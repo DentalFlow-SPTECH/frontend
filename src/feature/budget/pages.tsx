@@ -7,11 +7,12 @@ import { budgetTotal, dateLabel, money, moneyInput, normalize, readMoney, today 
 import type { Budget, BudgetInput, BudgetItem, Patient } from '../../demo/model';
 import { useDemo } from '../../demo/store';
 import styles from './budget.module.css';
+import { allTeeth, Odontogram, permanentTeeth, primaryTeeth } from './odontogram';
 
 function PatientContext({ patient }: { patient: Patient }) {
   return <div className={styles.patientContext}>
-    <div><span className={styles.smallLabel}>Paciente · {patient.code}</span><h2>{patient.name}</h2><p>Nascimento: {dateLabel(patient.birthDate)} <span aria-hidden="true">·</span> {patient.phone}</p></div>
-    <Link to={`/pacientes?paciente=${patient.id}`} className={styles.contextLink}>Ver paciente</Link>
+    <div><span className={styles.smallLabel}>Paciente · {patient.code}</span><h2>{patient.name}</h2>{(patient.birthDate || patient.mobile || patient.phone) && <p>{[patient.birthDate && `Nascimento: ${dateLabel(patient.birthDate)}`, patient.mobile || patient.phone].filter(Boolean).join(' · ')}</p>}</div>
+    <Link to={`/pacientes/${patient.id}`} className={styles.contextLink}>Ver paciente</Link>
   </div>;
 }
 
@@ -57,12 +58,12 @@ export function BudgetListPage() {
   </>;
 }
 
-interface DraftItem { id: string; procedure: string; quantity: string; unitPrice: string; observation: string }
+interface DraftItem { id: string; procedure: string; quantity: string; unitPrice: string; observation: string; tooth: string; surface: string }
 interface Draft { patientId: string; doctorId: string; createdOn: string; validUntil: string; observation: string; paymentNote: string; items: DraftItem[] }
 type Errors = Record<string, string>;
 
 function makeDraft(source: Budget | undefined, patientId: string): Draft {
-  return source ? { patientId: source.patientId, doctorId: source.doctorId, createdOn: source.createdOn, validUntil: source.validUntil, observation: source.observation, paymentNote: source.paymentNote, items: source.items.map(item => ({ id: item.id, procedure: item.procedure, quantity: String(item.quantity), unitPrice: moneyInput(item.unitPriceCents), observation: item.observation })) } : { patientId, doctorId: '', createdOn: today(), validUntil: '', observation: '', paymentNote: '', items: [] };
+  return source ? { patientId: source.patientId, doctorId: source.doctorId, createdOn: source.createdOn, validUntil: source.validUntil, observation: source.observation, paymentNote: source.paymentNote, items: source.items.map(item => ({ id: item.id, procedure: item.procedure, quantity: String(item.quantity), unitPrice: moneyInput(item.unitPriceCents), observation: item.observation, tooth: item.tooth ?? '', surface: item.surface ?? '' })) } : { patientId, doctorId: '', createdOn: today(), validUntil: '', observation: '', paymentNote: '', items: [] };
 }
 function itemValue(item: DraftItem) {
   const quantity = Number(item.quantity);
@@ -114,9 +115,9 @@ function BudgetEditor({ id }: { id?: string }) {
     setSavedMessage('');
     if (errorKey) setErrors(current => { const next = { ...current }; delete next[errorKey]; return next; });
   }
-  function addItem() {
+  function addItem(tooth = '') {
     const itemId = crypto.randomUUID();
-    setDraft(current => ({ ...current, items: [...current.items, { id: itemId, procedure: '', quantity: '1', unitPrice: '', observation: '' }] }));
+    setDraft(current => ({ ...current, items: [...current.items, { id: itemId, procedure: '', quantity: '1', unitPrice: '', observation: '', tooth, surface: '' }] }));
     setSavedMessage('');
     setErrors(current => { const next = { ...current }; delete next.budget_items; return next; });
     requestAnimationFrame(() => document.getElementById(`item_${itemId}_procedure`)?.focus());
@@ -138,6 +139,7 @@ function BudgetEditor({ id }: { id?: string }) {
     if (!draft.items.length) next.budget_items = 'Inclua ao menos um procedimento.';
     draft.items.forEach(item => {
       if (!data.procedures.some(value => value.name === item.procedure)) next[`item_${item.id}_procedure`] = 'Selecione um procedimento.';
+      if (item.tooth && !allTeeth.includes(item.tooth)) next[`item_${item.id}_tooth`] = 'Selecione um dente válido ou deixe o campo vazio.';
       if (!/^\d+$/.test(item.quantity) || !Number.isSafeInteger(Number(item.quantity)) || Number(item.quantity) < 1) next[`item_${item.id}_quantity`] = 'Use uma quantidade inteira maior que zero.';
       if (readMoney(item.unitPrice) === null) next[`item_${item.id}_unitPrice`] = 'Use um valor a partir de zero, com até duas casas decimais. Exemplo: 180,00.';
       else if (!itemValue(item) && !next[`item_${item.id}_quantity`]) next[`item_${item.id}_unitPrice`] = 'O valor informado é muito alto. Revise o valor unitário.';
@@ -147,7 +149,7 @@ function BudgetEditor({ id }: { id?: string }) {
     if (Object.keys(next).length) { requestAnimationFrame(() => document.getElementById(Object.keys(next)[0])?.focus()); return; }
     setSaving(true);
     try {
-      const items: BudgetItem[] = draft.items.map(item => ({ id: item.id, procedure: item.procedure, observation: item.observation.trim(), quantity: Number(item.quantity), unitPriceCents: readMoney(item.unitPrice)! }));
+      const items: BudgetItem[] = draft.items.map(item => ({ id: item.id, procedure: item.procedure, observation: item.observation.trim(), quantity: Number(item.quantity), unitPriceCents: readMoney(item.unitPrice)!, tooth: item.tooth, surface: item.surface.trim() }));
       const input: BudgetInput = { patientId: draft.patientId, doctorId: draft.doctorId, createdOn: draft.createdOn, validUntil: draft.validUntil, observation: draft.observation.trim(), paymentNote: draft.paymentNote.trim(), items };
       const saved = await saveBudget(input, id);
       const updated = makeDraft(saved, saved.patientId);
@@ -179,20 +181,23 @@ function BudgetEditor({ id }: { id?: string }) {
               <Field id="budget_validUntil" label="Validade (opcional)" error={errors.budget_validUntil}><input type="date" value={draft.validUntil} onChange={event => changeField('validUntil', event.target.value)} /></Field>
             </fieldset>}
           </section>
+          <section className={styles.paperSection} aria-labelledby="budget_teeth_heading"><div className={styles.sectionHeading}><h2 id="budget_teeth_heading">Odontograma</h2></div><Odontogram items={draft.items} readonly={readonly} disabled={saving} onAdd={addItem} /></section>
           <section className={styles.paperSection} aria-labelledby="budget_items_heading"><div className={styles.sectionHeading}><h2 id="budget_items_heading">Procedimentos</h2></div>
             {!draft.items.length && <p className={styles.noItems}>Nenhum procedimento incluído.</p>}
             <ol className={styles.items}>{draft.items.map((item, index) => <li key={item.id} className={styles.item}>
               <div className={styles.itemHeading}><h3>Item {String(index + 1).padStart(2, '0')}{readonly && <span>{item.procedure}</span>}</h3>{!readonly && <Button variant="quiet" disabled={saving} onClick={() => removeItem(item.id)} aria-label={`Remover item ${index + 1}${item.procedure ? `: ${item.procedure}` : ''}`}>Remover</Button>}</div>
-              {readonly ? <><dl className={styles.itemDetails}><div><dt>Quantidade</dt><dd>{item.quantity}</dd></div><div><dt>Valor unitário (R$)</dt><dd>{money(readMoney(item.unitPrice) ?? 0)}</dd></div><div><dt>Subtotal</dt><dd>{money((itemValue(item)?.quantity ?? 0) * (itemValue(item)?.unitPriceCents ?? 0))}</dd></div></dl>{item.observation && <p className={styles.itemObservation}>{item.observation}</p>}</> : <fieldset disabled={saving} className={styles.itemFields}>
+              {readonly ? <><dl className={styles.itemDetails}>{item.tooth && <div><dt>Dente</dt><dd>{item.tooth}</dd></div>}{item.surface && <div><dt>Região/superfície</dt><dd>{item.surface}</dd></div>}<div><dt>Quantidade</dt><dd>{item.quantity}</dd></div><div><dt>Valor unitário (R$)</dt><dd>{money(readMoney(item.unitPrice) ?? 0)}</dd></div><div><dt>Subtotal</dt><dd>{money((itemValue(item)?.quantity ?? 0) * (itemValue(item)?.unitPriceCents ?? 0))}</dd></div></dl>{item.observation && <p className={styles.itemObservation}>{item.observation}</p>}</> : <fieldset disabled={saving} className={styles.itemFields}>
                 <legend className={styles.visuallyHidden}>Preenchimento do item {index + 1}</legend>
                 <div className={styles.procedureField}><Field id={`item_${item.id}_procedure`} label="Procedimento" error={errors[`item_${item.id}_procedure`]}><select value={item.procedure} onChange={event => { const procedure = data.procedures.find(value => value.name === event.target.value); changeItem(item.id, { procedure: event.target.value, unitPrice: procedure ? moneyInput(procedure.referencePriceCents) : '' }, `item_${item.id}_procedure`); setErrors(current => { const next = { ...current }; delete next[`item_${item.id}_unitPrice`]; return next; }); }}><option value="">Selecione um procedimento</option>{data.procedures.map(value => <option key={value.id} value={value.name}>{value.name}</option>)}</select></Field></div>
                 <Field id={`item_${item.id}_quantity`} label="Quantidade" error={errors[`item_${item.id}_quantity`]}><input type="number" inputMode="numeric" min="1" step="1" value={item.quantity} onChange={event => changeItem(item.id, { quantity: event.target.value }, `item_${item.id}_quantity`)} /></Field>
+                <Field id={`item_${item.id}_tooth`} label="Dente (opcional)" error={errors[`item_${item.id}_tooth`]}><select value={item.tooth} onChange={event => changeItem(item.id, { tooth: event.target.value }, `item_${item.id}_tooth`)}><option value="">Sem dente específico</option><optgroup label="Permanente">{permanentTeeth.map(tooth => <option key={tooth} value={tooth}>{tooth}</option>)}</optgroup><optgroup label="Infantil">{primaryTeeth.map(tooth => <option key={tooth} value={tooth}>{tooth}</option>)}</optgroup></select></Field>
+                <Field id={`item_${item.id}_surface`} label="Região/superfície (opcional)"><input value={item.surface} onChange={event => changeItem(item.id, { surface: event.target.value })} /></Field>
                 <Field id={`item_${item.id}_unitPrice`} label="Valor unitário (R$)" error={errors[`item_${item.id}_unitPrice`]}><input inputMode="decimal" placeholder="0,00" value={item.unitPrice} onChange={event => changeItem(item.id, { unitPrice: event.target.value }, `item_${item.id}_unitPrice`)} /></Field>
                 <div className={styles.itemSubtotal}><span>Subtotal</span><strong>{itemValue(item) ? money(itemValue(item)!.quantity * itemValue(item)!.unitPriceCents) : '—'}</strong></div>
                 <div className={styles.itemNoteField}><Field id={`item_${item.id}_observation`} label="Observação do item (opcional)"><input value={item.observation} onChange={event => changeItem(item.id, { observation: event.target.value })} /></Field></div>
               </fieldset>}
             </li>)}</ol>
-            {!readonly && <div className={styles.addItem}><Button id="budget_items" variant="secondary" disabled={saving} aria-describedby={errors.budget_items ? 'budget_items_error' : undefined} onClick={addItem}>+ Adicionar procedimento</Button>{errors.budget_items && <p className={uiStyles.fieldError} id="budget_items_error">{errors.budget_items}</p>}</div>}
+            {!readonly && <div className={styles.addItem}><Button id="budget_items" variant="secondary" disabled={saving} aria-describedby={errors.budget_items ? 'budget_items_error' : undefined} onClick={() => addItem()}><span aria-hidden="true">+</span>Adicionar procedimento</Button>{errors.budget_items && <p className={uiStyles.fieldError} id="budget_items_error">{errors.budget_items}</p>}</div>}
           </section>
           {(!readonly || draft.observation || draft.paymentNote) && <section className={styles.paperSection} aria-labelledby="budget_notes_heading"><div className={styles.sectionHeading}><h2 id="budget_notes_heading">Anotações</h2></div>
             {readonly ? <dl className={uiStyles.definition}>{draft.observation && <div><dt>Observação</dt><dd>{draft.observation}</dd></div>}{draft.paymentNote && <div><dt>Condições informadas</dt><dd>{draft.paymentNote}</dd></div>}</dl> : <fieldset disabled={saving} className={styles.noteFields}><legend className={styles.visuallyHidden}>Anotações do orçamento</legend>

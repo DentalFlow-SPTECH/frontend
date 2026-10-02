@@ -19,7 +19,7 @@ async function scenario(page: Page, value: string) {
 async function createBudgetDraft(page: Page) {
   await open(page, '/orcamentos/novo?paciente=p3');
   await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
-  await page.getByRole('button', { name: 'Adicionar procedimento' }).click();
+  await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
   await page.getByLabel('Procedimento', { exact: true }).selectOption({ label: 'Profilaxia' });
   await page.getByLabel('Quantidade', { exact: true }).fill('2');
   await page.getByLabel('Valor unitário (R$)', { exact: true }).fill('250,00');
@@ -51,7 +51,7 @@ test('orçamento valida campos, associa erro e foca a primeira correção', asyn
   await expect(page.getByLabel('Doutor', { exact: true })).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByLabel('Observação do orçamento (opcional)')).toHaveValue('Manter esta observação.');
   await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
-  await page.getByRole('button', { name: 'Adicionar procedimento' }).click();
+  await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
   await page.getByLabel('Procedimento', { exact: true }).selectOption({ label: 'Profilaxia' });
   await page.getByLabel('Quantidade', { exact: true }).fill('0');
   await page.getByRole('button', { name: 'Salvar orçamento', exact: true }).click();
@@ -60,7 +60,7 @@ test('orçamento valida campos, associa erro e foca a primeira correção', asyn
 });
 test('itens, falha de gravação, edição e recarregamento de orçamento', async ({ page }) => {
   await createBudgetDraft(page);
-  await page.getByRole('button', { name: 'Adicionar procedimento' }).click();
+  await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
   await page.getByRole('button', { name: 'Salvar orçamento', exact: true }).click();
   await expect(page.getByText('Revise os campos indicados', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Remover item 2/ }).click();

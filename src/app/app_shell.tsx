@@ -5,11 +5,15 @@ import { ActionLink, EmptyState, Feedback } from '../component/ui';
 import { ReviewControls } from '../feature/review/review_page';
 import logo from '../asset/brand/dental_flow_logo.png';
 import styles from './app_shell.module.css';
-function NavIcon({ kind }: { kind: 'budget' | 'inventory' | 'patient' }) {
+function NavIcon({ kind }: { kind: 'budget' | 'inventory' | 'patient' | 'agenda' | 'doctor' | 'cash' | 'admin' }) {
   const paths: Record<typeof kind, ReactNode> = {
     budget: <path d="M7 3h10v18H7zM10 7h4M10 11h4M10 15h2" />,
     inventory: <path d="m3 7 9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4" />,
     patient: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-3a8 8 0 0 1 16 0v3" /></>,
+    agenda: <><path d="M4 5h16v16H4zM4 10h16M8 3v4M16 3v4M8 14h2M14 14h2M8 18h2" /></>,
+    doctor: <><circle cx="12" cy="7" r="4" /><path d="M4 21v-3a8 8 0 0 1 16 0v3M12 15v6M9 18h6" /></>,
+    cash: <><path d="M3 6h18v14H3zM3 10h18" /><circle cx="12" cy="15" r="2" /></>,
+    admin: <><circle cx="8" cy="7" r="3" /><path d="M2 20v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 5 5v1" /></>,
   };
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{paths[kind]}</svg>;
 }
@@ -60,9 +64,13 @@ export function AppShell() {
     <aside className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
       <Link to="/orcamentos" className={styles.brand} aria-label="Dental Flow — Orçamentos"><img src={logo} alt="Dental Flow" width="402" height="362" /></Link>
       <nav id="clinic_navigation" ref={navRef} className={styles.navigation} aria-label="Navegação principal">
+        <NavLink to="/agenda" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="agenda" />Agenda</NavLink>
         <NavLink to="/orcamentos" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="budget" />Orçamentos</NavLink>
         <NavLink to="/estoque" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="inventory" />Estoque</NavLink>
         <NavLink to="/pacientes" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="patient" />Pacientes</NavLink>
+        <NavLink to="/doutores" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="doctor" />Doutores</NavLink>
+        <NavLink to="/caixa" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="cash" />Caixa</NavLink>
+        <NavLink to="/administracao" className={({ isActive }) => isActive ? styles.selected : ''}><NavIcon kind="admin" />Administração</NavLink>
       </nav>
     </aside>
     <div className={styles.workspace}>

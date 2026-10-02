@@ -1,7 +1,7 @@
 .shell { display: grid; grid-template-columns: 216px minmax(0, 1fr); min-height: 100vh; }
 :where(.shell) a { color: var(--primary); text-underline-offset: 3px; }
 .shell :is(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-.sidebar { background: var(--nav); color: white; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 24px 16px; }
+.sidebar { background: var(--nav); color: white; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 24px 16px; overflow-y: auto; }
 .brand { display: block; align-self: center; width: 132px; margin-bottom: 32px; min-height: 44px; }
 .brand img { display: block; width: 100%; height: auto; }
 .navigation { display: flex; flex-direction: column; gap: 8px; }

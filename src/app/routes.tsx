@@ -1,9 +1,13 @@
 import { createHashRouter, Navigate } from 'react-router-dom';
 import { AppShell, NotFoundPage, RouteErrorPage } from './app_shell';
-import { PatientListPage } from '../feature/patient/patient_page';
+import { PatientDetailPage, PatientFormPage, PatientListPage } from '../feature/patient/patient_page';
 import { BudgetEditorPage, BudgetListPage } from '../feature/budget/pages';
 import { InventoryListPage, ProductDetailPage, ProductFormPage, StockEntryPage, StockExitPage } from '../feature/inventory/inventory_pages';
 import { ReviewPage } from '../feature/review/review_page';
+import { AgendaPage, AppointmentDetailPage, AppointmentFormPage } from '../feature/agenda/agenda_pages';
+import { CashDetailPage, CashFormPage, CashPage } from '../feature/cash/cash_pages';
+import { DoctorDetailPage, DoctorFormPage, DoctorListPage } from '../feature/doctor/doctor_pages';
+import { AdminPage, UserDetailPage, UserFormPage } from '../feature/admin/admin_pages';
 export const router = createHashRouter([{ element: <AppShell />, errorElement: <RouteErrorPage />, children: [
   { index: true, element: <Navigate to="/orcamentos" replace /> },
   { path: 'orcamentos', element: <BudgetListPage /> },
@@ -15,6 +19,25 @@ export const router = createHashRouter([{ element: <AppShell />, errorElement: <
   { path: 'estoque/:id/entrada', element: <StockEntryPage /> },
   { path: 'estoque/:id/saida', element: <StockExitPage /> },
   { path: 'pacientes', element: <PatientListPage /> },
+  { path: 'pacientes/novo', element: <PatientFormPage /> },
+  { path: 'pacientes/:id', element: <PatientDetailPage /> },
+  { path: 'pacientes/:id/editar', element: <PatientFormPage /> },
+  { path: 'agenda', element: <AgendaPage /> },
+  { path: 'agenda/nova', element: <AppointmentFormPage /> },
+  { path: 'agenda/:id', element: <AppointmentDetailPage /> },
+  { path: 'agenda/:id/editar', element: <AppointmentFormPage /> },
+  { path: 'doutores', element: <DoctorListPage /> },
+  { path: 'doutores/novo', element: <DoctorFormPage /> },
+  { path: 'doutores/:id', element: <DoctorDetailPage /> },
+  { path: 'doutores/:id/editar', element: <DoctorFormPage /> },
+  { path: 'caixa', element: <CashPage /> },
+  { path: 'caixa/entrada', element: <CashFormPage /> },
+  { path: 'caixa/saida', element: <CashFormPage /> },
+  { path: 'caixa/:id', element: <CashDetailPage /> },
+  { path: 'administracao', element: <AdminPage /> },
+  { path: 'administracao/novo', element: <UserFormPage /> },
+  { path: 'administracao/:id', element: <UserDetailPage /> },
+  { path: 'administracao/:id/editar', element: <UserFormPage /> },
   { path: 'revisao', element: <ReviewPage /> },
   { path: '*', element: <NotFoundPage /> },
 ] }]);

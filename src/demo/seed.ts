@@ -1,12 +1,14 @@
 import type { DemoData } from './model';
+import { emptyPatientInput } from './patient';
 export function createSeed(): DemoData {
   return {
     version: 1,
+    appointments: [], cashMovements: [], users: [], audit: [],
     patients: [
-      { id: 'p1', code: 'PAC-001', name: 'Marina Albuquerque', birthDate: '1991-06-14', phone: '(11) 90000-0101', email: 'marina@example.com', observation: '' },
-      { id: 'p2', code: 'PAC-002', name: 'Rafael Nogueira', birthDate: '1985-03-22', phone: '(11) 90000-0102', email: 'rafael@example.com', observation: '' },
-      { id: 'p3', code: 'PAC-003', name: 'Beatriz Campos', birthDate: '1998-11-05', phone: '(11) 90000-0103', email: 'beatriz@example.com', observation: '' },
-      { id: 'p4', code: 'PAC-004', name: 'André Siqueira', birthDate: '1974-08-09', phone: '(11) 90000-0104', email: 'andre@example.com', observation: '' },
+      { ...emptyPatientInput, id: 'p1', code: 'PAC-001', name: 'Marina Albuquerque', birthDate: '1991-06-14', phone: '(11) 90000-0101', email: 'marina@example.com', history: [] },
+      { ...emptyPatientInput, id: 'p2', code: 'PAC-002', name: 'Rafael Nogueira', birthDate: '1985-03-22', phone: '(11) 90000-0102', email: 'rafael@example.com', history: [] },
+      { ...emptyPatientInput, id: 'p3', code: 'PAC-003', name: 'Beatriz Campos', birthDate: '1998-11-05', phone: '(11) 90000-0103', email: 'beatriz@example.com', history: [] },
+      { ...emptyPatientInput, id: 'p4', code: 'PAC-004', name: 'André Siqueira', birthDate: '1974-08-09', phone: '(11) 90000-0104', email: 'andre@example.com', history: [] },
     ],
     doctors: [ { id: 'd1', name: 'Dra. Helena Martins', specialty: 'Clínica geral' }, { id: 'd2', name: 'Dr. Lucas Azevedo', specialty: 'Clínica geral' } ],
     procedures: [ { id: 'pr1', name: 'Avaliação odontológica', referencePriceCents: 12000 }, { id: 'pr2', name: 'Profilaxia', referencePriceCents: 18000 }, { id: 'pr3', name: 'Restauração em resina', referencePriceCents: 22000 }, { id: 'pr4', name: 'Raspagem periodontal', referencePriceCents: 35000 } ],
