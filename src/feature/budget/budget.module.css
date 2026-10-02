@@ -1,0 +1,106 @@
+.workspace { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; align-items: start; }
+.patientPicker { padding: 20px 0; border-top: 3px solid var(--ink); }
+.patientList { list-style: none; margin: 18px 0 0; padding: 0; }
+.mobilePatientPicker { display: none; }
+.patientList li { border-top: 1px solid var(--line); }
+.patientOption { width: 100%; text-align: left; background: transparent; border: 0; border-left: 3px solid transparent; padding: 16px 12px; min-height: 66px; color: var(--ink); }
+.patientOption span { display: block; font-size: 15px; font-weight: 500; }
+.patientOption small { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; letter-spacing: .5px; }
+.patientOption:hover { background: #edf3f0; }
+.patientSelected { border-left-color: var(--primary); background: #e9f2ee; }
+.allPatients, .contextLink { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; }
+.allPatients { margin-top: 14px; }
+.searchEmpty { padding: 22px 0; color: var(--muted); font-size: 14px; }
+.records { min-width: 0; }
+.patientContext { display: flex; gap: 24px; align-items: center; justify-content: space-between; padding: 0 0 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.smallLabel { display: block; font-size: 14px; color: var(--muted); font-weight: 500; margin-bottom: 7px; }
+.patientContext h2 { font-size: clamp(21px, 2vw, 25px); line-height: 1.2; font-weight: 500; letter-spacing: -.4px; }
+.patientContext p { font-size: 14px; color: var(--muted); margin-top: 9px; }
+.patientContext p span { margin-inline: 7px; }
+.contextLink { flex-shrink: 0; }
+.recordHeading { display: flex; gap: 16px; align-items: baseline; justify-content: space-between; padding: 8px 0 20px; }
+.recordHeading h2 { font-size: 20px; font-weight: 500; }
+.recordHeading > span { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.budgetTable { border-top: 1px solid var(--line); }
+.budgetTable tbody th { background: white; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; }
+.budgetTable tbody th a { display: block; padding-block: 5px; min-height: 44px; }
+.rowDate { display: block; color: var(--muted); margin-top: 7px; font-size: 14px; font-weight: 400; }
+.scenarioLabel { display: block; color: var(--muted); font-size: 14px; margin-top: 8px; font-weight: 400; }
+.mobileBudgets { display: none; }
+.topNote { margin-bottom: 24px; }
+.readonlyNote { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+.editorLayout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 32px; align-items: start; }
+.editorMain { min-width: 0; }
+.paperSection { padding: 24px 0; border-top: 1px solid var(--line); margin-bottom: 16px; }
+.sectionHeading { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.sectionHeading h2 { font-size: 20px; line-height: 1.3; font-weight: 500; }
+.fields { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; min-width: 0; }
+.noteFields { border: 0; padding: 0; margin: 0; display: grid; gap: 20px; min-width: 0; }
+.noItems { padding-bottom: 18px; color: var(--muted); font-size: 14px; }
+.items { list-style: none; padding: 0; margin: 0; }
+.item { border-top: 1px solid var(--line); padding: 22px 0 24px; }
+.itemHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+.itemHeading h3 { font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.itemHeading h3 span { display: block; margin-top: 7px; font-size: 17px; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.itemFields { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(80px, .65fr) minmax(110px, 1fr) minmax(110px, 1fr); gap: 20px 16px; min-width: 0; }
+.procedureField { grid-column: 1 / -1; }
+.itemNoteField { grid-column: 1 / -1; }
+.itemSubtotal { display: flex; flex-direction: column; justify-content: center; align-items: end; gap: 8px; font-variant-numeric: tabular-nums; min-width: 0; }
+.itemSubtotal span { font-size: 14px; color: var(--muted); }
+.itemSubtotal strong { font-size: 18px; font-weight: 500; white-space: nowrap; }
+.itemDetails { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 0; font-variant-numeric: tabular-nums; }
+.itemDetails dt { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.itemDetails dd { margin: 0; font-size: 15px; font-weight: 500; }
+.itemObservation { color: var(--muted); font-size: 14px; margin-top: 20px; }
+.addItem { display: flex; flex-direction: column; align-items: start; gap: 10px; }
+.summary { position: sticky; top: 24px; padding: 24px 0; border-top: 3px solid var(--primary); min-width: 0; }
+.summary h2 { font-size: 14px; font-weight: 400; color: var(--muted); }
+.summaryTotal { font-size: clamp(25px, 2.4vw, 32px); font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.8px; margin: 8px 0 28px; overflow-wrap: anywhere; }
+.summaryLine { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: baseline; gap: 18px; border-top: 1px solid var(--line); padding: 12px 0; font-size: 14px; }
+.summaryLine span { color: var(--muted); }
+.summaryLine strong { font-weight: 500; }
+.saveButton { width: 100%; }
+.saveHint { font-size: 14px; text-align: center; color: var(--muted); margin-top: 10px; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 1150px) {
+  .workspace { grid-template-columns: 215px minmax(0, 1fr); gap: 24px; }
+  .editorLayout { grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; }
+  .budgetTable th, .budgetTable td { padding: 14px 12px; }
+}
+@media (max-width: 1000px) {
+  .workspace { grid-template-columns: 1fr; }
+  .patientPicker { display: none; }
+  .mobilePatientPicker { display: block; }
+  .editorLayout { grid-template-columns: 1fr; }
+  .summary { position: static; max-width: none; }
+  .summaryTotal { font-size: 32px; }
+}
+@media (max-width: 767px) {
+  .workspace { gap: 16px; }
+  .patientContext { padding: 4px 0 20px; flex-direction: column; align-items: start; gap: 8px; margin-bottom: 20px; }
+  .patientContext p { line-height: 1.6; }
+  .contextLink { margin-top: 2px; }
+  .recordHeading { flex-direction: column; gap: 5px; }
+  .budgetTable { display: none; }
+  .mobileBudgets { display: block; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .mobileBudgets li { background: white; border-bottom: 1px solid var(--line); padding: 20px 16px; }
+  .mobileBudgetTop { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+  .mobileBudgetTop a { min-height: 44px; font-size: 16px; font-weight: 500; }
+  .mobileBudgetTop strong { font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 500; white-space: nowrap; }
+  .mobileBudgets dl { display: flex; flex-direction: column; gap: 12px; margin: 18px 0 0; }
+  .mobileBudgets dl div { display: grid; grid-template-columns: 85px minmax(0, 1fr); gap: 12px; }
+  .mobileBudgets dt { font-size: 14px; color: var(--muted); }
+  .mobileBudgets dd { margin: 0; font-size: 14px; }
+  .paperSection { padding: 22px 0; margin-bottom: 16px; }
+  .sectionHeading { gap: 10px; margin-bottom: 22px; }
+  .sectionHeading h2 { font-size: 19px; }
+  .fields { grid-template-columns: 1fr; }
+  .itemFields { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 18px 12px; }
+  .itemSubtotal { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--line); padding-top: 14px; }
+  .itemDetails { grid-template-columns: 1fr; gap: 14px; }
+  .itemDetails div { display: flex; gap: 20px; justify-content: space-between; }
+  .itemDetails dt { margin: 0; }
+  .itemDetails dd { text-align: right; flex-shrink: 0; }
+  .addItem { align-items: stretch; }
+  .summary { padding: 24px 0 0; }
+}

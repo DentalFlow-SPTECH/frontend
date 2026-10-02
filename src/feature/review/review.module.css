@@ -1,0 +1,4 @@
+.page { max-width: 560px; }
+.controls { display: flex; flex-direction: column; gap: 20px; }
+.controls > p { color: var(--muted); font-size: 15px; }
+.back { margin-top: 28px; }
