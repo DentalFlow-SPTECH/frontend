@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ActionLink, Button, EmptyState, Feedback, Field, LoadingState, PageHeader, StatusLabel, uiStyles } from '../../component/ui';
 import { useResource } from '../../component/use_resource';
@@ -9,6 +9,7 @@ import { useDemo } from '../../demo/store';
 import styles from './inventory.module.css';
 
 function StockSituation({ product }: { product: Product }) {
+  if (product.quantity === 0) return <StatusLabel tone="warning">Sem saldo</StatusLabel>;
   return product.quantity < product.minimum
     ? <StatusLabel tone="warning">Abaixo do mínimo</StatusLabel>
     : <StatusLabel>No mínimo ou acima</StatusLabel>;
@@ -54,7 +55,7 @@ export function InventoryListPage() {
   }
   function clearFilters() { setParams({}, { replace: true, flushSync: true }); }
   return <>
-    <PageHeader title="Estoque" action={<ActionLink to={`/estoque/novo${search}`}>Cadastrar material</ActionLink>} />
+    <PageHeader title="Estoque" description="Confira os saldos e abra um material para registrar entradas ou saídas." action={<ActionLink to={`/estoque/novo${search}`}>Cadastrar material</ActionLink>} />
     <div className={styles.searchToolbar}>
       <Field id="inventory_search" label="Buscar material"><input type="search" value={query} onChange={event => updateFilter('q', event.target.value)} placeholder="Nome, código ou categoria" /></Field>
       <label className={styles.checkFilter}><input type="checkbox" checked={lowOnly} onChange={event => updateFilter('abaixo', event.target.checked ? '1' : '')} /><span>Somente abaixo do mínimo</span></label>
@@ -107,6 +108,7 @@ const initialProduct: ProductFields = { name: '', category: '', description: '',
 
 export function ProductFormPage() {
   const { createProduct } = useDemo();
+  const resource = useResource('product-form');
   const { search } = useLocation();
   const navigate = useNavigate();
   const [fields, setFields] = useState<ProductFields>(initialProduct);
@@ -115,6 +117,8 @@ export function ProductFormPage() {
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<Product | null>(null);
   const [additionalOpen, setAdditionalOpen] = useState(false);
+  const saveFeedback = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (saveError) saveFeedback.current?.focus(); }, [saveError]);
   const dirty = !created && Object.keys(fields).some(key => fields[key as keyof ProductFields] !== initialProduct[key as keyof ProductFields]);
   useUnsaved(dirty, busy);
   useEffect(() => { if (created) document.querySelector<HTMLHeadingElement>('h1')?.focus(); }, [created]);
@@ -141,11 +145,13 @@ export function ProductFormPage() {
     finally { setBusy(false); }
   }
   if (created) return <><PageHeader title="Material cadastrado" /><Feedback tone="success">{created.name} está disponível no estoque.</Feedback><div className={styles.savedSummary}><span>{created.code}</span><h2>{created.name}</h2><p>Quantidade inicial: <strong>{created.quantity} {created.unit}</strong></p><p>Estoque mínimo: {created.minimum} {created.unit}</p></div><div className={uiStyles.formActions}><ActionLink to={`/estoque/${created.id}${search}`}>Ver material</ActionLink><ActionLink variant="secondary" to={`/estoque${search}`}>Voltar ao estoque</ActionLink></div></>;
+  if (resource.busy) return <LoadingState />;
+  if (resource.error) return <ResourceError message={resource.error} retry={resource.retry} />;
   return <>
     <Link className={uiStyles.back} to={`/estoque${search}`}>← Voltar ao estoque</Link>
     <PageHeader title="Cadastrar material" />
     <form noValidate onSubmit={submit} className={styles.form}>
-      {(saveError || Object.values(errors).some(Boolean)) && <div className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'O material ainda não foi salvo' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
+      {(saveError || Object.values(errors).some(Boolean)) && <div ref={saveFeedback} tabIndex={-1} className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'O material ainda não foi salvo' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
       <fieldset disabled={busy} className={styles.formSection}><legend>Identificação do material</legend><div className={uiStyles.formGrid}>
         <div className={uiStyles.full}><Field id="product_name" label="Nome do material" error={errors.name}><input required value={fields.name} onChange={event => change('name', event.target.value)} autoComplete="off" /></Field></div>
         <Field id="product_category" label="Categoria (opcional)"><input value={fields.category} onChange={event => change('category', event.target.value)} autoComplete="off" /></Field>
@@ -187,6 +193,8 @@ function StockEntryForm({ id }: { id?: string }) {
   const [busy, setBusy] = useState(false);
   const [savedQuantity, setSavedQuantity] = useState<number | null>(null);
   const [additionalOpen, setAdditionalOpen] = useState(false);
+  const saveFeedback = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (saveError) saveFeedback.current?.focus(); }, [saveError]);
   const dirty = savedQuantity === null && Object.keys(fields).some(key => fields[key as keyof EntryFields] !== initial[key as keyof EntryFields]);
   useUnsaved(dirty, busy);
   useEffect(() => { if (savedQuantity !== null) document.querySelector<HTMLHeadingElement>('h1')?.focus(); }, [savedQuantity]);
@@ -220,7 +228,7 @@ function StockEntryForm({ id }: { id?: string }) {
     <PageHeader title="Registrar entrada" />
     <div className={styles.entryContext}><div><span>{product.code}</span><h2>{product.name}</h2></div><p>Quantidade atual<strong>{product.quantity} {product.unit}</strong></p></div>
     <form noValidate onSubmit={submit} className={styles.form}>
-      {(saveError || Object.values(errors).some(Boolean)) && <div className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'A entrada ainda não foi salva' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
+      {(saveError || Object.values(errors).some(Boolean)) && <div ref={saveFeedback} tabIndex={-1} className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'A entrada ainda não foi salva' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
       <fieldset disabled={busy} className={styles.formSection}><legend>Dados da entrada</legend><div className={uiStyles.formGrid}>
         <Field id="entry_quantity" label={`Quantidade de entrada (${product.unit})`} error={errors.quantity}><input required inputMode="numeric" value={fields.quantity} onChange={event => change('quantity', event.target.value)} /></Field>
         <Field id="entry_date" label="Data" error={errors.date}><input required type="date" value={fields.date} onChange={event => change('date', event.target.value)} /></Field>
@@ -258,6 +266,8 @@ function StockExitForm({ id }: { id?: string }) {
   const [saveError, setSaveError] = useState('');
   const [busy, setBusy] = useState(false);
   const [savedQuantity, setSavedQuantity] = useState<number | null>(null);
+  const saveFeedback = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (saveError) saveFeedback.current?.focus(); }, [saveError]);
   const dirty = savedQuantity === null && Object.keys(fields).some(key => fields[key as keyof ExitFields] !== initial[key as keyof ExitFields]);
   useUnsaved(dirty, busy);
   useEffect(() => { if (savedQuantity !== null) document.querySelector<HTMLHeadingElement>('h1')?.focus(); }, [savedQuantity]);
@@ -292,7 +302,7 @@ function StockExitForm({ id }: { id?: string }) {
     <PageHeader title="Registrar saída" />
     <div className={styles.entryContext}><div><span>{product.code}</span><h2>{product.name}</h2></div><p>Quantidade disponível<strong>{product.quantity} {product.unit}</strong></p></div>
     {product.quantity === 0 ? <><Feedback tone="warning" title="Material sem estoque">Registre uma entrada antes de retirar este material.</Feedback><div className={uiStyles.formActions}><ActionLink to={`/estoque/${product.id}/entrada${search}`}>Registrar entrada</ActionLink><ActionLink variant="secondary" to={detailPath}>Voltar ao material</ActionLink></div></> : <form noValidate onSubmit={submit} className={styles.form}>
-      {(saveError || Object.values(errors).some(Boolean)) && <div className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'A saída ainda não foi salva' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
+      {(saveError || Object.values(errors).some(Boolean)) && <div ref={saveFeedback} tabIndex={-1} className={styles.formFeedback}><Feedback tone="error" title={saveError ? 'A saída ainda não foi salva' : 'Confira os campos indicados'}>{saveError || 'Corrija o preenchimento e tente novamente. Os dados foram mantidos.'}</Feedback></div>}
       <fieldset disabled={busy} className={styles.formSection}><legend>Dados da saída</legend><div className={uiStyles.formGrid}>
         <Field id="exit_quantity" label={`Quantidade de saída (${product.unit})`} error={errors.quantity}><input required inputMode="numeric" value={fields.quantity} onChange={event => change('quantity', event.target.value)} /></Field>
         <Field id="exit_date" label="Data" error={errors.date}><input required type="date" value={fields.date} onChange={event => change('date', event.target.value)} /></Field>

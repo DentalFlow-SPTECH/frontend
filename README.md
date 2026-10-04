@@ -1,6 +1,6 @@
 # Dental Flow — frontend da clínica
 
-Aplicação React + Vite + TypeScript para apresentar **agenda, pacientes, doutores, orçamentos, estoque, caixa e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
+Aplicação React + Vite + TypeScript para apresentar **painel, agenda, pacientes, doutores, orçamentos, estoque, caixa e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
 
 ## Executar localmente
 
@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Abra `http://127.0.0.1:5178/`. A aplicação entra em Orçamentos. As rotas usam hash, como `#/estoque`, para funcionar com recarregamento e acesso direto em hospedagem estática.
+Abra `http://127.0.0.1:5178/`. A aplicação entra no Painel, também disponível diretamente em `#/painel`. As rotas usam hash, como `#/estoque`, para funcionar com recarregamento e acesso direto em hospedagem estática.
 
 ```powershell
 npm run typecheck
@@ -25,6 +25,7 @@ O build fica em `dist/`. A prévia local abre em `http://127.0.0.1:4178/`.
 
 | Área | Operações disponíveis |
 | --- | --- |
+| Painel | Selecionar o dia de referência; consultar totais cadastrais, consultas do dia, materiais abaixo do mínimo e orçamentos recentes; comparar entradas e saídas dos últimos seis meses; abrir cada registro e o Caixa com o período mensal selecionado. |
 | Agenda | Consultar semana ou mês e dia selecionado; navegar por período/data; filtrar doutor; agendar, editar e cancelar consultas; verificar conflitos de horário; consultar histórico e vínculos de paciente, doutor e orçamento. |
 | Orçamentos | Buscar/selecionar paciente; consultar orçamentos e histórico; criar e editar registros locais; adicionar, alterar e remover itens; associar procedimentos a dentes permanentes ou infantis e região/superfície; calcular os valores ilustrativos; guardar observações e condições em texto livre. |
 | Estoque | Buscar por nome/código/categoria; filtrar abaixo do mínimo; consultar produto e histórico; cadastrar material fictício; registrar entrada e saída com motivo; conferir saldo atualizado. |
@@ -82,6 +83,20 @@ Administração começa sem usuários ou permissões atribuídas. Há sete módu
 
 O odontograma usa 32 dentes permanentes e 20 infantis, com numeração FDI de dois dígitos e quadrantes pela perspectiva do paciente. A correspondência de numeração foi conferida na [tabela oficial de designação dentária mantida no HL7](https://build.fhir.org/ig/HL7/UTG/branches/master/en/CodeSystem-ADAUniversalToothDesignationSystem.html), que relaciona os códigos às identificações ISO. As silhuetas são ilustrativas, sem diagnóstico. Selecionar um dente cria um item para escolher o procedimento; o item conserva dente, região/superfície livre e observação. É possível combinar ambas as dentições no mesmo orçamento. A marca no desenho indica somente procedimento planejado no orçamento. Não há prontuário, condição clínica ou procedimento executado presumido.
 
+### Painel
+
+A tela foi acrescentada por solicitação explícita do usuário em 03/10/2026 e passou a ser a entrada do protótipo e o destino da marca na navegação. A especificação anterior não previa um Dashboard como destino alternativo após login; esta mudança da demonstração não define autenticação, permissões efetivas ou redirecionamentos do produto integrado.
+
+Na revisão visual solicitada posteriormente, a tela recebeu o nome **Painel**, no título, navegação e mensagens. A entrada usa `#/painel`; endereços antigos `#/dashboard` redirecionam para o Painel conservando a data selecionada. Os blocos passaram a acompanhar o conteúdo em duas colunas independentes, sem reservar uma linha inteira pela altura do Estoque: o Caixa começa logo abaixo de Consultas mesmo no dia vazio. Estoque e orçamentos têm linhas mais compactas, sem reduzir os alvos de toque. Em 375 px os blocos seguem a ordem Consultas, Caixa, Estoque e Orçamentos. Links e botões usam o verde mais escuro `#145453`, com contraste calculado de 8,67:1 contra branco; o texto da opção selecionada na navegação passou a branco. As três propostas de identidade visual são estudos isolados para aprovação, sem substituir o tema geral da aplicação.
+
+O dia de referência começa na data de São Paulo e pode ser alterado ou retomado pelo botão Hoje. A seleção fica no endereço e acompanha o recarregamento. As consultas usam exatamente o dia escolhido, incluindo canceladas e faltas com a situação visível. A lista apresenta até seis consultas em ordem de horário e oferece acesso à Agenda para consultar todas. Pacientes e orçamentos cadastrados são totais de todos os registros; materiais abaixo do mínimo usam a comparação entre saldo atual e mínimo cadastrado. A lista de atenção apresenta até quatro materiais: primeiro os sem saldo, depois por nome, sem ordenar quantidades de unidades diferentes como se fossem equivalentes. Ela abre o filtro de estoque correspondente. Orçamentos recentes apresenta até cinco registros, ordenados por data de criação e código, com valores dos itens e vínculo para o orçamento.
+
+O Caixa usa as movimentações manuais com data dentro do mês completo do dia de referência. Entradas e saídas são somadas em centavos; o saldo é entradas menos saídas desse período. O gráfico compara os seis meses até o mês de referência, com a mesma escala para as duas séries e uma tabela acessível com os valores exatos. Sem movimentações, a tela oferece registrar uma entrada. O resumo não pressupõe saldo inicial, receita, lucro, pagamento de orçamento ou conciliação bancária.
+
+Quando existem registros na semana do dia de referência, o Painel também mostra **Consultas registradas por dia**. Ele responde à pergunta operacional “em quais dias desta semana há mais registros para conferir?”; cada coluna abre a Agenda no dia correspondente. A contagem inclui todos os registros, inclusive cancelados e faltas, e não representa ocupação, disponibilidade ou produtividade. Os sete valores e as datas são texto e links, portanto a comparação não depende somente da cor ou do gráfico. Sem registros semanais, esse gráfico não aparece: o estado vazio de Consultas explica o cenário e oferece a ação de agendar.
+
+O Painel lê as coleções existentes sem alterar identificadores, dados iniciais, chave de armazenamento ou snapshots salvos. Cadastros e movimentações efetivamente gravados pelos módulos aparecem no resumo ao retornar ou recarregar. Os estados vazio, carregamento e erro de leitura têm ações funcionais; durante carregamento ou erro, os indicadores ficam ocultos para não apresentar números como se a leitura tivesse sido concluída.
+
 ## Interface para a rotina da clínica
 
 A interface prioriza pessoas com pouca familiaridade com sistemas: ações com nomes diretos, textos secundários escuros, rótulos de campo com 16 px, textos auxiliares de pelo menos 14 px, foco visível e controles com pelo menos 44 px. O texto secundário usa `#35484E`, com contraste de pelo menos 7:1 nas superfícies branca e de trabalho; os testes verificam esse par além da análise com axe.
@@ -89,6 +104,38 @@ A interface prioriza pessoas com pouca familiaridade com sistemas: ações com n
 Os avisos de demonstração, cabeçalho redundante de desktop, rodapé repetitivo, notas técnicas e blocos sobre funcionalidades futuras foram removidos das telas de uso a pedido do usuário. Limitações e proveniência ficam neste README e na revisão técnica. Isso não altera a natureza fictícia dos dados ou a ausência de backend.
 
 No celular, a lista de pacientes de Orçamentos vira um seletor compacto para alcançar os registros sem percorrer todos os pacientes. Nos formulários de estoque, campos complementares ficam em “Informações adicionais (opcional)”. Se um desses campos tiver erro, a seção abre e o foco vai para a correção.
+
+### Revisão de uso em todas as telas — 03/10/2026
+
+A revisão conserva a marca, a IBM Plex Sans, as cores atuais, os componentes e CSS Modules. Não adiciona bibliotecas, backend ou regras de negócio. As alterações anteriores do Painel foram preservadas. A tabela distingue defeitos de comportamento verificados de hipóteses de dificuldade de uso que ainda precisam de avaliação com pessoas.
+
+| Tela ou fluxo | Evidência e natureza do problema | Impacto | Prioridade | Correção implementada |
+| --- | --- | --- | --- | --- |
+| Caixa | Bug: período invertido apresentava entradas, saídas e saldo zerados, apesar de não constituir uma consulta válida. | Zero poderia ser entendido como resultado financeiro do período. | Alta | Erro associado à data final; totais e lista aguardam a correção, conservando os filtros. |
+| Estoque: cadastro, entrada e saída | Bug de foco: após falha de gravação, o aviso aparecia sem receber foco, ao contrário dos outros formulários. | Quem usa teclado pode não localizar a recuperação. | Alta | Foco no aviso e preservação dos dados; repetição do envio e recarregamento verificados. |
+| Cadastro de material | Inconsistência reproduzida: não participava dos cenários de carregamento e falha de leitura. | Revisão e recuperação tinham comportamento diferente dos demais cadastros. | Média | Usa o mesmo ciclo de leitura, com tentativa de recuperação e preenchimento conservado. |
+| Orçamentos | Bug: busca de pacientes existia somente na memória da tela e sumia ao retornar ou recarregar. | A pessoa precisava localizar o paciente novamente. | Média | Busca no endereço, conservada no detalhe, criação e retorno; disponível também no celular. |
+| Orçamentos sem pacientes | Estado vazio oferecia criar orçamento sem o cadastro necessário para concluir. | A pessoa chegava a um formulário que não podia terminar. | Alta | Orientação e acesso ao cadastro de paciente; após salvar, Criar orçamento usa esse paciente. |
+| Agenda no celular | Hipótese de uso: a grade de sete dias exigia rolagem lateral para encontrar um atendimento. | A data desejada e a próxima ação podiam ficar fora da primeira visão. | Média | Seleção de dia e lista de consultas; grade completa acessível por Ver grade de horários da semana. |
+| Pacientes, Doutores e Administração | Hipótese de compreensão: ações nominais e ausência de atalhos de recuperação acrescentavam passos. | Uma pessoa iniciante precisava deduzir a ação seguinte. | Média | Cadastrar paciente/doutor/usuário; criar orçamento no paciente; limpar busca/filtros com resultados. |
+| Painel | Comparação por saldo bruto entre unidades distintas e falta de acesso ao mês pela tabela do gráfico. | Ordem podia sugerir prioridade de compra indevida; conferência mensal exigia refazer o filtro. | Média | Materiais sem saldo primeiro e restante por nome; meses da tabela abrem o Caixa no intervalo exato. |
+| Componentes compartilhados | Foco de títulos/conteúdo sem indicador visual e campos sem atributo name; risco de textos longos em layouts flexíveis. | Orientação por teclado e resistência do layout variavam entre páginas. | Média | Foco visível, nomes de controles, descrições preservadas, autofill cadastral e quebra de textos longos. |
+
+O gráfico semanal já existente responde “em quais dias há consultas registradas nesta semana?” e abre a Agenda no dia escolhido. O gráfico de Caixa responde “como as entradas e saídas registradas variam nos seis meses até a referência?”; a tabela conserva os valores exatos em centavos e agora abre as movimentações de cada mês. Não foi acrescentado um terceiro gráfico: a comparação de materiais continua em texto, com saldo, mínimo e unidade por produto. Barras de dias com zero consultas não ganham altura artificial.
+
+Contrastes calculados na paleta utilizada: ação primária/branco **8,67:1**; texto secundário/branco **9,60:1** e sobre a superfície de trabalho **8,98:1**; erro/fundo de erro **6,16:1**; sucesso/fundo de sucesso **6,38:1**; alerta/fundo de alerta **5,64:1**; borda de controle/branco **4,58:1**. O indicador de gravação respeita redução de movimento. Os alvos de 44 px são uma escolha de usabilidade; não substituem as condições e exceções de alvo mínimo da WCAG 2.2.
+
+A revisão usa [UI/UX Design Review](https://github.com/rknall/claude-skills/blob/main/ui-design-review/SKILL.md), [UX Writing & Content Design](https://github.com/hueyexe/frontend-agent-skills/blob/main/ux-writing-content-design/SKILL.md), [Accessibility Compliance](https://github.com/wshobson/agents/blob/main/plugins/ui-design/skills/accessibility-compliance/SKILL.md), [Web Design Guidelines](https://github.com/vercel-labs/agent-skills/blob/main/skills/web-design-guidelines/SKILL.md) e suas [diretrizes atuais](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md), [KPI Dashboard Design](https://github.com/wshobson/agents/blob/main/plugins/business-analytics/skills/kpi-dashboard-design/SKILL.md) e [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/). As decisões confirmadas para o Dental Flow têm prioridade sobre sugestões genéricas.
+
+`test/e2e/usability.spec.ts` acrescenta regressões para os defeitos acima e percorre **31 telas e variantes de consulta, cadastro, edição e revisão**, em desktop e 375 px, com axe, nomes longos sem espaços, ausência de erros de JavaScript e conservação do snapshot. Verifica também 320 px e área de layout de 720 px, correspondente à metade de um desktop de 1440 px para avaliar reflow equivalente a 200%. O teste de capturas gera os pares desktop/celular das 31 telas.
+
+A execução final completa de `npm run test:e2e` terminou com **197 verificações aprovadas e uma dispensada**, em sete minutos, no servidor local de desenvolvimento com Microsoft Edge/Playwright. A dispensa é intencional: o fluxo da agenda móvel roda somente no projeto de 375 px. Não ficaram falhas pendentes. A varredura das 31 telas nos dois projetos não encontrou violações no axe, erros de JavaScript ou overflow da página nas larguras verificadas; também confirmou que a consulta das telas não altera o snapshot local.
+
+Passaram `npm run typecheck`, `npm run build`, `npm run build:pages` e `git diff --check`. Na prévia do build para Pages, em `http://127.0.0.1:4178/frontend/`, a execução adicional do teste de capturas passou nos dois projetos: **31 telas por largura e 62 imagens reais**, com registros fictícios em contextos isolados. Essa rodada do build verifica navegação e captura das telas; a suíte completa acima foi executada no servidor de desenvolvimento. Os artefatos de revisão não comprovam publicação. As alterações permanecem locais, sem commit ou push.
+
+Uma verificação adicional percorreu as mesmas **31 telas no build para Pages com zoom nativo de 200% no Edge**, em um perfil exclusivo de teste. A preferência de zoom do navegador foi configurada nesse perfil: a medição passou de 1440 × 960 e `devicePixelRatio: 1` para 720 × 480 e `devicePixelRatio: 2`, mantendo `visualViewport.scale: 1`. Isso distingue o zoom do navegador de um simples redimensionamento ou gesto de ampliação. Não houve overflow da página, violações no axe, erros de JavaScript ou alteração do snapshot. O script e as medições estão na galeria local entregue com esta revisão. O método segue a [preferência de zoom do Chromium](https://raw.githubusercontent.com/chromium/chromium/main/chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc) e a [conversão oficial entre nível e fator](https://raw.githubusercontent.com/chromium/chromium/main/third_party/blink/common/page/page_zoom.cc); não representa uma navegação manual em todas as telas ampliadas.
+
+Para uma validação posterior com pessoas, proponha tarefas curtas sem explicar os controles: cadastrar um paciente e criar seu orçamento; agendar e encontrar uma consulta; registrar uma saída e explicar o saldo do período; tentar retirar material acima do saldo e corrigir a quantidade; localizar um usuário e explicar suas permissões. Observe conclusão, necessidade de ajuda e compreensão dos erros. Testes automáticos e inspeção visual não comprovam facilidade de uso com pessoas reais, leitor de tela ou dispositivo físico.
 
 ## Dados locais e cenários
 
@@ -129,6 +176,12 @@ Também passaram `npm run typecheck`, `npm run build`, `npm run build:pages` e `
 
 A ampliação de Agenda, Doutores, Caixa, Administração e odontograma foi validada em 02/10/2026 no build para Pages com Microsoft Edge/Playwright. A rodada completa terminou com 158 verificações aprovadas e duas falhas de seletor no teste de busca de usuários: a lista e a auditoria agora têm links com o mesmo nome. Após restringir esse teste à região da lista, a suíte final `doctor_admin.spec.ts` passou com 30 verificações (15 por largura). Somadas às 130 verificações dos demais módulos aprovadas na rodada completa, a cobertura final validada totaliza **160 combinações de cenário e largura: 80 cenários em desktop e os mesmos 80 em 375 px**, sem falhas pendentes. Capturas das visões semanal/mensal da Agenda, Caixa, Doutores, configuração de usuários e odontograma foram inspecionadas visualmente em desktop e celular. Axe, foco, preservação após falha, recarregamento e ausência de overflow passaram nas telas cobertas; a agenda semanal tem rolagem horizontal dentro de sua própria região em celular.
 
+A etapa do Dashboard foi validada em 03/10/2026 no build para Pages com Microsoft Edge/Playwright. A execução final conjunta de `dashboard.spec.ts` e `demo.spec.ts` passou com **62 verificações**: oito cenários do Dashboard e 23 dos fluxos existentes, executados em desktop e em 375 px. O Dashboard verifica a entrada inicial, data de São Paulo/Hoje, totais e ordenação, soma mensal e comparação de seis meses, filtros nos atalhos, recarregamento após consulta e entrada de caixa, independência entre módulos, ausência de gravação na leitura, estado vazio, carregamento, erro e recuperação, teclado, foco, axe, navegação móvel e ausência de overflow/erros de JavaScript. Um defeito de navegação encontrado na primeira rodada foi corrigido: selecionar o módulo atual no menu móvel agora fecha a navegação e devolve o foco ao título. As capturas gerais e do Caixa foram inspecionadas visualmente nas duas larguras. As demais suítes mantêm a evidência da etapa anterior; não foram executadas novamente nesta rodada. Typecheck, builds normal/Pages e `git diff --check` passaram. O Dashboard permanece em alterações locais, sem commit, push ou publicação.
+
+A revisão de nome, espaços e legibilidade do Painel foi validada no mesmo dia. A primeira rodada conjunta teve 61 verificações aprovadas e uma falha no teste do link ativo em celular, que precisava abrir o menu antes de localizar o link. Após corrigir esse seletor, a execução final de `dashboard.spec.ts` passou com 16 verificações (oito cenários por largura), incluindo o retorno compatível de `#/dashboard?date=…`, foco/navegação e uma verificação da distância visível entre Consultas e Caixa no dia vazio. As 46 verificações de `demo.spec.ts` passaram na rodada conjunta. Isso valida 62 combinações de cenário/largura, em rodadas separadas, sem falhas pendentes. As propostas foram renderizadas em contextos de navegador isolados, com dados fictícios, sem gravar no navegador do usuário; as imagens do Painel, cadastro de Pacientes e um exemplo móvel foram inspecionadas. Os cálculos de contraste das propostas são evidência de paleta, e não uma certificação das telas futuras.
+
+Na continuação, a suíte do Painel ganhou a verificação do gráfico semanal, de seus valores acessíveis e de cada link para a Agenda, além de reflow em 320 px. A validação atual deve ser lida junto da próxima execução registrada; ela não substitui teste com pessoas usuárias, leitor de tela ou dispositivo físico.
+
 ```powershell
 npm run test:e2e
 ```
@@ -167,6 +220,7 @@ Referências: [Vite: hospedagem estática e GitHub Pages](https://vite.dev/guide
 ## Estrutura e estilos
 
 - `src/app`: rotas com hash, navegação e estrutura da aplicação.
+- `src/feature/dashboard`: resumo do dia, caixa mensal com comparação de seis meses, atenção ao estoque e orçamentos recentes.
 - `src/feature/budget`: lista e editor de orçamentos.
 - `src/feature/inventory`: lista, detalhe, cadastro, entrada e saída de estoque.
 - `src/feature/patient`: busca, cadastro, detalhe, edição e histórico cadastral de pacientes.
@@ -196,10 +250,10 @@ Ainda precisam ser definidas:
 - Anexos, limites, retenção, dados da clínica e formato de impressão/exportação.
 - Contratos reais de integração e tratamento de concorrência/erros do backend.
 
-Agenda, manutenção de Doutores, Caixa, usuários/permissões locais e orçamento com seleção dentária estão implementados neste recorte. Prontuário, procedimentos realizados, pagamentos integrados, anexos, relatórios financeiros e Acesso real continuam pendentes. A demonstração entra por Orçamentos; o destino Agenda após login descrito pela especificação depende do Acesso integrado.
+Painel, Agenda, manutenção de Doutores, Caixa, usuários/permissões locais e orçamento com seleção dentária estão implementados neste recorte. Prontuário, procedimentos realizados, pagamentos integrados, anexos, relatórios financeiros e Acesso real continuam pendentes. A demonstração entra pelo Painel por solicitação do usuário; o destino Agenda após login descrito pela especificação depende do Acesso integrado e de sua definição de permissões.
 
 ## Fontes e autoridade
 
 O planejamento aprovado parte dos artefatos do repositório independente `documentos`: `1_SPC/c_design/dental_flow_ap_clinic_SPC_design.md` e `0_Context/b_brief/dental_flow_ap_clinic_SPC_frontend_brief.xlsx`.
 
-A planilha atual tem registros consolidados e derivados; trechos do Markdown ainda descrevem o modelo anterior vazio. Essa divergência não foi corrigida neste recorte. Na revisão de Pacientes, foram comparados o design (linhas 478–530, 1027–1030) e as células atuais `Requisitos Funcionais!C13:G18`, `Conteúdo das Páginas!E32/E34` e `Tom de Voz!B9/D9`. `Identificação do Projeto!B18/B30` confirma a versão preenchida e preserva a falta de aprovação clínica; as stories continuam derivadas e sujeitas à validação. Nesta continuação o usuário confirmou os campos mínimos, as duas dentições, as situações de consulta e os quatro perfis apenas como convenções do protótipo. Horários de expediente, pagamentos e matriz de permissões não foram promovidos a regras aprovadas. Os requisitos registrados na documentação não equivalem a cobertura integral por esta demonstração.
+A planilha atual tem registros consolidados e derivados; trechos do Markdown ainda descrevem o modelo anterior vazio. Essa divergência não foi corrigida neste recorte. Na revisão de Pacientes, foram comparados o design (linhas 478–530, 1027–1030) e as células atuais `Requisitos Funcionais!C13:G18`, `Conteúdo das Páginas!E32/E34` e `Tom de Voz!B9/D9`. `Identificação do Projeto!B18/B30` confirma a versão preenchida e preserva a falta de aprovação clínica; as stories continuam derivadas e sujeitas à validação. Nesta continuação o usuário confirmou os campos mínimos, as duas dentições, as situações de consulta e os quatro perfis apenas como convenções do protótipo. O Dashboard foi solicitado posteriormente pelo usuário; seu resumo deriva dos dados já existentes, sem acrescentar regras comerciais. Horários de expediente, pagamentos e matriz de permissões não foram promovidos a regras aprovadas. Os requisitos registrados na documentação não equivalem a cobertura integral por esta demonstração.

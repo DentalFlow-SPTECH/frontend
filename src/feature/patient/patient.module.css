@@ -24,6 +24,8 @@
 .full { grid-column: 1 / -1; }
 .sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .sectionHeading h2 { margin-bottom: 0; }
+.sectionHeading { flex-wrap: wrap; }
+.relatedActions { display: flex; gap: 8px; flex-wrap: wrap; }
 .budgetList { list-style: none; padding: 0; margin: 0; }
 .budgetList li { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 16px; border-top: 1px solid var(--line); padding-block: 10px; font-size: 14px; }
 .budgetList a { min-height: 44px; display: inline-flex; align-items: center; }

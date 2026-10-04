@@ -39,6 +39,7 @@ export function AgendaPage() {
   const { data } = useDemo();
   const resource = useResource('agenda');
   const [params, setParams] = useSearchParams();
+  const [showWeekGrid, setShowWeekGrid] = useState(false);
   const selectedDate = validDate(params.get('date') ?? '') ? params.get('date')! : today();
   const view = params.get('view') === 'month' ? 'month' : 'week';
   const doctorId = data.doctors.some(value => value.id === params.get('doutor')) ? params.get('doutor')! : '';
@@ -53,7 +54,7 @@ export function AgendaPage() {
   const period = view === 'week' ? `${dateLabel(days[0])} a ${dateLabel(days[6])}` : new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(parseDate(selectedDate));
   function goTo(date: string, nextView = view) { setParams({ date, view: nextView, ...(doctorId ? { doutor: doctorId } : {}) }); }
   return <>
-    <PageHeader title="Agenda" description="Consultas e atendimentos da clínica." action={<ActionLink to={newAppointment}>Nova consulta</ActionLink>} />
+    <PageHeader title="Agenda" description="Escolha uma data para consultar os atendimentos ou agendar uma consulta." action={<ActionLink to={newAppointment}>Agendar consulta</ActionLink>} />
     <div className={styles.toolbar}>
       <div className={styles.periodControls}>
         <div className={styles.navigation}><Button variant="secondary" aria-label={view === 'week' ? 'Semana anterior' : 'Mês anterior'} onClick={() => goTo(view === 'week' ? shiftDate(selectedDate, -7) : shiftMonth(selectedDate, -1))}>←</Button><Button variant="secondary" onClick={() => goTo(today())}>Hoje</Button><Button variant="secondary" aria-label={view === 'week' ? 'Próxima semana' : 'Próximo mês'} onClick={() => goTo(view === 'week' ? shiftDate(selectedDate, 7) : shiftMonth(selectedDate, 1))}>→</Button></div>
@@ -64,7 +65,13 @@ export function AgendaPage() {
     </div>
     <div className={styles.periodHeading}><h2>{period}</h2>{!resource.busy && !resource.error && <p role="status">{periodAppointments.length} {periodAppointments.length === 1 ? 'consulta' : 'consultas'}</p>}</div>
     {resource.busy ? <LoadingState /> : resource.error ? <ReadError message={resource.error} retry={resource.retry} /> : view === 'week' ? <>
-      <div className={styles.calendarScroll} role="region" aria-label="Agenda semanal, dias e horários" tabIndex={0}>
+      <section className={styles.mobileWeek} aria-labelledby="agenda_mobile_day">
+        <div className={styles.weekDayPicker} role="group" aria-label="Escolher dia da semana">{days.map((day, index) => <Button key={day} variant={day === selectedDate ? 'primary' : 'secondary'} aria-pressed={day === selectedDate} aria-label={`Ver consultas de ${dateLabel(day)}`} onClick={() => goTo(day)}>{weekdays[index]} {dateLabel(day).slice(0, 5)}</Button>)}</div>
+        <div className={styles.dayHeading}><h2 id="agenda_mobile_day">Consultas de {dateLabel(selectedDate)}</h2><ActionLink variant="secondary" to={newAppointment}>Agendar neste dia</ActionLink></div>
+        {selectedAppointments.length ? <div className={styles.dayAppointments}>{selectedAppointments.map(appointment => <AppointmentCard key={appointment.id} appointment={appointment} search={search} />)}</div> : <p className={uiStyles.muted}>Nenhuma consulta cadastrada para este dia.</p>}
+        <Button variant="quiet" aria-expanded={showWeekGrid} aria-controls="agenda_week_grid" onClick={() => setShowWeekGrid(value => !value)}>{showWeekGrid ? 'Ocultar grade de horários' : 'Ver grade de horários da semana'}</Button>
+      </section>
+      <div id="agenda_week_grid" className={`${styles.calendarScroll} ${showWeekGrid ? styles.revealed : ''}`} role="region" aria-label="Agenda semanal, dias e horários" tabIndex={0}>
         <table className={styles.weekTable}><caption className={styles.hidden}>Consultas da semana de {period}. Os horários exibidos correspondem às consultas cadastradas.</caption><thead><tr><th scope="col">Horário</th>{days.map((day, index) => <th scope="col" key={day} className={day === today() ? styles.currentDay : undefined}><Link to={`/agenda/nova?date=${day}&view=week${doctorSearch}`} aria-label={`Agendar em ${dateLabel(day)}`}><span>{weekdays[index]}</span><strong>{dateLabel(day).slice(0, 5)}</strong></Link></th>)}</tr></thead><tbody>{times.length ? times.map(time => <tr key={time}><th scope="row">{time}</th>{days.map(day => {
         const appointments = periodAppointments.filter(value => value.date === day && value.time === time);
         return <td key={day}>{appointments.map(appointment => <AppointmentCard key={appointment.id} appointment={appointment} search={search} />)}<Link className={styles.addSlot} to={`/agenda/nova?date=${day}&time=${time}&view=week${doctorSearch}`} aria-label={`Agendar em ${dateLabel(day)} às ${time}`}>+ Nova consulta</Link></td>;

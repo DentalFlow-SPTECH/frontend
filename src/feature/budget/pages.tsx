@@ -20,18 +20,21 @@ export function BudgetListPage() {
   const { data } = useDemo();
   const resource = useResource('budgets');
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState('');
+  const search = searchParams.get('q') ?? '';
   const patient = data.patients.find(value => value.id === searchParams.get('paciente')) ?? data.patients[0];
   const matches = data.patients.filter(value => normalize(`${value.name} ${value.code}`).includes(normalize(search)));
   const budgets = data.budgets.filter(value => value.patientId === patient?.id).sort((a, b) => b.createdOn.localeCompare(a.createdOn));
-  const newRoute = `/orcamentos/novo?paciente=${patient?.id ?? ''}`;
+  const context = new URLSearchParams({ ...(patient ? { paciente: patient.id } : {}), ...(search ? { q: search } : {}) });
+  const newRoute = `/orcamentos/novo?${context}`;
+  function searchPatient(value: string) { const next = new URLSearchParams(searchParams); if (value) next.set('q', value); else next.delete('q'); setSearchParams(next, { replace: true }); }
+  function selectPatient(id: string) { setSearchParams({ paciente: id, ...(search ? { q: search } : {}) }); }
   return <>
-    <PageHeader title="Orçamentos" action={<ActionLink to={newRoute}>Novo orçamento</ActionLink>} />
-    {resource.busy ? <LoadingState /> : resource.error ? <Feedback tone="error" title="Não foi possível carregar"><p>{resource.error}</p><Button variant="secondary" onClick={resource.retry}>Tentar novamente</Button></Feedback> : <div className={styles.workspace}>
-      <div className={styles.mobilePatientPicker}><Field id="budget_patient_picker" label="Paciente"><select value={patient?.id ?? ''} onChange={event => setSearchParams({ paciente: event.target.value })}>{data.patients.map(value => <option key={value.id} value={value.id}>{value.name}</option>)}</select></Field></div>
+    <PageHeader title="Orçamentos" description="Escolha o paciente para consultar ou criar seu orçamento." action={patient && <ActionLink to={newRoute}>Novo orçamento</ActionLink>} />
+    {resource.busy ? <LoadingState /> : resource.error ? <Feedback tone="error" title="Não foi possível carregar"><p>{resource.error}</p><Button variant="secondary" onClick={resource.retry}>Tentar novamente</Button></Feedback> : !data.patients.length ? <EmptyState title="Cadastre um paciente para começar" detail="O orçamento precisa estar vinculado a um paciente. Depois do cadastro, escolha Criar orçamento." action={<ActionLink to="/pacientes/novo">Cadastrar paciente</ActionLink>} /> : <div className={styles.workspace}>
+      <div className={styles.mobilePatientPicker}><Field id="budget_mobile_patient_search" label="Buscar paciente"><input type="search" placeholder="Nome ou código" value={search} onChange={event => searchPatient(event.target.value)} /></Field><Field id="budget_patient_picker" label="Paciente" hint={search && !matches.length ? 'Nenhum paciente encontrado. Limpe a busca para escolher outro.' : undefined}><select value={patient?.id ?? ''} onChange={event => selectPatient(event.target.value)}>{patient && !matches.some(value => value.id === patient.id) && <option value={patient.id}>{patient.name} — selecionado</option>}{matches.map(value => <option key={value.id} value={value.id}>{value.name}</option>)}</select></Field>{search && <Button variant="quiet" onClick={() => searchPatient('')}>Limpar busca</Button>}</div>
       <aside className={styles.patientPicker} aria-label="Seleção de paciente">
-        <Field id="budget_patient_search" label="Buscar paciente"><input type="search" placeholder="Nome ou código" value={search} onChange={event => setSearch(event.target.value)} /></Field>
-        {matches.length ? <ul className={styles.patientList}>{matches.map(value => <li key={value.id}><button type="button" aria-pressed={patient?.id === value.id} className={`${styles.patientOption} ${patient?.id === value.id ? styles.patientSelected : ''}`} onClick={() => setSearchParams({ paciente: value.id })}><span>{value.name}</span><small>{value.code}</small></button></li>)}</ul> : <div className={styles.searchEmpty}><p>Nenhum paciente encontrado.</p><Button variant="quiet" onClick={() => setSearch('')}>Limpar busca</Button></div>}
+        <Field id="budget_patient_search" label="Buscar paciente"><input type="search" placeholder="Nome ou código" value={search} onChange={event => searchPatient(event.target.value)} /></Field>
+        {matches.length ? <ul className={styles.patientList}>{matches.map(value => <li key={value.id}><button type="button" aria-pressed={patient?.id === value.id} className={`${styles.patientOption} ${patient?.id === value.id ? styles.patientSelected : ''}`} onClick={() => selectPatient(value.id)}><span>{value.name}</span><small>{value.code}</small></button></li>)}</ul> : <div className={styles.searchEmpty}><p>Nenhum paciente encontrado.</p><Button variant="quiet" onClick={() => searchPatient('')}>Limpar busca</Button></div>}
         <Link className={styles.allPatients} to="/pacientes">Consultar pacientes</Link>
       </aside>
       <section className={styles.records} aria-label="Orçamentos do paciente selecionado">
@@ -42,14 +45,14 @@ export function BudgetListPage() {
             <caption className={styles.visuallyHidden}>Orçamentos de {patient?.name}</caption>
             <thead><tr><th scope="col">Orçamento / emissão</th><th scope="col">Doutor</th><th scope="col">Situação</th><th scope="col" className={uiStyles.numeric}>Total</th></tr></thead>
             <tbody>{budgets.map(budget => <tr key={budget.id}>
-              <th scope="row"><Link to={`/orcamentos/${budget.id}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><span className={styles.rowDate}>{dateLabel(budget.createdOn)}</span></th>
+              <th scope="row"><Link to={`/orcamentos/${budget.id}${search ? `?q=${encodeURIComponent(search)}` : ''}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><span className={styles.rowDate}>{dateLabel(budget.createdOn)}</span></th>
               <td>{data.doctors.find(value => value.id === budget.doctorId)?.name ?? 'Não informado'}</td>
               <td>{budget.local ? <><span aria-hidden="true">—</span><span className={styles.visuallyHidden}>Situação não definida</span></> : <StatusLabel>{budget.statusLabel}</StatusLabel>}</td>
               <td className={uiStyles.numeric}><strong>{money(budgetTotal(budget.items))}</strong><span className={styles.scenarioLabel}>{budget.items.length} {budget.items.length === 1 ? 'item' : 'itens'}</span></td>
             </tr>)}</tbody>
           </table>
           <ul className={styles.mobileBudgets}>{budgets.map(budget => <li key={budget.id}>
-            <div className={styles.mobileBudgetTop}><Link to={`/orcamentos/${budget.id}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><strong>{money(budgetTotal(budget.items))}</strong></div>
+            <div className={styles.mobileBudgetTop}><Link to={`/orcamentos/${budget.id}${search ? `?q=${encodeURIComponent(search)}` : ''}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><strong>{money(budgetTotal(budget.items))}</strong></div>
             <dl><div><dt>Emissão</dt><dd>{dateLabel(budget.createdOn)}</dd></div><div><dt>Doutor</dt><dd>{data.doctors.find(value => value.id === budget.doctorId)?.name}</dd></div><div><dt>Situação</dt><dd>{budget.local ? <><span aria-hidden="true">—</span><span className={styles.visuallyHidden}>Situação não definida</span></> : <StatusLabel>{budget.statusLabel}</StatusLabel>}</dd></div></dl>
           </li>)}</ul>
         </> : <EmptyState title="Ainda não há orçamentos" detail={`Crie o primeiro orçamento de ${patient?.name ?? 'este paciente'}.`} action={<ActionLink to={newRoute}>Criar primeiro orçamento</ActionLink>} />}
@@ -155,14 +158,14 @@ function BudgetEditor({ id }: { id?: string }) {
       const updated = makeDraft(saved, saved.patientId);
       setDraft(updated); setBaseline(JSON.stringify(updated));
       setSavedMessage('Orçamento salvo.');
-      if (!id) setTarget(`/orcamentos/${saved.id}?salvo=1`);
+      if (!id) setTarget(`/orcamentos/${saved.id}?salvo=1${searchParams.get('q') ? `&q=${encodeURIComponent(searchParams.get('q')!)}` : ''}`);
     } catch (reason) { setSaveError(reason instanceof Error ? reason.message : 'Não foi possível salvar. Seu preenchimento foi mantido.'); requestAnimationFrame(() => feedbackRef.current?.focus()); }
     finally { setSaving(false); }
   }
 
   const savedOnArrival = searchParams.get('salvo') === '1' && !dirty;
   return <>
-    <Link className={uiStyles.back} to={`/orcamentos?paciente=${draft.patientId}`}>← Orçamentos do paciente</Link>
+    <Link className={uiStyles.back} to={`/orcamentos?paciente=${draft.patientId}${searchParams.get('q') ? `&q=${encodeURIComponent(searchParams.get('q')!)}` : ''}`}>← Orçamentos do paciente</Link>
     <PageHeader title={source ? `Orçamento ${source.code}` : 'Novo orçamento'} action={source && !source.local && <StatusLabel>{source.statusLabel}</StatusLabel>} />
     {resource.busy ? <LoadingState /> : resource.error ? <Feedback tone="error" title="Não foi possível carregar"><p>{resource.error}</p>{dirty && <p>Seu preenchimento continua preservado.</p>}<Button variant="secondary" onClick={resource.retry}>Tentar novamente</Button></Feedback> : id && !source ? <EmptyState title="Orçamento não encontrado" detail="Este orçamento não está disponível." action={<ActionLink to="/orcamentos">Voltar aos orçamentos</ActionLink>} /> : <>
       {patient && <PatientContext patient={patient} />}

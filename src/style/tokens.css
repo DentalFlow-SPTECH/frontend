@@ -1,5 +1,5 @@
 :root {
-  --ink: #01101f; --nav: #01101f; --accent: #1ed8cf; --primary: #1c7675;
+  --ink: #01101f; --nav: #01101f; --accent: #1ed8cf; --primary: #145453;
   --paper: #ffffff; --canvas: #f5f8f7; --muted: #35484e; --line: #d8e2df; --control-line: #65797d;
   --success: #176545; --success-bg: #edf6f0; --warning: #875800; --warning-bg: #fff5da; --error: #a13636; --error-bg: #fff1ef;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px; --space-12: 48px;

@@ -68,7 +68,7 @@ test('busca de pacientes conserva o filtro no detalhe, cadastro e retorno', asyn
   await expect(page.locator('main h1')).toHaveText('Marina Albuquerque');
   await page.getByRole('link', { name: /Voltar aos pacientes/ }).click();
   await expect(page.getByLabel('Buscar paciente', { exact: true })).toHaveValue('Marina');
-  await page.getByRole('link', { name: 'Novo paciente', exact: true }).click();
+  await page.getByRole('link', { name: 'Cadastrar paciente', exact: true }).click();
   await expect(page.locator('#patient_name')).toBeVisible();
   await page.getByRole('link', { name: /Voltar aos pacientes/ }).click();
   await expect(page.getByLabel('Buscar paciente', { exact: true })).toHaveValue('Marina');
@@ -303,7 +303,7 @@ test('lista vazia orienta novo cadastro e rotas sem paciente oferecem retorno', 
   await page.addInitScript(({ key, data }) => localStorage.setItem(key, JSON.stringify(data)), { key: storageKey, data: empty });
   await open(page);
   await expect(page.getByRole('heading', { name: /Nenhum paciente|Ainda não há pacientes/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Novo paciente', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Cadastrar paciente', exact: true })).toBeVisible();
   for (const route of ['/pacientes/sem-registro', '/pacientes/sem-registro/editar']) {
     await open(page, route);
     await expect(page.getByRole('heading', { name: 'Paciente não encontrado', exact: true })).toBeVisible();

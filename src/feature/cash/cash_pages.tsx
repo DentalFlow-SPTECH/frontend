@@ -42,14 +42,14 @@ export function CashPage() {
       <div className={styles.sectionHeading}><h2 id="cash_filters">Consultar movimentações</h2>{params.size > 0 && <Button variant="quiet" onClick={() => setParams({})}>Limpar filtros</Button>}</div>
       <div className={styles.filters}>
         <Field id="cash_from" label="Data inicial"><input type="date" value={from} onChange={event => filter('de', event.target.value)} /></Field>
-        <Field id="cash_until" label="Data final"><input type="date" value={until} onChange={event => filter('ate', event.target.value)} /></Field>
+        <Field id="cash_until" label="Data final" error={invalidPeriod ? 'Escolha uma data igual ou posterior à data inicial.' : undefined}><input type="date" value={until} onChange={event => filter('ate', event.target.value)} /></Field>
         <Field id="cash_type_filter" label="Tipo de movimentação"><select value={type} onChange={event => filter('tipo', event.target.value)}><option value="">Entradas e saídas</option><option value="Entrada">Entradas</option><option value="Saída">Saídas</option></select></Field>
         <Field id="cash_category_filter" label="Filtrar por categoria"><input type="search" value={category} onChange={event => filter('categoria', event.target.value)} placeholder="Categoria informada" /></Field>
         <Field id="cash_payment_filter" label="Filtrar por forma de pagamento"><input type="search" value={paymentMethod} onChange={event => filter('forma', event.target.value)} placeholder="Forma informada" /></Field>
       </div>
-      {invalidPeriod && <div className={styles.periodFeedback}><Feedback tone="warning">A data final deve ser igual ou posterior à data inicial.</Feedback></div>}
+      {invalidPeriod && <div className={styles.periodFeedback}><Feedback tone="error">A data final deve ser igual ou posterior à data inicial. Corrija o período para consultar as movimentações e os totais.</Feedback></div>}
     </section>
-    {resource.busy ? <LoadingState /> : resource.error ? <ReadError message={resource.error} retry={resource.retry} /> : <>
+    {resource.busy ? <LoadingState /> : resource.error ? <ReadError message={resource.error} retry={resource.retry} /> : invalidPeriod ? null : <>
       <dl className={styles.summary} aria-label="Totais das movimentações exibidas">
         <div><dt>Entradas</dt><dd>{money(entries)}</dd></div>
         <div><dt>Saídas</dt><dd>{money(exits)}</dd></div>

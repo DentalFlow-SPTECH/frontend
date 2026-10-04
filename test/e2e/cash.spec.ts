@@ -183,7 +183,11 @@ test('período, tipo, categoria e forma de pagamento filtram resultados e seus t
   await totals(page, 130000, 45000);
   await page.getByLabel('Data inicial', { exact: true }).fill('2026-10-03');
   await page.getByLabel('Data final', { exact: true }).fill('2026-10-01');
-  await expect(page.getByText('A data final deve ser igual ou posterior à data inicial.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('A data final deve ser igual ou posterior à data inicial.');
+  await expect(page.getByLabel('Totais das movimentações exibidas')).toHaveCount(0);
+  await expect(page.locator('#cash_until')).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('#cash_until').fill('2026-10-31');
+  await totals(page, 0, 20000);
 });
 
 test('carregamento e falha de leitura não apagam filtros nem preenchimento do caixa', async ({ page }) => {

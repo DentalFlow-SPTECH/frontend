@@ -1,4 +1,4 @@
-import { createHashRouter, Navigate } from 'react-router-dom';
+import { createHashRouter, Navigate, useLocation } from 'react-router-dom';
 import { AppShell, NotFoundPage, RouteErrorPage } from './app_shell';
 import { PatientDetailPage, PatientFormPage, PatientListPage } from '../feature/patient/patient_page';
 import { BudgetEditorPage, BudgetListPage } from '../feature/budget/pages';
@@ -8,8 +8,12 @@ import { AgendaPage, AppointmentDetailPage, AppointmentFormPage } from '../featu
 import { CashDetailPage, CashFormPage, CashPage } from '../feature/cash/cash_pages';
 import { DoctorDetailPage, DoctorFormPage, DoctorListPage } from '../feature/doctor/doctor_pages';
 import { AdminPage, UserDetailPage, UserFormPage } from '../feature/admin/admin_pages';
+import { DashboardPage } from '../feature/dashboard/dashboard_page';
+function LegacyDashboardRoute() { const { search } = useLocation(); return <Navigate to={`/painel${search}`} replace />; }
 export const router = createHashRouter([{ element: <AppShell />, errorElement: <RouteErrorPage />, children: [
-  { index: true, element: <Navigate to="/orcamentos" replace /> },
+  { index: true, element: <Navigate to="/painel" replace /> },
+  { path: 'painel', element: <DashboardPage /> },
+  { path: 'dashboard', element: <LegacyDashboardRoute /> },
   { path: 'orcamentos', element: <BudgetListPage /> },
   { path: 'orcamentos/novo', element: <BudgetEditorPage /> },
   { path: 'orcamentos/:id', element: <BudgetEditorPage /> },

@@ -36,6 +36,7 @@ async function noOverflow(page: Page) { expect(await page.evaluate(() => documen
 test('agenda vazia mantém semana, navegação temporal e mês completo', async ({ page }) => {
   await open(page);
   await expect(page.getByRole('heading', { name: 'Nenhuma consulta nesta semana' })).toBeVisible();
+  if ((page.viewportSize()?.width ?? 0) < 768) await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
   await expect(page.getByRole('link', { name: 'Agendar em 28/09/2026', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Próxima semana' }).click();
   await expect(page.locator('#agenda_date')).toHaveValue('2026-10-09');
@@ -181,6 +182,7 @@ test('filtro de doutor e cadastro por horário preservam contexto', async ({ pag
   await expect(page.locator('#agenda_doctor')).toHaveValue('d1');
   await expect(page.getByRole('link', { name: /Marina Albuquerque/ }).filter({ visible: true })).toBeVisible();
   await expect(page.getByRole('link', { name: /Rafael Nogueira/ }).filter({ visible: true })).toHaveCount(0);
+  if ((page.viewportSize()?.width ?? 0) < 768) await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
   await page.getByRole('link', { name: 'Agendar em 03/10/2026 às 09:00', exact: true }).click();
   await expect(page.locator('#appointment_date')).toHaveValue('2026-10-03');
   await expect(page.locator('#appointment_time')).toHaveValue('09:00');

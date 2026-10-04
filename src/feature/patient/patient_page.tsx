@@ -34,7 +34,7 @@ export function PatientListPage() {
     return textMatch || (/^[\d\s().+\-]+$/.test(query) && digits.length > 0 && [patient.cpf, patient.phone, patient.mobile].some(value => value.replace(/\D/g, '').includes(digits)));
   });
   return <>
-    <PageHeader title="Pacientes" action={<ActionLink to={`/pacientes/novo${search}`}>Novo paciente</ActionLink>} />
+    <PageHeader title="Pacientes" description="Consulte os cadastros ou adicione um paciente para agendar e criar orçamentos." action={<ActionLink to={`/pacientes/novo${search}`}>Cadastrar paciente</ActionLink>} />
     {contextPatient && <div className={styles.context}><Button variant="quiet" onClick={() => setParams({})}>Ver todos os pacientes</Button></div>}
     <div className={styles.search}><Field id="patient_search" label="Buscar paciente"><input type="search" value={query} onChange={event => setParams(event.target.value ? { q: event.target.value } : {}, { replace: true })} placeholder="Nome, CPF, código ou telefone" /></Field>{!busy && !error && <p role="status">{filtered.length} {filtered.length === 1 ? 'paciente' : 'pacientes'}</p>}</div>
     {busy ? <LoadingState /> : error ? <ReadError message={error} retry={retry} /> : filtered.length ? <ul className={styles.list}>{filtered.map(patient => <li key={patient.id}>
@@ -62,7 +62,7 @@ export function PatientDetailPage() {
       const filled = group.keys.filter(key => key !== 'name' && patient[key]);
       return filled.length > 0 && <section key={group.title} className={styles.detailSection} aria-label={group.title}><h2>{group.title}</h2><dl className={styles.definition}>{filled.map(key => <div key={key} className={key === 'observation' ? styles.full : undefined}><dt>{patientFieldLabels[key]}</dt><dd>{key === 'birthDate' ? dateLabel(patient[key]) : patient[key]}</dd></div>)}</dl></section>;
     })}
-    <section className={styles.detailSection} aria-labelledby="patient_budgets"><div className={styles.sectionHeading}><h2 id="patient_budgets">Orçamentos</h2><ActionLink variant="secondary" to={`/orcamentos?paciente=${patient.id}`}>Ver orçamentos</ActionLink></div>
+    <section className={styles.detailSection} aria-labelledby="patient_budgets"><div className={styles.sectionHeading}><h2 id="patient_budgets">Orçamentos</h2><div className={styles.relatedActions}><ActionLink to={`/orcamentos/novo?paciente=${patient.id}`}>Criar orçamento</ActionLink><ActionLink variant="secondary" to={`/orcamentos?paciente=${patient.id}`}>Ver orçamentos</ActionLink></div></div>
       {budgets.length ? <ul className={styles.budgetList}>{budgets.map(budget => <li key={budget.id}><Link to={`/orcamentos/${budget.id}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><time dateTime={budget.createdOn}>{dateLabel(budget.createdOn)}</time><strong>{money(budgetTotal(budget.items))}</strong></li>)}</ul> : <p className={uiStyles.muted}>Ainda não há orçamentos para este paciente.</p>}
     </section>
     {patient.history.length > 0 && <section className={styles.detailSection} aria-labelledby="patient_history"><h2 id="patient_history">Histórico cadastral</h2><HistoryList entries={patient.history} /></section>}
@@ -105,7 +105,7 @@ function PatientForm({ id }: { id?: string }) {
   if (saved) return <>
     <PageHeader title={id ? 'Cadastro atualizado' : 'Paciente cadastrado'} />
     <Feedback tone="success">{saved.name} {id ? 'teve o cadastro salvo.' : 'está disponível para criar orçamentos.'}</Feedback>
-    <div className={uiStyles.formActions}><ActionLink to={`/pacientes/${saved.id}${search}`}>Ver paciente</ActionLink><ActionLink variant="secondary" to={`/orcamentos?paciente=${saved.id}`}>Ver orçamentos</ActionLink><ActionLink variant="quiet" to={`/pacientes${search}`}>Voltar aos pacientes</ActionLink></div>
+    <div className={uiStyles.formActions}><ActionLink to={`/pacientes/${saved.id}${search}`}>Ver paciente</ActionLink><ActionLink variant="secondary" to={`/orcamentos/novo?paciente=${saved.id}`}>Criar orçamento</ActionLink><ActionLink variant="secondary" to={`/orcamentos?paciente=${saved.id}`}>Ver orçamentos</ActionLink><ActionLink variant="quiet" to={`/pacientes${search}`}>Voltar aos pacientes</ActionLink></div>
   </>;
   if (resource.busy) return <LoadingState />;
   if (resource.error) return <ReadError message={resource.error} retry={resource.retry} />;
@@ -120,7 +120,7 @@ function PatientForm({ id }: { id?: string }) {
       {groups.map(group => <fieldset key={group.title} className={styles.formSection} disabled={saving}><legend>{group.title}</legend><div className={uiStyles.formGrid}>
         {group.keys.map(key => <div key={key} className={key === 'name' || key === 'street' || key === 'observation' || key === 'emergencyContact' ? uiStyles.full : undefined}>
           <Field id={`patient_${key}`} label={`${patientFieldLabels[key]} (${key === 'name' ? 'obrigatório' : 'opcional'})`} error={key === 'name' ? nameError : undefined}>
-            {key === 'observation' ? <textarea rows={3} value={fields[key]} onChange={event => change(key, event.target.value)} /> : <input type={key === 'birthDate' ? 'date' : key === 'phone' || key === 'mobile' ? 'tel' : key === 'email' ? 'email' : 'text'} required={key === 'name'} value={fields[key]} onChange={event => change(key, event.target.value)} />}
+            {key === 'observation' ? <textarea rows={3} value={fields[key]} onChange={event => change(key, event.target.value)} /> : <input type={key === 'birthDate' ? 'date' : key === 'phone' || key === 'mobile' ? 'tel' : key === 'email' ? 'email' : 'text'} autoComplete={({ name: 'name', birthDate: 'bday', phone: 'tel', mobile: 'tel', email: 'email', postalCode: 'postal-code', city: 'address-level2', state: 'address-level1' } as Partial<Record<keyof PatientInput, string>>)[key] ?? 'off'} required={key === 'name'} value={fields[key]} onChange={event => change(key, event.target.value)} />}
           </Field>
         </div>)}
       </div></fieldset>)}

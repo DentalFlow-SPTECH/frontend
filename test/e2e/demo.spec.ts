@@ -155,7 +155,7 @@ test('cadastro de material valida, conserva falha e persiste após recarregar', 
   await expect(page.getByRole('heading', { name: 'Material cadastrado', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Ver material', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Nenhuma movimentação registrada' })).toBeVisible();
-  await expect(page.getByText('Abaixo do mínimo', { exact: true })).toBeVisible();
+  await expect(page.getByText('Sem saldo', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Gaze de demonstração', exact: true })).toBeVisible();
   await expect(page.getByText('R$ 14,50', { exact: true })).toBeVisible();
@@ -239,8 +239,8 @@ test('dados locais ilegíveis têm recuperação explícita', async ({ page }) =
 test('endereço desconhecido oferece retorno e links com hash sobrevivem ao reload', async ({ page }) => {
   await open(page, '/nao-existe');
   await expect(page.getByRole('heading', { name: 'Página não encontrada' })).toBeVisible();
-  await page.getByRole('link', { name: 'Ir para orçamentos' }).click();
-  await expect(page.getByRole('heading', { name: 'Orçamentos', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Voltar ao Painel' }).click();
+  await expect(page.getByRole('heading', { name: 'Painel', exact: true })).toBeVisible();
   await open(page, '/estoque/s2');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Resina composta — cor A2' })).toBeVisible();

@@ -2,6 +2,9 @@
 .patientPicker { padding: 20px 0; border-top: 3px solid var(--ink); }
 .patientList { list-style: none; margin: 18px 0 0; padding: 0; }
 .mobilePatientPicker { display: none; }
+.mobilePatientPicker > * + * { margin-top: 12px; }
+.patientOption span, .patientContext > div, .itemHeading h3 { min-width: 0; overflow-wrap: anywhere; }
+.budgetTable :is(td, th), .mobileBudgets dd, .itemDetails dd { overflow-wrap: anywhere; }
 .patientList li { border-top: 1px solid var(--line); }
 .patientOption { width: 100%; text-align: left; background: transparent; border: 0; border-left: 3px solid transparent; padding: 16px 12px; min-height: 66px; color: var(--ink); }
 .patientOption span { display: block; font-size: 15px; font-weight: 500; }
