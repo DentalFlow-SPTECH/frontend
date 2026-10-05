@@ -9,8 +9,12 @@ import { CashDetailPage, CashFormPage, CashPage } from '../feature/cash/cash_pag
 import { DoctorDetailPage, DoctorFormPage, DoctorListPage } from '../feature/doctor/doctor_pages';
 import { AdminPage, UserDetailPage, UserFormPage } from '../feature/admin/admin_pages';
 import { DashboardPage } from '../feature/dashboard/dashboard_page';
+import { LoginPage, RegistrationPage } from '../feature/access/access_pages';
 function LegacyDashboardRoute() { const { search } = useLocation(); return <Navigate to={`/painel${search}`} replace />; }
-export const router = createHashRouter([{ element: <AppShell />, errorElement: <RouteErrorPage />, children: [
+export const router = createHashRouter([
+  { path: 'login', element: <LoginPage />, errorElement: <RouteErrorPage /> },
+  { path: 'cadastro', element: <RegistrationPage />, errorElement: <RouteErrorPage /> },
+  { element: <AppShell />, errorElement: <RouteErrorPage />, children: [
   { index: true, element: <Navigate to="/painel" replace /> },
   { path: 'painel', element: <DashboardPage /> },
   { path: 'dashboard', element: <LegacyDashboardRoute /> },

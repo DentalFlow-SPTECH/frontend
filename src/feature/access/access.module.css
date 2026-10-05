@@ -1,0 +1,31 @@
+.layout { min-height: 100dvh; display: grid; align-content: center; justify-items: center; padding: 40px 32px; position: relative; isolation: isolate; }
+.layout::before { content: ''; position: absolute; inset: 0 0 auto; height: clamp(192px, 38vh, 360px); background: var(--nav); z-index: -1; }
+.layout :is(button, a, input, select):focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.layout [tabindex="-1"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.panel { width: 100%; max-width: 448px; min-width: 0; border-radius: 12px; box-shadow: 0 16px 48px #01101f0d; }
+.brandHeader { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 36px; background: var(--nav); border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent); }
+.logo { display: block; width: 108px; height: auto; mix-blend-mode: lighten; }
+.brandContext { display: grid; justify-items: end; gap: 12px; color: #edf4f7; font-size: 14px; }
+.brandContext span { display: block; width: 32px; height: 2px; background: var(--accent); }
+.brandContext p { text-align: right; }
+.content { padding: 32px 36px 24px; background: var(--paper); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; }
+.form, .fields { display: grid; gap: 20px; min-width: 0; }
+.fields { padding: 0; border: 0; margin: 0; }
+.primaryAction { width: 100%; min-height: 48px; position: relative; padding-inline: 40px; }
+.forwardArrow { position: absolute; right: 16px; }
+.switchLink { border-radius: 0; border-top: 1px solid var(--line); padding-top: 16px; }
+.passwordField { position: relative; min-width: 0; }
+.passwordField input { padding-right: 100px; }
+.passwordToggle { position: absolute; right: 3px; top: 31px; min-height: 44px; padding: 8px 12px; font-size: 14px; }
+.reviewDialog { width: min(448px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; color: var(--ink); border: 1px solid var(--control-line); border-radius: var(--radius); }
+.reviewDialog::backdrop { background: #01101f60; }
+.reviewDialog h2 { font-size: 24px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 767px) {
+  .layout { padding: 24px 16px; align-content: start; }
+  .layout::before { height: 192px; }
+  .brandHeader { padding: 18px 24px; gap: 16px; }
+  .logo { width: 84px; }
+  .brandContext { font-size: 14px; gap: 10px; }
+  .content { padding: 28px 24px 20px; }
+}

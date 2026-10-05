@@ -25,6 +25,7 @@ O build fica em `dist/`. A prévia local abre em `http://127.0.0.1:4178/`.
 
 | Área | Operações disponíveis |
 | --- | --- |
+| Login e Cadastro | Rotas externas ao shell, validação e envio demonstrativo em memória; Login chega ao Painel, Cadastro oferece voltar ao Login com somente o e-mail preenchido. |
 | Painel | Selecionar o dia de referência; consultar totais cadastrais, consultas do dia, materiais abaixo do mínimo e orçamentos recentes; comparar entradas e saídas dos últimos seis meses; abrir cada registro e o Caixa com o período mensal selecionado. |
 | Agenda | Consultar semana ou mês e dia selecionado; navegar por período/data; filtrar doutor; agendar, editar e cancelar consultas; verificar conflitos de horário; consultar histórico e vínculos de paciente, doutor e orçamento. |
 | Orçamentos | Buscar/selecionar paciente; consultar orçamentos e histórico; criar e editar registros locais; adicionar, alterar e remover itens; associar procedimentos a dentes permanentes ou infantis e região/superfície; calcular os valores ilustrativos; guardar observações e condições em texto livre. |
@@ -54,6 +55,28 @@ As entradas de estoque somam a quantidade ao saldo local; as saídas subtraem e 
 - O odontograma permite alternar entre dentição permanente e infantil, conforme decisão do usuário. Dente e região/superfície são opcionais nos itens do orçamento.
 
 Essas convenções não definem moeda, precisão, arredondamento, limites comerciais ou custeio para o produto integrado. A proibição de saldo negativo está confirmada; as demais políticas de estoque continuam pendentes.
+
+### Login e Cadastro de conta — 05/10/2026
+
+`#/login` e `#/cadastro` são telas externas, sem a navegação lateral dos módulos. Reutilizam o logotipo original, IBM Plex Sans, cores, Field, botões, feedback e foco visível. O painel tem até 448 px e conserva margens em celular. A entrada global continua no Painel; `#/dashboard` continua redirecionando com a data conservada. Os módulos podem ser abertos diretamente: estas telas não implementam proteção de rotas ou segurança real.
+
+Login usa e-mail e senha como convenções de apresentação desta etapa. Qualquer e-mail no formato demonstrado e qualquer senha preenchida permitem executar o sucesso, sem consultar contas nem verificar credenciais. Cadastro pede nome completo, e-mail, senha e confirmação. Valida somente presença, formato de e-mail e igualdade das senhas; não há regra de tamanho/composição, unicidade, aprovação, CPF, CRO, clínica ou perfil. Essa validação não altera a Administração, onde somente nome continua obrigatório.
+
+Os formulários usam labels visíveis, ids/names e autocomplete: `username` (e-mail de login), `current-password`, `name`, `email` e `new-password`. O envio mostra andamento, bloqueia campos e botão e impede repetição, inclusive dois eventos antes da atualização da interface. Erros de campo ficam associados ao controle e o foco vai à primeira correção. Uma falha de envio recebe foco, conserva todos os campos e orienta tentar novamente. Mostrar/ocultar senha tem nome acessível e `aria-pressed`; colar e inserir senha continua permitido.
+
+O sucesso do Login anuncia a conclusão demonstrativa, limpa a senha da tela e abre `#/painel`. Cadastro substitui o formulário pela conclusão demonstrativa, limpa senha e confirmação e oferece **Ir para o login**. Esse retorno leva somente o e-mail pelo estado da navegação, sem colocá-lo no endereço; o e-mail pode permanecer no recarregamento dessa entrada do Login. Ao abrir um novo Cadastro, os campos começam vazios. Senhas e confirmações ficam somente no estado do formulário durante seu preenchimento; não são gravadas no armazenamento, histórico de navegação, arquivos ou logs. Não há tokens, contas persistidas, backend, endpoints, chamadas de autenticação ou envio de e-mail.
+
+A proteção de saída existente pede confirmação ao abandonar Cadastro com preenchimento; cancelar conserva os dados. Formulário vazio, mostrar/ocultar senha, abrir/fechar revisão e voltar ao Login após conclusão não pedem confirmação. No Login, alternar para Criar conta é uma ação rotineira e dispensa confirmação. Durante envio, a mesma proteção impede sair até a conclusão.
+
+**Ctrl + Alt + R** abre a revisão sobre cada tela externa, preservando os campos e devolvendo o foco ao fechar ou pressionar Escape. Ela oferece **Funcionamento normal**, **Envio lento** (2,2 s) e **Falha ao enviar**. No cenário de falha, enviar mostra a recuperação; selecione Funcionamento normal e envie novamente. O envio normal dura 650 ms; o Login anuncia sucesso por mais 500 ms antes de navegar. O cenário é memória compartilhada com os controles de revisão dos módulos, volta ao normal ao recarregar e fica bloqueado durante envio. As telas externas não oferecem restauração dos dados da clínica.
+
+Cadastro e Login não modificam usuários, permissões, auditoria, IDs, relações ou snapshots em `dental_flow_demo_v1`. Nenhuma conta recebe perfil Administrador. Cadastro demonstra a interface e sua conclusão; não cria uma identidade utilizável no produto. Recuperação, contrato de autenticação, sessão, mudança da entrada global e proteção dos módulos continuam para a integração de acesso.
+
+Os testes `test/e2e/access.spec.ts` cobrem rotas diretas/recarregamento, navegação, validações/foco, controles de senha, teclado, autocomplete, falha/repetição, envio duplicado, saída, conclusão, retorno com e-mail e sem senha, snapshots completos/antigos, axe, 375 px, reflow de 320 px, movimento reduzido e capturas sem credenciais. Os testes de acesso desativam traces e capturas automáticas de falha para não registrar o preenchimento. `test/e2e/access_zoom.spec.ts` mede zoom nativo de 200% em perfil isolado do Edge (largura CSS pela metade e DPR duplicado), com axe e overflow nas duas telas e seus erros.
+
+**Validação em 05/10/2026:** typecheck, build normal, build para Pages e `git diff --check` passaram. A suíte completa, com `$env:TEST_BASE_URL = 'http://127.0.0.1:4178/frontend/'` e `npm run test:e2e`, terminou em 6,6 minutos com **228 verificações aprovadas e duas dispensadas**: 197 regressões dos módulos e 31 verificações de acesso. As dispensas são o cenário exclusivo de agenda móvel no projeto desktop e o zoom nativo de desktop no projeto móvel. Não houve falhas pendentes. Foram conferidas capturas reais de Login e Cadastro em 1440 px e 375 px, reflow em 320 px, axe nos estados de preenchimento/validação/envio/falha/conclusão e zoom nativo de 200% (1440×960, DPR 1 → 720×480, DPR 2). Os snapshots antigos/completos permaneceram idênticos no armazenamento e não foram detectados erros de JavaScript ou chamadas de autenticação nas telas de acesso. Essa é evidência local com Edge/Playwright e axe; não é publicação, autenticação integrada ou teste com pessoas/leitor de tela/dispositivo físico. Nenhuma dependência foi acrescentada e nenhum teste existente foi alterado.
+
+**Revisão visual de acesso em 05/10/2026:** após o pedido de uma composição mais criativa, a marca passou a ocupar uma faixa azul escura integrada ao topo do formulário, com uma linha de cor da marca e o contexto “Acesso à clínica”. O logotipo original conserva seus pixels e proporções; a mistura de cor no CSS integra seu fundo à faixa, evitando a aparência de uma imagem quadrada solta. O fundo superior da página acompanha a marca, o formulário permanece limitado a 448 px e as ações principais receberam uma seta discreta. Os componentes, campos, foco, dados e fluxos demonstrativos continuam os mesmos. Foram repetidos typecheck, builds normal/Pages, diff check e os testes de acesso: **31 aprovados e uma dispensa intencional** do zoom de desktop no projeto móvel, com novas capturas em desktop e 375 px, axe, 320 px e zoom nativo de 200%. As regressões completas dos módulos pertencem à rodada anterior; não foram repetidas nesta alteração visual.
 
 ### Etapa de Pacientes
 
@@ -220,6 +243,7 @@ Referências: [Vite: hospedagem estática e GitHub Pages](https://vite.dev/guide
 ## Estrutura e estilos
 
 - `src/app`: rotas com hash, navegação e estrutura da aplicação.
+- `src/feature/access`: Login, Cadastro e estrutura externa; simulação somente em memória, sem relação com as contas da Administração.
 - `src/feature/dashboard`: resumo do dia, caixa mensal com comparação de seis meses, atenção ao estoque e orçamentos recentes.
 - `src/feature/budget`: lista e editor de orçamentos.
 - `src/feature/inventory`: lista, detalhe, cadastro, entrada e saída de estoque.
