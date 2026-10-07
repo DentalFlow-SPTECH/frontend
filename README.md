@@ -1,6 +1,18 @@
 # Dental Flow — frontend da clínica
 
-Aplicação React + Vite + TypeScript para apresentar **painel, agenda, pacientes, doutores, orçamentos, estoque, caixa e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
+Aplicação React + Vite + JavaScript/JSX, CSS Modules e MVVM para apresentar **painel, agenda, pacientes, doutores, orçamentos, estoque, caixa e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
+
+## Refatoração arquitetural — 06/10/2026
+
+O código, as configurações e os testes foram convertidos para JavaScript/JSX. TypeScript e o script `typecheck` foram retirados; resultados de typecheck nas seções históricas abaixo referem-se à implementação anterior. ESLint e testes oferecem verificações diferentes, sem substituir a garantia dos tipos.
+
+As operações de sete domínios estão em `src/feature/<module>/model` e `repository`; a sessão compartilhada e o adapter de snapshot estão em `src/data`. O provedor React em `src/app/app_provider.jsx` liga os dados à interface. Pacientes, Doutores, Estoque, Orçamentos, Agenda, Caixa, Administração, Acesso, Painel e Revisão têm Views e ViewModels separados. `src/demo/store.tsx` foi substituído e sua fachada temporária foi removida. Acesso e Painel possuem Models de validação/agregação; usam os dados compartilhados sem criar um Repository de gravação sem necessidade. Revisão controla a sessão demonstrativa pelo ViewModel.
+
+Views cuidam do JSX, CSS e foco; ViewModels concentram rascunhos, filtros, validação de preenchimento e comandos. Models de operações não importam React, DOM ou persistência. Repositories executam regras sobre o snapshot atual dentro da transação. ESLint verifica essas fronteiras. Os formulários de gravação bloqueiam dois envios antes da próxima renderização, e a sessão publica os dados somente após persistir com sucesso.
+
+Verificação atual: `npm run check` aprovado (lint, sete testes unitários e build); `npm run build:pages` aprovado. A regressão integrada do build final para Pages aprovou 230 testes, com dois cenários ignorados pela configuração, zero falhas, em 6,4 minutos. Inclui desktop, celular, axe, reflow 320 px e zoom de 200%. O plano explica os skips e os limites da prova. Resultados históricos abaixo não substituem esta evidência.
+
+O [plano e as evidências](../documentos/0_Context/c_delivery/dental_flow_ap_clinic_SPC_frontend_refactor.md) e a [arquitetura](../documentos/1_SPC/b_technical/dental_flow_ap_clinic_SPC_frontend_architecture.md) ficam no repositório irmão `documentos`. O [brain](../documentos/_brain/dental_flow_ap_clinic_SPC_index.md) permite retomar por assunto. Os links locais entre repositórios exigem os checkouts lado a lado; no GitHub, consulte o repositório de documentos correspondente.
 
 ## Executar localmente
 
@@ -14,7 +26,8 @@ npm run dev
 Abra `http://127.0.0.1:5178/`. A aplicação entra no Painel, também disponível diretamente em `#/painel`. As rotas usam hash, como `#/estoque`, para funcionar com recarregamento e acesso direto em hospedagem estática.
 
 ```powershell
-npm run typecheck
+npm run lint
+npm run test:unit
 npm run build
 npm run preview
 ```
@@ -72,7 +85,7 @@ A proteção de saída existente pede confirmação ao abandonar Cadastro com pr
 
 Cadastro e Login não modificam usuários, permissões, auditoria, IDs, relações ou snapshots em `dental_flow_demo_v1`. Nenhuma conta recebe perfil Administrador. Cadastro demonstra a interface e sua conclusão; não cria uma identidade utilizável no produto. Recuperação, contrato de autenticação, sessão, mudança da entrada global e proteção dos módulos continuam para a integração de acesso.
 
-Os testes `test/e2e/access.spec.ts` cobrem rotas diretas/recarregamento, navegação, validações/foco, controles de senha, teclado, autocomplete, falha/repetição, envio duplicado, saída, conclusão, retorno com e-mail e sem senha, snapshots completos/antigos, axe, 375 px, reflow de 320 px, movimento reduzido e capturas sem credenciais. Os testes de acesso desativam traces e capturas automáticas de falha para não registrar o preenchimento. `test/e2e/access_zoom.spec.ts` mede zoom nativo de 200% em perfil isolado do Edge (largura CSS pela metade e DPR duplicado), com axe e overflow nas duas telas e seus erros.
+Os testes `test/e2e/access.spec.js` cobrem rotas diretas/recarregamento, navegação, validações/foco, controles de senha, teclado, autocomplete, falha/repetição, envio duplicado, saída, conclusão, retorno com e-mail e sem senha, snapshots completos/antigos, axe, 375 px, reflow de 320 px, movimento reduzido e capturas sem credenciais. Os testes de acesso desativam traces e capturas automáticas de falha para não registrar o preenchimento. `test/e2e/access_zoom.spec.js` mede zoom nativo de 200% em perfil isolado do Edge (largura CSS pela metade e DPR duplicado), com axe e overflow nas duas telas e seus erros.
 
 **Validação em 05/10/2026:** typecheck, build normal, build para Pages e `git diff --check` passaram. A suíte completa, com `$env:TEST_BASE_URL = 'http://127.0.0.1:4178/frontend/'` e `npm run test:e2e`, terminou em 6,6 minutos com **228 verificações aprovadas e duas dispensadas**: 197 regressões dos módulos e 31 verificações de acesso. As dispensas são o cenário exclusivo de agenda móvel no projeto desktop e o zoom nativo de desktop no projeto móvel. Não houve falhas pendentes. Foram conferidas capturas reais de Login e Cadastro em 1440 px e 375 px, reflow em 320 px, axe nos estados de preenchimento/validação/envio/falha/conclusão e zoom nativo de 200% (1440×960, DPR 1 → 720×480, DPR 2). Os snapshots antigos/completos permaneceram idênticos no armazenamento e não foram detectados erros de JavaScript ou chamadas de autenticação nas telas de acesso. Essa é evidência local com Edge/Playwright e axe; não é publicação, autenticação integrada ou teste com pessoas/leitor de tela/dispositivo físico. Nenhuma dependência foi acrescentada e nenhum teste existente foi alterado.
 
@@ -150,7 +163,7 @@ Contrastes calculados na paleta utilizada: ação primária/branco **8,67:1**; t
 
 A revisão usa [UI/UX Design Review](https://github.com/rknall/claude-skills/blob/main/ui-design-review/SKILL.md), [UX Writing & Content Design](https://github.com/hueyexe/frontend-agent-skills/blob/main/ux-writing-content-design/SKILL.md), [Accessibility Compliance](https://github.com/wshobson/agents/blob/main/plugins/ui-design/skills/accessibility-compliance/SKILL.md), [Web Design Guidelines](https://github.com/vercel-labs/agent-skills/blob/main/skills/web-design-guidelines/SKILL.md) e suas [diretrizes atuais](https://github.com/vercel-labs/web-interface-guidelines/blob/main/command.md), [KPI Dashboard Design](https://github.com/wshobson/agents/blob/main/plugins/business-analytics/skills/kpi-dashboard-design/SKILL.md) e [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/). As decisões confirmadas para o Dental Flow têm prioridade sobre sugestões genéricas.
 
-`test/e2e/usability.spec.ts` acrescenta regressões para os defeitos acima e percorre **31 telas e variantes de consulta, cadastro, edição e revisão**, em desktop e 375 px, com axe, nomes longos sem espaços, ausência de erros de JavaScript e conservação do snapshot. Verifica também 320 px e área de layout de 720 px, correspondente à metade de um desktop de 1440 px para avaliar reflow equivalente a 200%. O teste de capturas gera os pares desktop/celular das 31 telas.
+`test/e2e/usability.spec.js` acrescenta regressões para os defeitos acima e percorre **31 telas e variantes de consulta, cadastro, edição e revisão**, em desktop e 375 px, com axe, nomes longos sem espaços, ausência de erros de JavaScript e conservação do snapshot. Verifica também 320 px e área de layout de 720 px, correspondente à metade de um desktop de 1440 px para avaliar reflow equivalente a 200%. O teste de capturas gera os pares desktop/celular das 31 telas.
 
 A execução final completa de `npm run test:e2e` terminou com **197 verificações aprovadas e uma dispensada**, em sete minutos, no servidor local de desenvolvimento com Microsoft Edge/Playwright. A dispensa é intencional: o fluxo da agenda móvel roda somente no projeto de 375 px. Não ficaram falhas pendentes. A varredura das 31 telas nos dois projetos não encontrou violações no axe, erros de JavaScript ou overflow da página nas larguras verificadas; também confirmou que a consulta das telas não altera o snapshot local.
 
@@ -254,7 +267,8 @@ Referências: [Vite: hospedagem estática e GitHub Pages](https://vite.dev/guide
 - `src/feature/admin`: usuários, permissões configuráveis, bloqueio/reativação e auditoria local.
 - `src/feature/review`: controles de teste, fora da navegação da clínica.
 - `src/component`: controles, feedback, carregamento e comportamento de formulários.
-- `src/demo`: modelos de apresentação, cenário inicial e armazenamento local. Não são contratos de API.
+- `src/demo`: cenário fictício, campos compatíveis, formatadores e fachada temporária; não são contratos de API.
+- `src/data`: sessão compartilhada, repositories e adapter de armazenamento local.
 - `src/asset/brand`: logotipo original, incorporado sem redesenho.
 - `src/style`: fontes locais IBM Plex Sans, normalização e tokens compartilhados.
 
