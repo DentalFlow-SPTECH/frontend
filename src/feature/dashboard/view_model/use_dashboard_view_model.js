@@ -25,7 +25,7 @@ export function useDashboardViewModel() {
     const weekCounts = weekDates.map(day => data.appointments.filter(appointment => appointment.date === day).length);
     const hasWeekAppointments = weekCounts.some(count => count > 0);
     const lowProducts = data.products.filter(product => product.quantity < product.minimum).sort((a, b) => Number(a.quantity !== 0) - Number(b.quantity !== 0) || a.name.localeCompare(b.name, 'pt-BR'));
-    const recentBudgets = [...data.budgets].sort((a, b) => b.createdOn.localeCompare(a.createdOn) || b.code.localeCompare(a.code)).slice(0, 5);
+    const recentBudgets = [...data.budgets].sort((a, b) => b.createdOn.localeCompare(a.createdOn) || b.code.localeCompare(a.code));
     const monthlyCash = data.cashMovements.filter(movement => movement.date >= period.from && movement.date <= period.until);
     const totals = cashTotals(monthlyCash);
     const cashPath = `/caixa?de=${period.from}&ate=${period.until}`;

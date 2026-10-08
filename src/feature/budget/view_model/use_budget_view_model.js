@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useResource } from '../../../component/use_resource.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
-import { budgetTotal, normalize, readMoney, moneyInput } from '../../../demo/format.js';
+import { usePagination } from '../../../component/use_pagination.js';
+import { budgetTotal, readMoney, moneyInput } from '../../../demo/format.js';
 import { useClinicData, useClinicRepository } from '../../../app/app_provider.jsx';
 import { makeDraft, itemValue, dateIsValid } from '../model/budget_model.js';
 import { allTeeth } from '../model/teeth.js';
@@ -12,12 +13,14 @@ export function useBudgetListViewModel() {
     const [searchParams, setSearchParams] = useSearchParams();
     const search = searchParams.get('q') ?? '';
     const patient = data.patients.find(value => value.id === searchParams.get('paciente')) ?? data.patients[0];
-    const matches = data.patients.filter(value => normalize(`${value.name} ${value.code}`).includes(normalize(search)));
     const budgets = data.budgets.filter(value => value.patientId === patient?.id).sort((a, b) => b.createdOn.localeCompare(a.createdOn));
-    const context = new URLSearchParams({ ...(patient ? { paciente: patient.id } : {}), ...(search ? { q: search } : {}) });
+    const context = new URLSearchParams(searchParams);
+    if (patient) context.set('paciente', patient.id);
+    const listSearch = context.size ? `?${context}` : '';
     const newRoute = `/orcamentos/novo?${context}`;
     function searchPatient(value) {
         const next = new URLSearchParams(searchParams);
+        next.delete('pagina');
         if (value)
             next.set('q', value);
         else
@@ -25,7 +28,7 @@ export function useBudgetListViewModel() {
         setSearchParams(next, { replace: true });
     }
     function selectPatient(id) { setSearchParams({ paciente: id, ...(search ? { q: search } : {}) }); }
-    return { data, resource, search, patient, matches, budgets, newRoute, searchPatient, selectPatient };
+    return { data, resource, search, patient, budgets, listSearch, newRoute, searchPatient, selectPatient };
 }
 export function useBudgetEditorViewModel({ id }) {
     const submissionLock = useRef(false);
@@ -38,6 +41,13 @@ export function useBudgetEditorViewModel({ id }) {
     const readonly = !!source && !source.local;
     const requestedPatient = data.patients.find(value => value.id === searchParams.get('paciente'))?.id ?? data.patients[0]?.id ?? '';
     const [draft, setDraft] = useState(() => makeDraft(source, requestedPatient));
+    const itemPagination = usePagination(draft.items.length);
+    const visibleItems = draft.items.slice(itemPagination.start, itemPagination.end);
+    const listContext = new URLSearchParams(searchParams);
+    listContext.delete('salvo');
+    listContext.set('paciente', draft.patientId);
+    if (source && source.patientId !== draft.patientId) listContext.delete('pagina');
+    const returnTo = `/orcamentos?${listContext}`;
     const [baseline, setBaseline] = useState(() => JSON.stringify(makeDraft(source, requestedPatient)));
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
@@ -67,6 +77,7 @@ export function useBudgetEditorViewModel({ id }) {
     }
     function addItem(tooth = '') {
         const itemId = crypto.randomUUID();
+        itemPagination.goTo(Math.floor(draft.items.length / itemPagination.pageSize));
         setDraft(current => ({ ...current, items: [...current.items, { id: itemId, procedure: '', quantity: '1', unitPrice: '', observation: '', tooth, surface: '' }] }));
         setSavedMessage('');
         setErrors(current => { const next = { ...current }; delete next.budget_items; return next; });
@@ -110,6 +121,9 @@ export function useBudgetEditorViewModel({ id }) {
         setSaveError('');
         setSavedMessage('');
         if (Object.keys(next).length) {
+            const invalidItem = draft.items.findIndex(item => Object.keys(next).some(key => key.startsWith(`item_${item.id}_`)));
+            if (Object.keys(next)[0].startsWith('item_') && invalidItem >= 0)
+                itemPagination.goTo(Math.floor(invalidItem / itemPagination.pageSize));
             return Object.keys(next)[0];
         }
         submissionLock.current = true;
@@ -122,8 +136,11 @@ export function useBudgetEditorViewModel({ id }) {
             setDraft(updated);
             setBaseline(JSON.stringify(updated));
             setSavedMessage('Orçamento salvo.');
-            if (!id)
-                setTarget(`/orcamentos/${saved.id}?salvo=1${searchParams.get('q') ? `&q=${encodeURIComponent(searchParams.get('q'))}` : ''}`);
+            if (!id) {
+                const savedContext = new URLSearchParams(listContext);
+                savedContext.set('salvo', '1');
+                setTarget(`/orcamentos/${saved.id}?${savedContext}`);
+            }
         }
         catch (reason) {
             setSaveError(reason instanceof Error ? reason.message : 'Não foi possível salvar. Seu preenchimento foi mantido.');
@@ -136,5 +153,5 @@ export function useBudgetEditorViewModel({ id }) {
     const savedOnArrival = searchParams.get('salvo') === '1' && !dirty;
     function changeProcedure(itemId, value) { const procedure = data.procedures.find(entry => entry.name === value); changeItem(itemId, { procedure: value, unitPrice: procedure ? moneyInput(procedure.referencePriceCents) : '' }, `item_${itemId}_procedure`); setErrors(current => { const next = { ...current }; delete next[`item_${itemId}_unitPrice`]; return next; }); }
     const itemAmounts = Object.fromEntries(draft.items.map(item => { const value = itemValue(item); return [item.id, { unitPriceCents: readMoney(item.unitPrice) ?? 0, subtotal: value ? value.quantity * value.unitPriceCents : null }]; }));
-    return { data, searchParams, source, resource, readonly, draft, errors, saving, saveError, savedMessage, dirty, patient, total, changeField, changeItem, addItem, removeItem, submit, savedOnArrival, changeProcedure, itemAmounts };
+    return { data, source, resource, readonly, draft, errors, saving, saveError, savedMessage, dirty, patient, total, changeField, changeItem, addItem, removeItem, submit, savedOnArrival, changeProcedure, itemAmounts, itemPagination, visibleItems, returnTo };
 }

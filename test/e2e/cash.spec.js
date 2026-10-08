@@ -39,7 +39,7 @@ async function scenario(page, value) {
         await expect(page.getByText('Carregando registros…')).toHaveCount(0);
 }
 async function totals(page, entries, exits) {
-    const summary = page.locator('dl[aria-label="Totais das movimentações exibidas"] dd');
+    const summary = page.locator('dl[aria-label="Totais de todas as movimentações da seleção"] dd');
     await expect(summary).toHaveText([money(entries), money(exits), money(entries - exits)]);
 }
 test('caixa inicial é vazio sem contabilizar orçamentos aprovados ou estoque', async ({ page }) => {
@@ -156,7 +156,7 @@ test('período, tipo, categoria e forma de pagamento filtram resultados e seus t
     await page.getByLabel('Data inicial', { exact: true }).fill('2026-10-01');
     await page.getByLabel('Data final', { exact: true }).fill('2026-10-02');
     await totals(page, 100000, 25000);
-    await expect(page.getByRole('status').filter({ hasText: '2 registros' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: /^2 registros$/ })).toBeVisible();
     await page.getByLabel('Tipo de movimentação', { exact: true }).selectOption('Saída');
     await page.getByLabel('Filtrar por categoria', { exact: true }).fill('materiais');
     await page.getByLabel('Filtrar por forma de pagamento', { exact: true }).fill('cartao');
@@ -175,7 +175,7 @@ test('período, tipo, categoria e forma de pagamento filtram resultados e seus t
     await page.getByLabel('Data inicial', { exact: true }).fill('2026-10-03');
     await page.getByLabel('Data final', { exact: true }).fill('2026-10-01');
     await expect(page.getByRole('alert')).toContainText('A data final deve ser igual ou posterior à data inicial.');
-    await expect(page.getByLabel('Totais das movimentações exibidas')).toHaveCount(0);
+    await expect(page.getByLabel('Totais de todas as movimentações da seleção')).toHaveCount(0);
     await expect(page.locator('#cash_until')).toHaveAttribute('aria-invalid', 'true');
     await page.locator('#cash_until').fill('2026-10-31');
     await totals(page, 0, 20000);

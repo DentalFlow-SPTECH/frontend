@@ -3,5 +3,10 @@
   --paper: #ffffff; --canvas: #f5f8f7; --muted: #35484e; --line: #d8e2df; --control-line: #65797d;
   --success: #176545; --success-bg: #edf6f0; --warning: #875800; --warning-bg: #fff5da; --error: #a13636; --error-bg: #fff1ef;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
-  --radius: 6px; --font: 'IBM Plex Sans', sans-serif;
+  --radius: 10px; --radius-card: 14px; --radius-panel: 18px; --font: 'IBM Plex Sans', sans-serif;
+  --appointment-scheduled-bg: #fff5d8; --appointment-scheduled-text: #704b00; --appointment-scheduled-line: #a16b00;
+  --appointment-confirmed-bg: #e6f5ec; --appointment-confirmed-text: #155739; --appointment-confirmed-line: #21824e;
+  --appointment-completed-bg: #eaf2ff; --appointment-completed-text: #245b94; --appointment-completed-line: #3578bf;
+  --appointment-cancelled-bg: #ffeded; --appointment-cancelled-text: #933434; --appointment-cancelled-line: #b94747;
+  --appointment-active-bg: #def5f2; --appointment-active-text: #145453; --appointment-active-line: #147771;
 }

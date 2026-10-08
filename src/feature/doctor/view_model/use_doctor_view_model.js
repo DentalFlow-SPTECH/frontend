@@ -9,7 +9,7 @@ export function useDoctorListViewModel() {
     const { data } = useClinicData();
     const [params, setParams] = useSearchParams();
     const query = params.get('q') ?? '';
-    const search = query ? `?q=${encodeURIComponent(query)}` : '';
+    const search = params.size ? `?${params}` : '';
     const resource = useResource('doctors');
     const filtered = data.doctors.filter(doctor => {
         const values = [doctor.name, doctor.specialty, doctor.cpf, doctor.cro, doctor.phone, doctor.email, doctor.status];

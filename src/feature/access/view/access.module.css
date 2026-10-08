@@ -2,13 +2,13 @@
 .layout::before { content: ''; position: absolute; inset: 0 0 auto; height: clamp(192px, 38vh, 360px); background: var(--nav); z-index: -1; }
 .layout :is(button, a, input, select):focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .layout [tabindex="-1"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
-.panel { width: 100%; max-width: 448px; min-width: 0; border-radius: 12px; box-shadow: 0 16px 48px #01101f0d; }
-.brandHeader { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 36px; background: var(--nav); border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent); }
+.panel { width: 100%; max-width: 448px; min-width: 0; border-radius: var(--radius-panel); box-shadow: 0 16px 48px #01101f0d; }
+.brandHeader { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 36px; background: var(--nav); border-radius: var(--radius-panel) var(--radius-panel) 0 0; border-bottom: 3px solid var(--accent); }
 .logo { display: block; width: 108px; height: auto; mix-blend-mode: lighten; }
 .brandContext { display: grid; justify-items: end; gap: 12px; color: #edf4f7; font-size: 14px; }
 .brandContext span { display: block; width: 32px; height: 2px; background: var(--accent); }
 .brandContext p { text-align: right; }
-.content { padding: 32px 36px 24px; background: var(--paper); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; }
+.content { padding: 32px 36px 24px; background: var(--paper); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 var(--radius-panel) var(--radius-panel); }
 .form, .fields { display: grid; gap: 20px; min-width: 0; }
 .fields { padding: 0; border: 0; margin: 0; }
 .primaryAction { width: 100%; min-height: 48px; position: relative; padding-inline: 40px; }

@@ -1,3 +1,4 @@
+import { PagedList } from '../../../component/paged_list.jsx';
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ActionLink, Button, EmptyState, Feedback, Field, HistoryList, LoadingState, PageHeader, StatusLabel, uiStyles } from '../../../component/ui.jsx';
@@ -23,18 +24,18 @@ export function CashPage() {
       {invalidPeriod && <div className={styles.periodFeedback}><Feedback tone="error">A data final deve ser igual ou posterior à data inicial. Corrija o período para consultar as movimentações e os totais.</Feedback></div>}
     </section>
     {resource.busy ? <LoadingState /> : resource.error ? <ReadError message={resource.error} retry={resource.retry}/> : invalidPeriod ? null : <>
-      <dl className={styles.summary} aria-label="Totais das movimentações exibidas">
+      <dl className={styles.summary} aria-label="Totais de todas as movimentações da seleção">
         <div><dt>Entradas</dt><dd>{money(entries)}</dd></div>
         <div><dt>Saídas</dt><dd>{money(exits)}</dd></div>
         <div className={styles.balance}><dt>Saldo das movimentações</dt><dd>{money(entries - exits)}</dd></div>
       </dl>
-      <p className={styles.summaryHint}>Totais das movimentações exibidas. O saldo corresponde às entradas menos as saídas.</p>
+      <p className={styles.summaryHint}>Totais de todas as movimentações da seleção. O saldo corresponde às entradas menos as saídas.</p>
       <div className={styles.sectionHeading}><h2>Movimentações</h2><p role="status">{filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}</p></div>
-      {filtered.length ? <ul className={styles.list}>{filtered.map(movement => <li key={movement.id}>
+      {filtered.length ? <PagedList records={filtered} label="Movimentações do caixa" pageKey="pagina">{rows => <ul className={styles.list}>{rows.map(movement => <li key={movement.id}>
         <div className={styles.identity}><StatusLabel tone={movement.type === 'Entrada' ? 'success' : 'neutral'}>{movement.type}</StatusLabel><h3><Link to={`/caixa/${movement.id}${search}`}>{movement.description}</Link></h3><div className={styles.rowMeta}><time dateTime={movement.date}>{dateLabel(movement.date)}</time>{movement.category && <span>{movement.category}</span>}{movement.paymentMethod && <span>{movement.paymentMethod}</span>}</div></div>
         <strong className={styles.amount}>{money(movement.amountCents)}</strong>
         <ActionLink variant="secondary" to={`/caixa/${movement.id}${search}`} aria-label={`Ver movimentação: ${movement.description}`}>Ver detalhes</ActionLink>
-      </li>)}</ul> : <EmptyState title={params.size ? 'Nenhuma movimentação encontrada' : 'Ainda não há movimentações'} detail={params.size ? 'Ajuste os filtros para consultar outros registros.' : 'Registre uma entrada ou uma saída para acompanhar o caixa.'} action={params.size ? <Button variant="secondary" onClick={() => clearFilters()}>Limpar filtros</Button> : <ActionLink to="/caixa/entrada">Registrar primeira entrada</ActionLink>}/>}
+      </li>)}</ul>}</PagedList> : <EmptyState title={params.size ? 'Nenhuma movimentação encontrada' : 'Ainda não há movimentações'} detail={params.size ? 'Ajuste os filtros para consultar outros registros.' : 'Registre uma entrada ou uma saída para acompanhar o caixa.'} action={params.size ? <Button variant="secondary" onClick={() => clearFilters()}>Limpar filtros</Button> : <ActionLink to="/caixa/entrada">Registrar primeira entrada</ActionLink>}/>}
     </>}
   </>;
 }

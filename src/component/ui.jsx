@@ -1,3 +1,4 @@
+import { PagedList } from './paged_list.jsx';
 import { cloneElement, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { dateLabel } from '../demo/format.js';
@@ -13,10 +14,10 @@ export function Field({ id, label, error, hint, children }) {
 export function Feedback({ tone = 'info', title, children }) { return <div className={`${styles.feedback} ${styles[tone]}`} role={tone === 'error' ? 'alert' : tone === 'success' ? 'status' : undefined}>{title && <strong>{title}</strong>}{children && <div>{children}</div>}</div>; }
 export function EmptyState({ title, detail, action }) { return <div className={styles.empty}><h2>{title}</h2><p>{detail}</p>{action}</div>; }
 export function LoadingState() { return <div className={styles.loading} role="status" aria-busy="true"><p>Carregando registros…</p></div>; }
-export function StatusLabel({ children, tone = 'neutral' }) { return <span className={`${styles.status} ${styles[`status_${tone}`]}`}>{children}</span>; }
+export function StatusLabel({ children, tone = 'neutral', appointment = false }) { return <span data-status={appointment ? children : undefined} className={`${styles.status} ${appointment ? styles.appointmentColor : styles[`status_${tone}`]}`}>{children}</span>; }
 export function HistoryList({ entries }) {
     if (!entries.length)
         return <p className={styles.description}>Nenhum registro no histórico.</p>;
-    return <ol className={styles.history}>{[...entries].reverse().map(entry => <li key={entry.id}><div className={styles.historyDate}>{dateLabel(entry.date)}<span>{entry.actor.replace(' · demonstração', '')}</span></div><p>{entry.description.replace('Registro local atualizado na demonstração.', 'Orçamento atualizado.').replace('Registro local criado na demonstração.', 'Orçamento criado.')}</p></li>)}</ol>;
+    return <PagedList records={[...entries].reverse()} label="Histórico">{rows => <ol className={styles.history}>{rows.map(entry => <li key={entry.id}><div className={styles.historyDate}>{dateLabel(entry.date)}<span>{entry.actor.replace(' · demonstração', '')}</span></div><p>{entry.description.replace('Registro local atualizado na demonstração.', 'Orçamento atualizado.').replace('Registro local criado na demonstração.', 'Orçamento criado.')}</p></li>)}</ol>}</PagedList>;
 }
 export { styles as uiStyles };

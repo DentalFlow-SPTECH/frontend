@@ -1,3 +1,4 @@
+import { PagedList } from '../../../component/paged_list.jsx';
 import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ActionLink, Button, EmptyState, Feedback, Field, LoadingState, PageHeader, StatusLabel, uiStyles } from '../../../component/ui.jsx';
@@ -28,25 +29,25 @@ export function InventoryListPage() {
     </div>
     {resource.busy ? <LoadingState /> : resource.error ? <ResourceError message={resource.error} retry={resource.retry}/> : !data.products.length ? <EmptyState title="Ainda não há materiais" detail="Cadastre o primeiro material para acompanhar o estoque." action={<ActionLink to="/estoque/novo">Cadastrar material</ActionLink>}/> : !filtered.length ? <EmptyState title="Nenhum material encontrado" detail="Tente outro nome, código ou categoria, ou remova o filtro de quantidade." action={<Button variant="secondary" onClick={clearFilters}>Limpar filtros</Button>}/> : <>
       <div className={styles.listHeading}><p role="status">{filtered.length} {filtered.length === 1 ? 'material' : 'materiais'}{query || lowOnly ? ' nesta seleção' : ''}</p></div>
-      <table className={`${uiStyles.table} ${styles.desktopRecords}`}>
+      <PagedList records={filtered} label="Materiais" pageKey="pagina">{rows => <><table className={`${uiStyles.table} ${styles.desktopRecords}`}>
         <caption className={styles.srOnly}>Materiais e quantidades em estoque</caption>
         <thead><tr><th scope="col">Material</th><th scope="col" className={uiStyles.numeric}>Quantidade atual</th><th scope="col" className={uiStyles.numeric}>Mínimo</th><th scope="col">Situação</th></tr></thead>
-        <tbody>{filtered.map(product => <tr key={product.id}><th scope="row" className={styles.materialCell}><Link to={`/estoque/${product.id}${search}`}>{product.name}</Link><span>{product.code}{product.category && ` · ${product.category}`}</span></th><td className={uiStyles.numeric}><strong>{product.quantity}</strong><span className={styles.unit}>{product.unit}</span></td><td className={uiStyles.numeric}>{product.minimum}<span className={styles.unit}>{product.unit}</span></td><td><StockSituation product={product}/></td></tr>)}</tbody>
+        <tbody>{rows.map(product => <tr key={product.id}><th scope="row" className={styles.materialCell}><Link to={`/estoque/${product.id}${search}`}>{product.name}</Link><span>{product.code}{product.category && ` · ${product.category}`}</span></th><td className={uiStyles.numeric}><strong>{product.quantity}</strong><span className={styles.unit}>{product.unit}</span></td><td className={uiStyles.numeric}>{product.minimum}<span className={styles.unit}>{product.unit}</span></td><td><StockSituation product={product}/></td></tr>)}</tbody>
       </table>
-      <ul className={styles.mobileRecords}>{filtered.map(product => <li key={product.id}><div className={styles.mobileRecordHeading}><span className={styles.code}>{product.code}</span><StockSituation product={product}/></div><Link className={styles.mobileMaterialLink} to={`/estoque/${product.id}${search}`}>{product.name}</Link>{product.category && <p className={styles.category}>{product.category}</p>}<dl className={styles.mobileQuantities}><div><dt>Quantidade atual</dt><dd><strong>{product.quantity}</strong> {product.unit}</dd></div><div><dt>Mínimo</dt><dd>{product.minimum} {product.unit}</dd></div></dl></li>)}</ul>
+      <ul className={styles.mobileRecords}>{rows.map(product => <li key={product.id}><div className={styles.mobileRecordHeading}><span className={styles.code}>{product.code}</span><StockSituation product={product}/></div><Link className={styles.mobileMaterialLink} to={`/estoque/${product.id}${search}`}>{product.name}</Link>{product.category && <p className={styles.category}>{product.category}</p>}<dl className={styles.mobileQuantities}><div><dt>Quantidade atual</dt><dd><strong>{product.quantity}</strong> {product.unit}</dd></div><div><dt>Mínimo</dt><dd>{product.minimum} {product.unit}</dd></div></dl></li>)}</ul></>}</PagedList>
     </>}
   </>;
 }
 function MovementHistory({ movements, product }) {
     if (!movements.length)
         return <EmptyState title="Nenhuma movimentação registrada" detail="As entradas e saídas deste material aparecerão aqui."/>;
-    return <ol className={styles.movements}>{movements.map(movement => <li key={movement.id}>
+    return <PagedList records={movements} label="Movimentações do material">{rows => <ol className={styles.movements}>{rows.map(movement => <li key={movement.id}>
     <div className={styles.movementMeta}><time dateTime={movement.date}>{dateLabel(movement.date)}</time><span>{movement.actor.replace(' · demonstração', '').replace(' · exemplo', '')}</span></div>
     <div className={styles.movementContent}><div className={styles.movementTitle}><h3>{movement.type}</h3><span className={styles.movementQuantity}>{movement.type === 'Saída' ? '−' : movement.quantity >= 0 ? '+' : '−'}{Math.abs(movement.quantity)} {product.unit}</span></div><p>{movement.reason}</p>
       {(movement.supplier || movement.lot || movement.expiresOn || (movement.type === 'Entrada' && movement.purchaseCents > 0)) && <dl className={styles.movementDetails}>{movement.supplier && <div><dt>Fornecedor</dt><dd>{movement.supplier}</dd></div>}{movement.type === 'Entrada' && movement.purchaseCents > 0 && <div><dt>Valor da compra</dt><dd>{money(movement.purchaseCents)}</dd></div>}{movement.lot && <div><dt>Lote informado</dt><dd>{movement.lot}</dd></div>}{movement.expiresOn && <div><dt>Validade informada</dt><dd>{dateLabel(movement.expiresOn)}</dd></div>}</dl>}
       {movement.observation && <p className={styles.movementObservation}>{movement.observation}</p>}
     </div>
-  </li>)}</ol>;
+  </li>)}</ol>}</PagedList>;
 }
 export function ProductDetailPage() {
     const { search, resource, product, movements } = useProductDetailViewModel();

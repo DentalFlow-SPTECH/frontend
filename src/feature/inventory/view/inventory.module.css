@@ -95,3 +95,10 @@
   .entryContext strong { font-size: 18px; margin: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .form, .mobileRecords, .desktopRecords { scroll-behavior: auto; } }
+
+.movements { border: 1px solid var(--line); border-radius: var(--radius-panel); }
+.stockStrip { border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); padding: 24px; gap: 24px; }
+.mobileRecords > li { border: 1px solid var(--line); border-radius: var(--radius-card); margin-bottom: 12px; }
+
+.formSection, .detailSection { border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); padding: 24px; }
+@media (max-width: 767px) { .formSection, .detailSection, .stockStrip { padding: 20px 16px; } }

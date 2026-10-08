@@ -45,3 +45,9 @@
   .amount { font-size: 20px; }
   .sectionHeading { align-items: start; }
 }
+
+.filterSection, .list, .detailSection, .formSection { border: 1px solid var(--line); border-radius: var(--radius-panel); }
+.list > li { margin: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+
+.summary { gap: 14px; border: 0; background: transparent; }
+.summary > div { border: 1px solid var(--line); border-radius: var(--radius-card); }

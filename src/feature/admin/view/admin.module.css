@@ -45,3 +45,6 @@
   .permissionRow label { justify-content: start; font-size: 14px; }
   .permissionRow label > span { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none; white-space: normal; }
 }
+
+.section, .formSection { border: 1px solid var(--line); border-radius: var(--radius-panel); }
+.users > li { border: 1px solid var(--line); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; }

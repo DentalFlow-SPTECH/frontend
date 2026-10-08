@@ -1,0 +1,8 @@
+.list { min-width: 0; }
+.content { min-width: 0; }
+.content:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 8px; }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; }
+.pagination p { margin: 0; color: var(--muted); font-size: .875rem; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.controls span { font-size: .875rem; white-space: nowrap; }
+@media (max-width: 480px) { .pagination { align-items: flex-start; } .controls { width: 100%; justify-content: space-between; gap: 6px; } .controls button { padding-inline: 10px; } }

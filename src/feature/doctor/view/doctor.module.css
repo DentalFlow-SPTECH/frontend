@@ -35,3 +35,6 @@
   .appointments time, .budgets time { grid-column: 1; grid-row: 2; }
   .appointments > li > span, .budgets strong { grid-column: 2; grid-row: 1 / 3; }
 }
+
+.list, .formSection, .section { border: 1px solid var(--line); border-radius: var(--radius-panel); }
+.list > li { margin: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }

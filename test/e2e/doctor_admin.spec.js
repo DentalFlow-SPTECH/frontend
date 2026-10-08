@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
@@ -33,9 +34,9 @@ test('doutor cadastrado com nome apenas fica disponível para orçamento e persi
     await page.reload();
     await expect(page.locator('main h1')).toHaveText(doctor.name);
     await open(page, '/orcamentos/novo');
+    await chooseRecord(page, page.getByLabel('Doutor', { exact: true }), doctor.id, doctor.name);
     await expect(page.getByLabel('Doutor', { exact: true })).toContainText(doctor.name);
-    await page.getByLabel('Doutor', { exact: true }).selectOption(doctor.id);
-    await expect(page.getByLabel('Doutor', { exact: true })).toHaveValue(doctor.id);
+    await expect(page.getByLabel('Doutor', { exact: true })).toHaveAttribute('value', doctor.id);
 });
 test('cadastro e edição de doutor preservam id, vínculos e histórico sem duplicar eventos', async ({ page }) => {
     const doctor = await createDoctor(page);
@@ -88,7 +89,7 @@ test('contexto do doutor exibe consultas reais e abre agenda com o profissional 
     await expect(page.getByRole('link', { name: 'Dra. Helena Martins', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Dra. Helena Martins', exact: true }).click();
     await page.getByRole('link', { name: 'Ver agenda', exact: true }).click();
-    await expect(page.getByLabel('Filtrar por doutor', { exact: true })).toHaveValue('d1');
+    await expect(page.getByLabel('Filtrar por doutor', { exact: true })).toHaveAttribute('value', 'd1');
 });
 test('nome obrigatório e falha de doutor conservam dados e levam o foco ao erro', async ({ page }) => {
     await open(page, '/doutores/novo');
@@ -181,7 +182,7 @@ test('bloqueio e reativação exigem confirmação, preservam usuário e geram a
     await scenario(page, 'normal');
     page.once('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Bloquear usuário', exact: true }).click();
-    await expect(page.getByRole('status')).toHaveText('Usuário bloqueado.');
+    await expect(page.getByRole('status').filter({ hasText: /^Usuário bloqueado\.$/ })).toHaveText('Usuário bloqueado.');
     await page.reload();
     await expect(page.getByRole('button', { name: 'Reativar usuário', exact: true })).toBeVisible();
     const blocked = await snapshot(page);
@@ -190,7 +191,7 @@ test('bloqueio e reativação exigem confirmação, preservam usuário e geram a
     expect(blocked.audit.length).toBe(before.audit.length + 1);
     page.once('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Reativar usuário', exact: true }).click();
-    await expect(page.getByRole('status')).toHaveText('Usuário reativado.');
+    await expect(page.getByRole('status').filter({ hasText: /^Usuário reativado\.$/ })).toHaveText('Usuário reativado.');
     const active = await snapshot(page);
     expect(active.users.find(value => value.id === user.id)?.blocked).toBe(false);
     expect(active.users.find(value => value.id === user.id)?.permissions).toEqual(user.permissions);

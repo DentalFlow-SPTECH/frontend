@@ -15,6 +15,7 @@ export function useInventoryListViewModel() {
     const filtered = data.products.filter(product => (!lowOnly || product.quantity < product.minimum) && normalize(`${product.name} ${product.code} ${product.category}`).includes(normalize(query)));
     function updateFilter(key, value) {
         const next = new URLSearchParams(params);
+        next.delete('pagina');
         if (value)
             next.set(key, value);
         else

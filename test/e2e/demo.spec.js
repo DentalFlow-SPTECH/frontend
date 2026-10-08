@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 async function open(page, route = '/orcamentos') {
@@ -19,7 +20,7 @@ async function scenario(page, value) {
 }
 async function createBudgetDraft(page) {
     await open(page, '/orcamentos/novo?paciente=p3');
-    await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
+    await chooseRecord(page, page.getByLabel('Doutor', { exact: true }), 'd1');
     await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
     await page.getByLabel('Procedimento', { exact: true }).selectOption({ label: 'Profilaxia' });
     await page.getByLabel('Quantidade', { exact: true }).fill('2');
@@ -31,13 +32,10 @@ test('paciente, orçamentos e estado vazio permanecem relacionados', async ({ pa
     await expect(page.getByRole('heading', { name: 'Orçamentos', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Marina Albuquerque', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: /ORC-001/ }).filter({ visible: true })).toBeVisible();
-    if (await page.locator('#budget_patient_picker').isVisible())
-        await page.getByLabel('Paciente', { exact: true }).selectOption('p3');
-    else
-        await page.getByRole('button', { name: /Beatriz Campos/ }).click();
+    await chooseRecord(page, page.locator('#budget_patient_picker'), 'p3');
     await expect(page.getByRole('heading', { name: 'Ainda não há orçamentos' })).toBeVisible();
     await page.getByRole('link', { name: 'Criar primeiro orçamento' }).click();
-    await expect(page.getByLabel('Paciente', { exact: true })).toHaveValue('p3');
+    await expect(page.getByLabel('Paciente', { exact: true })).toHaveAttribute('value', 'p3');
 });
 test('exemplos de orçamento são somente para consulta', async ({ page }) => {
     await open(page, '/orcamentos/b2');
@@ -53,7 +51,7 @@ test('orçamento valida campos, associa erro e foca a primeira correção', asyn
     await expect(page.getByLabel('Doutor', { exact: true })).toBeFocused();
     await expect(page.getByLabel('Doutor', { exact: true })).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByLabel('Observação do orçamento (opcional)')).toHaveValue('Manter esta observação.');
-    await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
+    await chooseRecord(page, page.getByLabel('Doutor', { exact: true }), 'd1');
     await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
     await page.getByLabel('Procedimento', { exact: true }).selectOption({ label: 'Profilaxia' });
     await page.getByLabel('Quantidade', { exact: true }).fill('0');

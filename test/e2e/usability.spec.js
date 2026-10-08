@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
@@ -34,14 +35,20 @@ async function scenario(page, value) {
 }
 test('busca de paciente em orçamentos acompanha detalhe, retorno e recarregamento', async ({ page }) => {
     await open(page, '/orcamentos');
-    await page.getByLabel('Buscar paciente', { exact: true }).filter({ visible: true }).fill('Marina');
+    await page.locator('#budget_patient_picker').click();
+    await page.getByRole('searchbox', { name: 'Buscar paciente', exact: true }).fill('Marina');
     await expect(page).toHaveURL(/q=Marina/);
+    await page.keyboard.press('Escape');
     await page.getByRole('link', { name: 'Ver orçamento ORC-001', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Orçamento ORC-001', exact: true })).toBeVisible();
     await page.getByRole('link', { name: /Orçamentos do paciente/ }).click();
-    await expect(page.getByLabel('Buscar paciente', { exact: true }).filter({ visible: true })).toHaveValue('Marina');
+    await page.locator('#budget_patient_picker').click();
+    await expect(page.getByRole('searchbox', { name: 'Buscar paciente', exact: true })).toHaveValue('Marina');
+    await page.keyboard.press('Escape');
     await page.reload();
-    await expect(page.getByLabel('Buscar paciente', { exact: true }).filter({ visible: true })).toHaveValue('Marina');
+    await page.locator('#budget_patient_picker').click();
+    await expect(page.getByRole('searchbox', { name: 'Buscar paciente', exact: true })).toHaveValue('Marina');
+    await page.keyboard.press('Escape');
 });
 test('sem pacientes o orçamento orienta cadastro e oferece o próximo passo após salvar', async ({ page }) => {
     const data = createSeed();
@@ -54,9 +61,9 @@ test('sem pacientes o orçamento orienta cadastro e oferece o próximo passo ap�
     await page.getByRole('button', { name: 'Salvar paciente', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Paciente cadastrado', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Criar orçamento', exact: true }).click();
-    await expect(page.locator('#budget_patientId')).toHaveValue(/.+/);
-    await expect(page.locator('#budget_patientId option:checked')).toHaveText('Lia Exemplo');
-    await page.locator('#budget_doctorId').selectOption('d1');
+    await expect(page.locator('#budget_patientId')).toHaveAttribute('value', /.+/);
+    await expect(page.locator('#budget_patientId')).toContainText('Lia Exemplo');
+    await chooseRecord(page, page.locator('#budget_doctorId'), 'd1');
     await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
     await page.getByLabel('Procedimento', { exact: true }).selectOption('Profilaxia');
     await page.getByRole('button', { name: 'Salvar orçamento', exact: true }).click();
@@ -117,7 +124,7 @@ test('agenda móvel seleciona dia por teclado e conserva dia e doutor ao voltar'
     await page.getByRole('link', { name: /Rafael Nogueira/ }).filter({ visible: true }).click();
     await page.getByRole('link', { name: /Voltar à agenda/ }).click();
     await expect(page.locator('#agenda_date')).toHaveValue('2026-10-04');
-    await expect(page.locator('#agenda_doctor')).toHaveValue('d1');
+    await expect(page.locator('#agenda_doctor')).toHaveAttribute('value', 'd1');
     await page.reload();
     await expect(page.locator('#agenda_date')).toHaveValue('2026-10-04');
     await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
@@ -130,7 +137,7 @@ test('tabela do gráfico de caixa abre o mês exato e mantém os totais em centa
     await page.getByRole('link', { name: 'Ver caixa de setembro de 2026', exact: true }).click();
     await expect(page.locator('#cash_from')).toHaveValue('2026-09-01');
     await expect(page.locator('#cash_until')).toHaveValue('2026-09-30');
-    await expect(page.getByLabel('Totais das movimentações exibidas').locator('dd')).toHaveText(['R$ 800,00', 'R$ 0,00', 'R$ 800,00']);
+    await expect(page.getByLabel('Totais de todas as movimentações da seleção').locator('dd')).toHaveText(['R$ 800,00', 'R$ 0,00', 'R$ 800,00']);
 });
 const screens = [
     ['painel', '/painel?date=2026-10-03'], ['agenda', '/agenda?date=2026-10-03'], ['agenda-mes', '/agenda?date=2026-10-03&view=month'],

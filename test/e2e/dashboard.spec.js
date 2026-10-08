@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseRecord } from './record_picker_helpers.js';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
 const storageKey = 'dental_flow_demo_v1';
@@ -138,8 +139,9 @@ test('novos cadastros atualizam painel após recarregar mantendo módulos indepe
     await open(page, '/painel?date=2026-10-12');
     await page.getByRole('link', { name: 'Agendar consulta', exact: true }).first().click();
     await expect(page.getByLabel('Data (obrigatória)', { exact: true })).toHaveValue('2026-10-12');
-    for (const [id, value] of [['patientId', 'p1'], ['doctorId', 'd1'], ['procedure', 'Profilaxia']])
-        await page.locator(`#appointment_${id}`).selectOption(value);
+    await chooseRecord(page, page.locator('#appointment_patientId'), 'p1');
+    await chooseRecord(page, page.locator('#appointment_doctorId'), 'd1');
+    await page.locator('#appointment_procedure').selectOption('Profilaxia');
     await page.locator('#appointment_time').fill('09:00');
     await page.locator('#appointment_duration').fill('30');
     await page.getByRole('button', { name: 'Salvar consulta', exact: true }).click();

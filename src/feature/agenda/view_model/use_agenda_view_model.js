@@ -6,6 +6,7 @@ import { dateLabel, today } from '../../../demo/format.js';
 import { appointmentInterval } from '../../../demo/clinic.js';
 import { useClinicData, useClinicRepository } from '../../../app/app_provider.jsx';
 import { emptyAppointment, parseDate, validDate, weekDates, monthDates } from '../model/agenda_model.js';
+import { calendarHours, fullWeekdays, daySegments, monthCells } from '../model/calendar_model.js';
 export function useAppointmentCardViewModel({ appointment }) {
     const { data } = useClinicData();
     const patient = data.patients.find(value => value.id === appointment.patientId);
@@ -21,16 +22,22 @@ export function useAgendaViewModel() {
     const view = params.get('view') === 'month' ? 'month' : 'week';
     const doctorId = data.doctors.some(value => value.id === params.get('doutor')) ? params.get('doutor') : '';
     const days = view === 'week' ? weekDates(selectedDate) : monthDates(selectedDate);
-    const periodAppointments = (data.appointments ?? []).filter(value => days.includes(value.date) && (!doctorId || value.doctorId === doctorId)).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-    const selectedAppointments = periodAppointments.filter(value => value.date === selectedDate);
-    const times = [...new Set(periodAppointments.map(value => value.time))].sort();
+    const filteredAppointments = (data.appointments ?? []).filter(value => !doctorId || value.doctorId === doctorId);
+    const selectedAppointments = daySegments(filteredAppointments, selectedDate).map(segment => segment.appointment);
+    const calendarDays = days.map((day, index) => ({ date: day, weekday: fullWeekdays[index], segments: daySegments(filteredAppointments, day) }));
+    const visibleSegments = calendarDays.flatMap(day => day.segments);
+    const periodAppointments = [...new Map(visibleSegments.map(segment => [segment.appointment.id, segment.appointment])).values()].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+    const initialHour = visibleSegments.length ? Math.max(0, Math.floor(Math.min(...visibleSegments.map(segment => segment.start)) / 60) - 1) : 8;
+    const monthDays = monthCells(selectedDate).map(cell => {
+        const events = daySegments(filteredAppointments, cell.date).map(segment => segment.appointment);
+        return { ...cell, count: events.length, events: events.slice(0, 3), extra: Math.max(0, events.length - 3) };
+    });
     const doctorSearch = doctorId ? `&doutor=${doctorId}` : '';
-    const search = `?date=${selectedDate}&view=${view}${doctorSearch}`;
+    const search = `?date=${selectedDate}&view=${view}${doctorSearch}${params.get('pagina') ? `&pagina=${encodeURIComponent(params.get('pagina'))}` : ''}`;
     const newAppointment = `/agenda/nova${search}`;
-    const monthOffset = (parseDate(days[0]).getDay() + 6) % 7;
     const period = view === 'week' ? `${dateLabel(days[0])} a ${dateLabel(days[6])}` : new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(parseDate(selectedDate));
     function goTo(date, nextView = view) { setParams({ date, view: nextView, ...(doctorId ? { doutor: doctorId } : {}) }); }
-    return { data, resource, setParams, showWeekGrid, setShowWeekGrid, selectedDate, view, doctorId, days, periodAppointments, selectedAppointments, times, doctorSearch, search, newAppointment, monthOffset, period, goTo };
+    return { data, resource, setParams, showWeekGrid, setShowWeekGrid, selectedDate, view, doctorId, days, periodAppointments, selectedAppointments, calendarDays, calendarHours, initialHour, monthDays, doctorSearch, search, newAppointment, period, goTo };
 }
 export function useAppointmentFormViewModel({ id }) {
     const submissionLock = useRef(false);

@@ -15,6 +15,7 @@ export function useAdminViewModel() {
     const filtered = data.users.filter(user => normalize(`${user.name} ${user.email} ${user.login} ${user.profile}`).includes(normalize(query)) && (!status || (status === 'blocked' ? user.blocked : !user.blocked)));
     function filter(key, value) {
         const next = new URLSearchParams(params);
+        next.delete('pagina');
         if (value)
             next.set(key, value);
         else

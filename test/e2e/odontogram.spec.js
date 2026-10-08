@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
@@ -14,7 +15,7 @@ async function scenario(page, value) {
 }
 test('odontograma permanente e infantil associa dentes e superfícies aos itens e persiste após falha', async ({ page }, testInfo) => {
     await open(page, '/orcamentos/novo?paciente=p3');
-    await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
+    await chooseRecord(page, page.getByLabel('Doutor', { exact: true }), 'd1');
     await expect(page.getByRole('button', { name: /Adicionar procedimento no dente/ })).toHaveCount(32);
     await page.getByRole('button', { name: 'Adicionar procedimento no dente 11', exact: true }).click();
     await expect(page.getByLabel('Procedimento', { exact: true })).toBeFocused();

@@ -6,7 +6,7 @@ export function usePatientListViewModel() {
     const [params, setParams] = useSearchParams();
     const contextPatient = repository.find(params.get('paciente'));
     const query = params.get('q') ?? contextPatient?.name ?? '';
-    const search = query ? `?q=${encodeURIComponent(query)}` : '';
+    const search = params.size ? `?${params}` : '';
     const resource = useResource('patients');
     return {
         contextPatient, query, search, resource, patients: repository.search(query),

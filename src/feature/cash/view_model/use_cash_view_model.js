@@ -23,6 +23,7 @@ export function useCashViewModel() {
     const exits = filtered.filter(value => value.type === 'Saída').reduce((total, value) => total + value.amountCents, 0);
     function filter(key, value) {
         const next = new URLSearchParams(params);
+        next.delete('pagina');
         if (value)
             next.set(key, value);
         else

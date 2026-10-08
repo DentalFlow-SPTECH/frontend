@@ -1,19 +1,9 @@
-.workspace { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; align-items: start; }
-.patientPicker { padding: 20px 0; border-top: 3px solid var(--ink); }
-.patientList { list-style: none; margin: 18px 0 0; padding: 0; }
-.mobilePatientPicker { display: none; }
-.mobilePatientPicker > * + * { margin-top: 12px; }
-.patientOption span, .patientContext > div, .itemHeading h3 { min-width: 0; overflow-wrap: anywhere; }
+.workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+.patientContext > div, .itemHeading h3 { min-width: 0; overflow-wrap: anywhere; }
 .budgetTable :is(td, th), .mobileBudgets dd, .itemDetails dd { overflow-wrap: anywhere; }
-.patientList li { border-top: 1px solid var(--line); }
-.patientOption { width: 100%; text-align: left; background: transparent; border: 0; border-left: 3px solid transparent; padding: 16px 12px; min-height: 66px; color: var(--ink); }
-.patientOption span { display: block; font-size: 15px; font-weight: 500; }
-.patientOption small { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; letter-spacing: .5px; }
-.patientOption:hover { background: #edf3f0; }
-.patientSelected { border-left-color: var(--primary); background: #e9f2ee; }
+.pickerHint { margin-top: 16px; font-size: 14px; color: var(--muted); }
 .allPatients, .contextLink { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; }
 .allPatients { margin-top: 14px; }
-.searchEmpty { padding: 22px 0; color: var(--muted); font-size: 14px; }
 .records { min-width: 0; }
 .patientContext { display: flex; gap: 24px; align-items: center; justify-content: space-between; padding: 0 0 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .smallLabel { display: block; font-size: 14px; color: var(--muted); font-weight: 500; margin-bottom: 7px; }
@@ -66,14 +56,12 @@
 .saveHint { font-size: 14px; text-align: center; color: var(--muted); margin-top: 10px; }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 1150px) {
-  .workspace { grid-template-columns: 215px minmax(0, 1fr); gap: 24px; }
+  .workspace { grid-template-columns: 260px minmax(0, 1fr); gap: 24px; }
   .editorLayout { grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; }
   .budgetTable th, .budgetTable td { padding: 14px 12px; }
 }
 @media (max-width: 1000px) {
   .workspace { grid-template-columns: 1fr; }
-  .patientPicker { display: none; }
-  .mobilePatientPicker { display: block; }
   .editorLayout { grid-template-columns: 1fr; }
   .summary { position: static; max-width: none; }
   .summaryTotal { font-size: 32px; }
@@ -85,8 +73,8 @@
   .contextLink { margin-top: 2px; }
   .recordHeading { flex-direction: column; gap: 5px; }
   .budgetTable { display: none; }
-  .mobileBudgets { display: block; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-  .mobileBudgets li { background: white; border-bottom: 1px solid var(--line); padding: 20px 16px; }
+  .mobileBudgets { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
+  .mobileBudgets li { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 20px 16px; }
   .mobileBudgetTop { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
   .mobileBudgetTop a { min-height: 44px; font-size: 16px; font-weight: 500; }
   .mobileBudgetTop strong { font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 500; white-space: nowrap; }
@@ -107,3 +95,9 @@
   .addItem { align-items: stretch; }
   .summary { padding: 24px 0 0; }
 }
+
+.summary { border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); padding: 24px; }
+
+.paperSection, .patientPicker { border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); padding: 24px; }
+.item { border: 1px solid var(--line); border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; background: var(--paper); }
+@media (max-width: 767px) { .summary, .paperSection, .patientPicker { padding: 20px 16px; } }

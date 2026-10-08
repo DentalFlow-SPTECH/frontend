@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const storageKey = 'dental_flow_demo_v1';
@@ -20,8 +21,8 @@ async function scenario(page, value) {
 async function draft(page, { date = '2026-10-02', time = '09:00', duration = '45', doctor = 'd1', patient = 'p1' } = {}) {
     await open(page, `/agenda/nova?date=${date}`);
     await expect(page.getByRole('heading', { name: 'Nova consulta', exact: true })).toBeVisible();
-    await page.locator('#appointment_patientId').selectOption(patient);
-    await page.locator('#appointment_doctorId').selectOption(doctor);
+    await chooseRecord(page, page.locator('#appointment_patientId'), patient);
+    await chooseRecord(page, page.locator('#appointment_doctorId'), doctor);
     await page.locator('#appointment_procedure').selectOption('Profilaxia');
     await page.locator('#appointment_time').fill(time);
     await page.locator('#appointment_duration').fill(duration);
@@ -62,8 +63,8 @@ test('consulta valida mínimos, associa mensagens e foca a primeira correção',
     for (const key of ['patientId', 'doctorId', 'procedure', 'date', 'time', 'duration'])
         await expect(page.locator(`#appointment_${key}`)).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('#appointment_observation')).toHaveValue('Manter esta observação.');
-    await page.locator('#appointment_patientId').selectOption('p1');
-    await page.locator('#appointment_doctorId').selectOption('d1');
+    await chooseRecord(page, page.locator('#appointment_patientId'), 'p1');
+    await chooseRecord(page, page.locator('#appointment_doctorId'), 'd1');
     await page.locator('#appointment_procedure').selectOption('Profilaxia');
     await page.locator('#appointment_date').fill('2026-10-02');
     await page.locator('#appointment_time').fill('09:00');
@@ -184,7 +185,7 @@ test('filtro de doutor e cadastro por horário preservam contexto', async ({ pag
     await draft(page, { doctor: 'd2', patient: 'p2', time: '10:00' });
     await save(page);
     await open(page, '/agenda?date=2026-10-02&doutor=d1');
-    await expect(page.locator('#agenda_doctor')).toHaveValue('d1');
+    await expect(page.locator('#agenda_doctor')).toHaveAttribute('value', 'd1');
     await expect(page.getByRole('link', { name: /Marina Albuquerque/ }).filter({ visible: true })).toBeVisible();
     await expect(page.getByRole('link', { name: /Rafael Nogueira/ }).filter({ visible: true })).toHaveCount(0);
     if ((page.viewportSize()?.width ?? 0) < 768)
@@ -192,9 +193,9 @@ test('filtro de doutor e cadastro por horário preservam contexto', async ({ pag
     await page.getByRole('link', { name: 'Agendar em 03/10/2026 às 09:00', exact: true }).click();
     await expect(page.locator('#appointment_date')).toHaveValue('2026-10-03');
     await expect(page.locator('#appointment_time')).toHaveValue('09:00');
-    await expect(page.locator('#appointment_doctorId')).toHaveValue('d1');
+    await expect(page.locator('#appointment_doctorId')).toHaveAttribute('value', 'd1');
     await page.getByRole('link', { name: 'Voltar à agenda', exact: false }).click();
-    await expect(page.locator('#agenda_doctor')).toHaveValue('d1');
+    await expect(page.locator('#agenda_doctor')).toHaveAttribute('value', 'd1');
     await page.getByRole('button', { name: 'Visão mensal' }).click();
     await page.getByRole('button', { name: '02/10/2026, 1 consulta', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Consultas de 02/10/2026' })).toBeVisible();

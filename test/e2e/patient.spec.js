@@ -1,3 +1,4 @@
+import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
@@ -126,8 +127,8 @@ test('novo paciente recebe orçamento e edição preserva identidade, relação 
     await expect(page.getByRole('heading', { name: 'Ainda não há orçamentos', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: completePatient.name, exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Criar primeiro orçamento', exact: true }).click();
-    await expect(page.getByLabel('Paciente', { exact: true })).toHaveValue(patient.id);
-    await page.getByLabel('Doutor', { exact: true }).selectOption('d1');
+    await expect(page.getByLabel('Paciente', { exact: true })).toHaveAttribute('value', patient.id);
+    await chooseRecord(page, page.getByLabel('Doutor', { exact: true }), 'd1');
     await page.getByRole('button', { name: 'Adicionar procedimento', exact: true }).click();
     await page.getByLabel('Procedimento', { exact: true }).selectOption({ label: 'Profilaxia' });
     await page.getByRole('button', { name: 'Salvar orçamento', exact: true }).click();
@@ -158,7 +159,7 @@ test('novo paciente recebe orçamento e edição preserva identidade, relação 
     await page.getByRole('link', { name: 'Ver orçamentos', exact: true }).click();
     await expect(page.getByRole('link', { name: `Ver orçamento ${budget.code}`, exact: true }).filter({ visible: true })).toBeVisible();
     await page.getByRole('link', { name: `Ver orçamento ${budget.code}`, exact: true }).filter({ visible: true }).click();
-    await expect(page.getByLabel('Paciente', { exact: true })).toHaveValue(patient.id);
+    await expect(page.getByLabel('Paciente', { exact: true })).toHaveAttribute('value', patient.id);
     await expect(page.getByRole('heading', { name: 'Clara Monteiro Lima', exact: true })).toBeVisible();
     await expect(page.getByLabel('Procedimento', { exact: true })).toHaveValue('Profilaxia');
 });
