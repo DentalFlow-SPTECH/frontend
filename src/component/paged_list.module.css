@@ -1,8 +1,16 @@
 .list { min-width: 0; }
 .content { min-width: 0; }
 .content:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 8px; }
-.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; padding: 10px 0 0; }
+/* Painéis estreitos: faixa e botões na mesma linha; a posição da página continua disponível para leitores de tela. */
+.compact { flex-wrap: nowrap; padding-top: 8px; }
+.compact p, .compact .controls button { white-space: nowrap; }
+.compact .prefix, .compact .position, .compact .noun { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.compact .controls { flex-wrap: nowrap; gap: 6px; }
+.compact .controls button { min-height: 36px; padding: 6px 12px; font-size: 14px; }
 .pagination p { margin: 0; color: var(--muted); font-size: .875rem; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .controls span { font-size: .875rem; white-space: nowrap; }
-@media (max-width: 480px) { .pagination { align-items: flex-start; } .controls { width: 100%; justify-content: space-between; gap: 6px; } .controls button { padding-inline: 10px; } }
+.controls button { min-height: 40px; padding-block: 7px; }
+@media (max-width: 767px) { .controls button, .compact .controls button { min-height: 44px; } }
+@media (max-width: 480px) { .pagination:not(.compact) { align-items: flex-start; } .pagination:not(.compact) .controls { width: 100%; justify-content: space-between; gap: 6px; } .controls button { padding-inline: 10px; } }

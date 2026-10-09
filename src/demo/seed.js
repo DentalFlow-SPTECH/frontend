@@ -2,7 +2,7 @@ import { emptyPatientInput } from './patient.js';
 export function createSeed() {
     return {
         version: 1,
-        appointments: [], cashMovements: [], users: [], audit: [],
+        appointments: [], cashMovements: [], users: [], audit: [], clinics: [], dailyReports: [],
         patients: [
             { ...emptyPatientInput, id: 'p1', code: 'PAC-001', name: 'Marina Albuquerque', birthDate: '1991-06-14', phone: '(11) 90000-0101', email: 'marina@example.com', history: [] },
             { ...emptyPatientInput, id: 'p2', code: 'PAC-002', name: 'Rafael Nogueira', birthDate: '1985-03-22', phone: '(11) 90000-0102', email: 'rafael@example.com', history: [] },

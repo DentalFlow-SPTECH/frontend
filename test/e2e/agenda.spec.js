@@ -23,7 +23,7 @@ async function draft(page, { date = '2026-10-02', time = '09:00', duration = '45
     await expect(page.getByRole('heading', { name: 'Nova consulta', exact: true })).toBeVisible();
     await chooseRecord(page, page.locator('#appointment_patientId'), patient);
     await chooseRecord(page, page.locator('#appointment_doctorId'), doctor);
-    await page.locator('#appointment_procedure').selectOption('Profilaxia');
+    await chooseRecord(page, page.locator('#appointment_procedure'), 'pr2', 'profil');
     await page.locator('#appointment_time').fill(time);
     await page.locator('#appointment_duration').fill(duration);
 }
@@ -38,8 +38,8 @@ async function noOverflow(page) { expect(await page.evaluate(() => document.docu
 test('agenda vazia mantém semana, navegação temporal e mês completo', async ({ page }) => {
     await open(page);
     await expect(page.getByRole('heading', { name: 'Nenhuma consulta nesta semana' })).toBeVisible();
-    if ((page.viewportSize()?.width ?? 0) < 768)
-        await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
+    if ((page.viewportSize()?.width ?? 0) < 1280)
+        await page.getByRole('button', { name: 'Calendário', exact: true }).click();
     await expect(page.getByRole('link', { name: 'Agendar em 28/09/2026', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Próxima semana' }).click();
     await expect(page.locator('#agenda_date')).toHaveValue('2026-10-09');
@@ -65,7 +65,7 @@ test('consulta valida mínimos, associa mensagens e foca a primeira correção',
     await expect(page.locator('#appointment_observation')).toHaveValue('Manter esta observação.');
     await chooseRecord(page, page.locator('#appointment_patientId'), 'p1');
     await chooseRecord(page, page.locator('#appointment_doctorId'), 'd1');
-    await page.locator('#appointment_procedure').selectOption('Profilaxia');
+    await chooseRecord(page, page.locator('#appointment_procedure'), 'pr2');
     await page.locator('#appointment_date').fill('2026-10-02');
     await page.locator('#appointment_time').fill('09:00');
     await page.locator('#appointment_duration').fill('0');
@@ -76,7 +76,7 @@ test('consulta valida mínimos, associa mensagens e foca a primeira correção',
 test('cadastro, detalhe, vínculo com orçamento e edição de status persistem', async ({ page }) => {
     await draft(page);
     await page.locator('#appointment_budgetId').selectOption('b1');
-    await page.locator('#appointment_attendance').fill('Particular');
+    await page.getByRole('radio', { name: 'Particular', exact: true }).check();
     await page.locator('#appointment_observation').fill('Paciente prefere atendimento pela manhã.');
     await save(page);
     await page.getByRole('link', { name: 'Ver consulta', exact: true }).click();
@@ -97,7 +97,7 @@ test('cadastro, detalhe, vínculo com orçamento e edição de status persistem'
     await expect(page.getByText('Confirmada', { exact: true })).toBeVisible();
     const data = await snapshot(page);
     expect(data.appointments).toHaveLength(1);
-    expect(data.appointments[0]).toMatchObject({ patientId: 'p1', doctorId: 'd1', duration: 45, status: 'Confirmada', time: '10:00', budgetId: 'b1' });
+    expect(data.appointments[0]).toMatchObject({ patientId: 'p1', doctorId: 'd1', duration: 45, status: 'Confirmada', time: '10:00', budgetId: 'b1', procedureId: 'pr2', procedure: 'Profilaxia', attendance: 'Particular', clinicId: '' });
     expect(data.appointments[0].history).toHaveLength(2);
     expect(data.cashMovements).toHaveLength(0);
 });
@@ -186,10 +186,10 @@ test('filtro de doutor e cadastro por horário preservam contexto', async ({ pag
     await save(page);
     await open(page, '/agenda?date=2026-10-02&doutor=d1');
     await expect(page.locator('#agenda_doctor')).toHaveAttribute('value', 'd1');
-    await expect(page.getByRole('link', { name: /Marina Albuquerque/ }).filter({ visible: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Marina Albuquerque', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: /Rafael Nogueira/ }).filter({ visible: true })).toHaveCount(0);
-    if ((page.viewportSize()?.width ?? 0) < 768)
-        await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
+    if ((page.viewportSize()?.width ?? 0) < 1280)
+        await page.getByRole('button', { name: 'Calendário', exact: true }).click();
     await page.getByRole('link', { name: 'Agendar em 03/10/2026 às 09:00', exact: true }).click();
     await expect(page.locator('#appointment_date')).toHaveValue('2026-10-03');
     await expect(page.locator('#appointment_time')).toHaveValue('09:00');
@@ -261,7 +261,7 @@ test('agenda, mês, formulário e detalhe têm acessibilidade, teclado e largura
     await page.screenshot({ path: testInfo.outputPath('agenda-form.png'), fullPage: true });
     await save(page);
     await open(page, '/agenda?date=2026-10-02');
-    const appointmentCard = page.getByRole('link', { name: /Marina Albuquerque/ }).filter({ visible: true });
+    const appointmentCard = page.getByRole('link', { name: 'Marina Albuquerque', exact: true });
     await expect(appointmentCard).toBeVisible();
     await appointmentCard.scrollIntoViewIfNeeded();
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

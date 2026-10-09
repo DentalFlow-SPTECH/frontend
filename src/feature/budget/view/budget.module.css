@@ -1,24 +1,25 @@
-.workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+.workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
 .patientContext > div, .itemHeading h3 { min-width: 0; overflow-wrap: anywhere; }
 .budgetTable :is(td, th), .mobileBudgets dd, .itemDetails dd { overflow-wrap: anywhere; }
 .pickerHint { margin-top: 16px; font-size: 14px; color: var(--muted); }
 .allPatients, .contextLink { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; }
 .allPatients { margin-top: 14px; }
 .records { min-width: 0; }
-.patientContext { display: flex; gap: 24px; align-items: center; justify-content: space-between; padding: 0 0 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
-.smallLabel { display: block; font-size: 14px; color: var(--muted); font-weight: 500; margin-bottom: 7px; }
-.patientContext h2 { font-size: clamp(21px, 2vw, 25px); line-height: 1.2; font-weight: 500; letter-spacing: -.4px; }
-.patientContext p { font-size: 14px; color: var(--muted); margin-top: 9px; }
+.patientContext { display: flex; gap: 24px; align-items: center; justify-content: space-between; padding: 0 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.smallLabel { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+.patientContext h2 { font-size: 20px; line-height: 1.2; font-weight: 500; letter-spacing: -.3px; }
+.patientContext p { font-size: 14px; color: var(--muted); margin-top: 3px; }
 .patientContext p span { margin-inline: 7px; }
 .contextLink { flex-shrink: 0; }
-.recordHeading { display: flex; gap: 16px; align-items: baseline; justify-content: space-between; padding: 8px 0 20px; }
-.recordHeading h2 { font-size: 20px; font-weight: 500; }
+.recordHeading { display: flex; gap: 16px; align-items: baseline; justify-content: space-between; padding: 0 0 8px; }
+.recordHeading h2 { font-size: 17px; font-weight: 500; }
 .recordHeading > span { font-size: 14px; color: var(--muted); white-space: nowrap; }
 .budgetTable { border-top: 1px solid var(--line); }
 .budgetTable tbody th { background: white; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; }
-.budgetTable tbody th a { display: block; padding-block: 5px; min-height: 44px; }
-.rowDate { display: block; color: var(--muted); margin-top: 7px; font-size: 14px; font-weight: 400; }
-.scenarioLabel { display: block; color: var(--muted); font-size: 14px; margin-top: 8px; font-weight: 400; }
+.budgetTable :is(td, th) { vertical-align: middle; padding-block: 5px; }
+.budgetTable tbody th a { display: inline-block; padding-block: 0; min-height: 0; }
+.rowDate { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.scenarioLabel { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
 .mobileBudgets { display: none; }
 .topNote { margin-bottom: 24px; }
 .readonlyNote { margin: 0 0 24px; color: var(--muted); font-size: 14px; }

@@ -10,7 +10,8 @@ export function readSnapshot(storage) {
         // Validate the collections before using a local snapshot. Preserve an unreadable snapshot until reset.
         if (saved.version !== 1 || !['patients', 'doctors', 'procedures', 'budgets', 'products', 'movements'].every(key => Array.isArray(saved[key])))
             throw new Error('invalid');
-        for (const key of ['appointments', 'cashMovements', 'users', 'audit']) {
+        // Coleções acrescentadas depois da primeira versão: ausentes em snapshots anteriores, começam vazias.
+        for (const key of ['appointments', 'cashMovements', 'users', 'audit', 'clinics', 'dailyReports']) {
             if (saved[key] === undefined)
                 saved[key] = [];
             else if (!Array.isArray(saved[key]))

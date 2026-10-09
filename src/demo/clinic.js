@@ -1,4 +1,7 @@
 export const appointmentStatuses = ['Agendada', 'Confirmada', 'Em atendimento', 'Concluída', 'Cancelada', 'Faltou'];
+export const openStatuses = ['Agendada', 'Confirmada', 'Em atendimento'];
+export const attendanceOptions = ['Particular', 'Convênio'];
+export const withoutClinic = 'sem';
 export function isDate(value) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
         return false;
@@ -14,3 +17,12 @@ export function appointmentInterval(value) {
     return Number.isSafeInteger(end) && Number.isFinite(new Date(end).getTime()) ? { start, end } : null;
 }
 export function isTooth(value) { return /^([1-4][1-8]|[5-8][1-5])$/.test(value); }
+// Registros anteriores às clínicas ficam sem vínculo até a vinculação manual; nenhuma unidade é atribuída por inferência.
+export function matchesClinic(record, clinicId) { return !clinicId || (clinicId === withoutClinic ? !record.clinicId : record.clinicId === clinicId); }
+export function clinicLabel(clinics, id) { return clinics.find(value => value.id === id)?.name ?? 'Sem clínica'; }
+// Concluir pelo status antigo não registrava o que foi feito; esses registros ainda podem receber os procedimentos realizados.
+export function canFinalize(appointment) { return !appointment.completion && (openStatuses.includes(appointment.status) || appointment.status === 'Concluída'); }
+// Um relatório enviado ou validado fixa as consultas incluídas até ser devolvido para correção.
+export function lockedReport(reports, appointmentId) { return reports.find(report => (report.status === 'Enviado' || report.status === 'Validado') && report.appointmentIds.includes(appointmentId)); }
+// Cada procedimento realizado é lido junto da consulta que o originou: data, doutor, clínica e forma de atendimento vêm dela.
+export function performedItems(appointments) { return appointments.flatMap(appointment => (appointment.completion?.items ?? []).map(item => ({ ...item, appointment }))); }

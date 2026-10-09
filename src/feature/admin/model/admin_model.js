@@ -1,3 +1,4 @@
+import { lockedReport } from '../../../demo/clinic.js';
 const uid = () => crypto.randomUUID();
 export function saveUserModel(current, input, id) {
     const existing = id ? current.users.find(value => value.id === id) : undefined;
@@ -33,3 +34,34 @@ export const profiles = ['Administrador', 'Recepção', 'Financeiro', 'Doutor'];
 export const emptyUser = { name: '', email: '', phone: '', login: '', profile: '', permissions: [] };
 export const fieldKeys = ['name', 'email', 'phone', 'login', 'profile'];
 export const labels = { name: 'Nome completo', email: 'E-mail', phone: 'Telefone', login: 'Usuário/login', profile: 'Perfil de acesso' };
+// Estrutura mínima de unidade: nome e histórico. Pacientes e doutores são compartilhados entre as clínicas.
+export function saveClinicModel(current, input, id) {
+    const existing = id ? current.clinics.find(value => value.id === id) : undefined;
+    if (id && !existing)
+        throw new Error('Esta clínica não está disponível. Seu preenchimento foi mantido.');
+    const name = input.name.trim();
+    if (!name)
+        throw new Error('Informe o nome da clínica.');
+    if (existing?.name === name)
+        return { value: existing };
+    const clinic = { ...existing, name, id: existing?.id ?? uid(), history: [...(existing?.history ?? []), { id: uid(), date: new Date().toISOString(), actor: 'Você', description: existing ? `Nome alterado: ${existing.name} → ${name}.` : 'Clínica cadastrada.' }] };
+    const change = { data: { ...current, clinics: existing ? current.clinics.map(value => value.id === clinic.id ? clinic : value) : [...current.clinics, clinic] }, action: existing ? 'Clínica atualizada' : 'Clínica cadastrada', record: clinic.name, recordPath: `/administracao/clinicas/${clinic.id}/editar` };
+    return { ...change, value: clinic };
+}
+// A vinculação é sempre uma escolha explícita e só alcança registros ainda sem clínica.
+export function linkClinicModel(current, { clinicId, appointmentIds = [], cashIds = [] }) {
+    const clinic = current.clinics.find(value => value.id === clinicId);
+    if (!clinic)
+        throw new Error('Selecione a clínica para vincular os registros.');
+    const appointments = current.appointments.filter(value => appointmentIds.includes(value.id) && !value.clinicId);
+    const movements = current.cashMovements.filter(value => cashIds.includes(value.id) && !value.clinicId);
+    const count = appointments.length + movements.length;
+    if (!count)
+        throw new Error('Selecione ao menos um registro sem clínica.');
+    if (appointments.some(value => lockedReport(current.dailyReports, value.id)))
+        throw new Error('Há consultas em relatório diário já enviado. Devolva o relatório para correção antes de vincular.');
+    const entry = () => ({ id: uid(), date: new Date().toISOString(), actor: 'Você', description: `Clínica vinculada: ${clinic.name}.` });
+    const link = (value, ids) => ids.includes(value.id) && !value.clinicId ? { ...value, clinicId, history: [...(value.history ?? []), entry()] } : value;
+    const change = { data: { ...current, appointments: current.appointments.map(value => link(value, appointmentIds)), cashMovements: current.cashMovements.map(value => link(value, cashIds)) }, action: 'Registros vinculados à clínica', record: `${count} ${count === 1 ? 'registro' : 'registros'} · ${clinic.name}`, recordPath: '/administracao/vinculos' };
+    return { ...change, value: count };
+}

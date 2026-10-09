@@ -49,7 +49,7 @@ test('rotas externas, navegação e recarregamento preservam entrada e dashboard
     await expect(page).toHaveURL(/#\/painel$/);
     await page.goto('./#/dashboard?date=2026-10-03');
     await expect(page).toHaveURL(/#\/painel\?date=2026-10-03$/);
-    await expect(page.getByLabel('Dia de referência')).toHaveValue('2026-10-03');
+    await expect(page.locator('#dashboard_period')).toHaveText('Outubro de 2026');
 });
 test('login valida presença e formato, associa erros e foca a primeira correção', async ({ page }) => {
     await open(page);

@@ -198,6 +198,7 @@ test('bloqueio e reativação exigem confirmação, preservam usuário e geram a
     expect(active.users.find(value => value.id === user.id)?.history).toHaveLength(3);
     expect(active.audit.length).toBe(before.audit.length + 2);
     await page.getByRole('link', { name: /Voltar à administração/ }).click();
+    await page.getByRole('navigation', { name: 'Seções da administração' }).getByRole('link', { name: 'Auditoria de ações', exact: true }).click();
     const audit = page.getByRole('region', { name: 'Auditoria de ações' });
     for (const entry of active.audit) {
         await expect(audit.getByText(entry.action, { exact: true })).toBeVisible();

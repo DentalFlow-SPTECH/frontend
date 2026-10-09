@@ -1,6 +1,13 @@
 // Domain operations return an atomic change; they never persist or publish state.
 import { emptyPatientInput, patientFieldLabels } from '../../../demo/patient.js';
 import { normalize } from '../../../demo/format.js';
+// O cadastro é preenchido uma seção por vez; os valores ficam juntos e só o nome completo é obrigatório.
+export const patientSections = [
+    { key: 'pessoais', title: 'Dados pessoais', keys: ['name', 'cpf', 'birthDate'] },
+    { key: 'contato', title: 'Contato', keys: ['phone', 'mobile', 'email'] },
+    { key: 'endereco', title: 'Endereço', keys: ['postalCode', 'street', 'number', 'complement', 'district', 'city', 'state'] },
+    { key: 'adicionais', title: 'Informações adicionais', keys: ['observation', 'emergencyContact', 'insurance', 'insuranceNumber'] },
+];
 export function createPatientInput(patient) {
     return Object.fromEntries(Object.keys(emptyPatientInput).map(key => [key, patient?.[key] ?? '']));
 }

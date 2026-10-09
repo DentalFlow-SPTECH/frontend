@@ -1,12 +1,30 @@
-import { normalize, dateLabel } from '../demo/format.js';
+import { normalize, dateLabel, money } from '../demo/format.js';
 
-export const recordPageSize = 8;
+export const recordPageSize = 6;
+
+// Cada tipo de cadastro informa seus textos, os campos pesquisados e os detalhes exibidos; o seletor não conhece os módulos.
+const kinds = {
+    patient: {
+        noun: 'paciente', plural: 'pacientes', hint: 'Nome, código, CPF ou telefone. Selecione um resultado para confirmar.',
+        fields: record => [record.name, record.code, record.cpf, record.phone, record.mobile],
+        details: record => [record.code, record.birthDate && `Nascimento: ${dateLabel(record.birthDate)}`, record.mobile || record.phone],
+    },
+    doctor: {
+        noun: 'doutor', plural: 'doutores', hint: 'Nome, CRO ou especialidade. Selecione um resultado para confirmar.',
+        fields: record => [record.name, record.cro, record.specialty, record.id],
+        details: record => [record.cro && `CRO: ${record.cro}`, record.specialty, record.phone || record.email],
+    },
+    procedure: {
+        noun: 'procedimento', plural: 'procedimentos', hint: 'Nome do procedimento, com ou sem acentos. Selecione um resultado para confirmar.',
+        fields: record => [record.name],
+        details: record => [Number.isSafeInteger(record.referencePriceCents) && `Valor de referência: ${money(record.referencePriceCents)}`],
+    },
+};
+
+export function recordKind(kind) { return kinds[kind] ?? kinds.doctor; }
 
 export function recordDetails(record, kind) {
-    return (kind === 'patient'
-        ? [record.code, record.birthDate && `Nascimento: ${dateLabel(record.birthDate)}`, record.mobile || record.phone]
-        : [record.cro && `CRO: ${record.cro}`, record.specialty, record.phone || record.email]
-    ).filter(Boolean).join(' · ') || 'Sem dados adicionais no cadastro';
+    return recordKind(kind).details(record).filter(Boolean).join(' · ') || 'Sem dados adicionais no cadastro';
 }
 
 export function findRecords(records, query, kind) {
@@ -14,9 +32,7 @@ export function findRecords(records, query, kind) {
     const digits = query.replace(/\D/g, '');
     const numeric = /^[\d\s().+\-]+$/.test(query) && digits.length > 0;
     return records.filter(record => {
-        const fields = kind === 'patient'
-            ? [record.name, record.code, record.cpf, record.phone, record.mobile]
-            : [record.name, record.cro, record.specialty, record.id];
+        const fields = recordKind(kind).fields(record);
         return normalize(fields.filter(Boolean).join(' ')).includes(term)
             || (numeric && fields.some(field => String(field ?? '').replace(/\D/g, '').includes(digits)));
     });

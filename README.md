@@ -1,6 +1,30 @@
 # Dental Flow — frontend da clínica
 
-Aplicação React + Vite + JavaScript/JSX, CSS Modules e MVVM para apresentar **painel, agenda, pacientes, doutores, orçamentos, estoque, caixa e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
+Aplicação React + Vite + JavaScript/JSX, CSS Modules e MVVM para apresentar **painel, agenda, pacientes, doutores, orçamentos, estoque, caixa, relatórios e administração** de uma clínica odontológica. Este recorte é uma demonstração: pacientes, doutores, procedimentos, materiais, valores e históricos são fictícios. Não há backend, endpoints, autenticação real ou envio de dados a um servidor.
+
+## Listas compactas, clínicas, finalização de consulta e relatórios — 08/10/2026
+
+Pedido e aprovado pelo usuário a partir de imagens das telas propostas. Decisões adotadas, contrato de dados e evidência completa estão na [entrega](../documentos/0_Context/c_delivery/dental_flow_ap_clinic_SPC_frontend_clinic_reports.md). Esta seção descreve o comportamento atual; onde houver diferença, ela substitui as seções históricas abaixo (limites de página, grade da Agenda e conteúdo do Painel).
+
+**Listas e formulários.** As listagens usam uma linha por registro no desktop e cartões curtos no celular: oito por página em Pacientes, Doutores e Estoque; seis em Caixa, Orçamentos, usuários, auditoria, históricos e relações; quatro nas consultas do dia; seis nos diálogos de busca. Em 1366 × 768 a paginação das listas principais fica visível sem rolar a página. O cadastro de paciente tem quatro seções navegáveis (Dados pessoais, Contato, Endereço, Informações adicionais) e continua exigindo somente o nome completo; um erro abre a seção do campo.
+
+**Agenda.** Na semana, sem filtro de doutor, cada horário de início é um bloco com a quantidade de consultas e as situações; com um doutor filtrado, as consultas aparecem como cartões proporcionais à duração, lado a lado quando se sobrepõem. O painel ao lado lista o dia ou o horário escolhido, quatro por página. Abaixo de 1280 px há a alternância “Consultas do dia | Calendário”. O procedimento é escolhido por busca e a forma de atendimento é Particular ou Convênio (opcional).
+
+**Clínicas.** Administração → Clínicas cadastra as unidades. Quando existe clínica, novas consultas exigem uma; consultas e movimentações anteriores ficam “Sem clínica” até serem escolhidas em **Vincular registros sem clínica**. Nenhuma clínica é atribuída automaticamente. Agenda, Caixa, Painel e Relatórios filtram por clínica. Pacientes são compartilhados e contam uma vez; doutores atendem em qualquer clínica e o conflito de horário vale entre elas.
+
+**Finalizar consulta.** Ação própria no detalhe e na lista do dia. Registra os procedimentos realizados (a partir do agendado e do orçamento vinculado, com inclusão e retirada), quantidade, dente e região opcionais. Muda a situação para Concluída, grava histórico e auditoria e **não cria movimentação de Caixa**. Repetir não duplica. Consulta finalizada não é editada nem cancelada; a finalização pode ser corrigida até o relatório diário ser enviado.
+
+**Relatórios.** `#/relatorios/diario` (doutor): finalizações do dia, observação, rascunho e envio. `#/relatorios/conferencia` (dona): validar ou devolver com motivo. Estados Rascunho, Enviado, Em correção e Validado. `#/relatorios/mensal`: procedimentos realizados por execução ou por retorno do convênio, conferência de glosa por item (Aguardando, Sem glosa, Glosa parcial, Glosa total), impressão e CSV. Valor apresentado desconhecido fica vazio, nunca zero; nada é apresentado como recebido.
+
+**Painel.** Abas Visão geral, Produção e relatórios e Financeiro, com mês e clínica. Mostra indicadores e pendências com atalhos; as listas de consultas do dia, estoque e orçamentos recentes foram retiradas.
+
+**Dados.** `dental_flow_demo_v1` e a versão 1 foram mantidas. As coleções `clinics` e `dailyReports` e os campos novos de consulta e caixa são opcionais; um snapshot anterior abre sem conversão e sem gravação automática.
+
+**Limites.** As visões de doutor e dona são telas locais, sem controle de acesso. Não há integração com operadoras, regra contratual, repasse, comissão ou valor automático. O catálogo de procedimentos não tem cadastro na aplicação. Estoque não foi dividido por clínica. Relatório validado e consulta finalizada não são reabertos. Os rótulos de campo continuam com 16 px.
+
+**Verificação em 08/10/2026.** `npm run lint`, 20 testes unitários, `npm run build` e `npm run build:pages` aprovados. `npm run test:e2e` no servidor de desenvolvimento: **275 aprovados, 3 skips previstos, 0 falhas** (13,8 min). Na prévia `/frontend/` do build final: **275 aprovados, 3 skips previstos, 0 falhas** (10,5 min). São 278 combinações de cenário e largura (desktop 1440 × 960 e celular 375 × 812), com axe, 320 px, ampliação equivalente a 200%, falhas de leitura/gravação e recarregamento. Duas rodadas anteriores do mesmo dia tiveram uma falha cada (um tempo limite em teste de Login não alterado e uma leitura do axe durante a transição de cor de um botão); a entrega explica ambas e o ajuste feito no teste. O chunk JavaScript passou a 615,62 kB (171,92 kB gzip) e o aviso do Vite acima de 500 kB permanece. É evidência local com Edge/Playwright e axe: não equivale a publicação, autenticação integrada ou teste com pessoas, leitor de tela ou dispositivo físico.
+
+Para experimentar os fluxos com dados fictícios em uma origem isolada (`http://127.0.0.1:4190/frontend/`), siga a [entrega](../documentos/0_Context/c_delivery/dental_flow_ap_clinic_SPC_frontend_clinic_reports.md). Commit e push foram autorizados pelo usuário em 08/10/2026 e feitos no branch `feat/clinicas-finalizacao-relatorios`. A publicação no Pages não foi autorizada e o workflow não foi acionado.
 
 ## Busca de cadastros e padrão visual — 08/10/2026
 
@@ -63,14 +87,15 @@ O build fica em `dist/`. A prévia local abre em `http://127.0.0.1:4178/`.
 | Área | Operações disponíveis |
 | --- | --- |
 | Login e Cadastro | Rotas externas ao shell, validação e envio demonstrativo em memória; Login chega ao Painel, Cadastro oferece voltar ao Login com somente o e-mail preenchido. |
-| Painel | Selecionar o dia de referência; consultar totais cadastrais, consultas do dia, materiais abaixo do mínimo e orçamentos recentes; comparar entradas e saídas dos últimos seis meses; abrir cada registro e o Caixa com o período mensal selecionado. |
-| Agenda | Consultar semana ou mês e dia selecionado; navegar por período/data; filtrar doutor; agendar, editar e cancelar consultas; verificar conflitos de horário; consultar histórico e vínculos de paciente, doutor e orçamento. |
+| Painel | Escolher mês e clínica; consultar indicadores de consultas, pacientes atendidos e pendências; produção por doutor e procedimento e andamento dos relatórios diários; entradas e saídas do mês, comparação de seis meses e convênios em conferência; abrir cada módulo com o mesmo período e clínica. |
+| Agenda | Consultar semana ou mês e a lista do dia ou do horário; navegar por período/data; filtrar doutor e clínica; agendar, editar e cancelar consultas; verificar conflitos de horário; finalizar a consulta registrando os procedimentos realizados e corrigir a finalização; consultar histórico e vínculos de paciente, doutor, clínica e orçamento. |
 | Orçamentos | Buscar/selecionar paciente; consultar orçamentos e histórico; criar e editar registros locais; adicionar, alterar e remover itens; associar procedimentos a dentes permanentes ou infantis e região/superfície; calcular os valores ilustrativos; guardar observações e condições em texto livre. |
 | Estoque | Buscar por nome/código/categoria; filtrar abaixo do mínimo; consultar produto e histórico; cadastrar material fictício; registrar entrada e saída com motivo; conferir saldo atualizado. |
 | Pacientes | Buscar por nome/CPF/código/telefone/celular; consultar o cadastro e seus orçamentos; cadastrar e editar dados pessoais, contatos, endereço e informações complementares; consultar o histórico cadastral das gravações. |
 | Doutores | Buscar, cadastrar, editar e consultar dados profissionais, histórico e consultas/orçamentos vinculados. |
-| Caixa | Registrar entradas e saídas manuais; consultar detalhes e histórico; filtrar por período/tipo/categoria/forma; calcular entradas, saídas e saldo das movimentações exibidas. |
-| Administração | Buscar, cadastrar e editar usuários; configurar permissões por módulo/operação; bloquear/reativar mediante confirmação; consultar histórico e auditoria das gravações locais. |
+| Caixa | Registrar entradas e saídas manuais, com clínica opcional; consultar detalhes e histórico; filtrar por período/tipo/categoria/forma/clínica; calcular entradas, saídas e saldo das movimentações exibidas. |
+| Relatórios | Preparar, enviar e corrigir o relatório diário do doutor; validar ou devolver com motivo; consultar os procedimentos realizados no mês; registrar guia, valor apresentado, retorno e glosa por item de convênio; imprimir e exportar CSV. |
+| Administração | Buscar, cadastrar e editar usuários; configurar permissões por módulo/operação; bloquear/reativar mediante confirmação; cadastrar e editar clínicas; vincular a uma clínica as consultas e movimentações anteriores escolhidas; consultar histórico e auditoria das gravações locais. |
 | Revisão da interface | Guardar dados no navegador; restaurar o cenário inicial mediante confirmação; experimentar carregamento lento e falhas de leitura/gravação fora da navegação da clínica. |
 
 Os orçamentos pré-carregados são somente para consulta. Seus status são exemplos e não têm transições disponíveis. Registros criados pelo visitante podem ser editados e não recebem um status comercial inventado: a lista mostra um travessão com nome acessível “Situação não definida”. A marca `local` e o valor interno `Registro local` identificam esses registros no modelo da demonstração, sem aparecer como avisos na rotina.
@@ -86,7 +111,7 @@ As entradas de estoque somam a quantidade ao saldo local; as saídas subtraem e 
 - Nome e unidade identificam o material do exemplo. Paciente, doutor, data e ao menos um item permitem demonstrar a criação de orçamento. A obrigatoriedade final dos campos depende da clínica.
 - Categoria, fornecedor, lote e condições são textos de referência; não constituem catálogos definitivos. Validade informada não gera expiração automática.
 - Somente nome completo é obrigatório para pacientes, doutores e usuários. CPF/CRO, contatos e demais campos cadastrais continuam opcionais, sem algoritmo ou regra de unicidade inventados.
-- Consultas exigem paciente, doutor, procedimento, data, horário e duração. A situação usa Agendada, Confirmada, Em atendimento, Concluída, Cancelada e Faltou, confirmadas pelo usuário como convenções do protótipo.
+- Consultas exigem paciente, doutor, procedimento, data, horário e duração, e clínica quando houver clínica cadastrada. A situação usa Agendada, Confirmada, Em atendimento, Concluída, Cancelada e Faltou, confirmadas pelo usuário como convenções do protótipo; Concluída é atribuída somente por Finalizar consulta.
 - Entradas e saídas de caixa exigem valor positivo, data e descrição. Categoria, forma de pagamento, responsável e observação são opcionais e livres.
 - Os perfis Administrador, Recepção, Financeiro e Doutor são referências opcionais confirmadas para o protótipo. Escolher um perfil não atribui permissões; o usuário configura cada permissão individualmente.
 - O odontograma permite alternar entre dentição permanente e infantil, conforme decisão do usuário. Dente e região/superfície são opcionais nos itens do orçamento.
@@ -145,6 +170,8 @@ O odontograma usa 32 dentes permanentes e 20 infantis, com numeração FDI de do
 
 ### Painel
 
+*Registro histórico: o conteúdo atual do Painel está na seção de 08/10/2026 no início deste arquivo.*
+
 A tela foi acrescentada por solicitação explícita do usuário em 03/10/2026 e passou a ser a entrada do protótipo e o destino da marca na navegação. A especificação anterior não previa um Dashboard como destino alternativo após login; esta mudança da demonstração não define autenticação, permissões efetivas ou redirecionamentos do produto integrado.
 
 Na revisão visual solicitada posteriormente, a tela recebeu o nome **Painel**, no título, navegação e mensagens. A entrada usa `#/painel`; endereços antigos `#/dashboard` redirecionam para o Painel conservando a data selecionada. Os blocos passaram a acompanhar o conteúdo em duas colunas independentes, sem reservar uma linha inteira pela altura do Estoque: o Caixa começa logo abaixo de Consultas mesmo no dia vazio. Estoque e orçamentos têm linhas mais compactas, sem reduzir os alvos de toque. Em 375 px os blocos seguem a ordem Consultas, Caixa, Estoque e Orçamentos. Links e botões usam o verde mais escuro `#145453`, com contraste calculado de 8,67:1 contra branco; o texto da opção selecionada na navegação passou a branco. As três propostas de identidade visual são estudos isolados para aprovação, sem substituir o tema geral da aplicação.
@@ -199,7 +226,7 @@ Para uma validação posterior com pessoas, proponha tarefas curtas sem explicar
 
 ## Dados locais e cenários
 
-O cenário inicial tem quatro pacientes, dois doutores, quatro procedimentos, três orçamentos, cinco materiais e oito movimentações de estoque. Consultas, caixa, usuários e auditoria começam vazios. Os cadastros foram criados para esta demonstração; nenhum dado veio de pacientes reais.
+O cenário inicial tem quatro pacientes, dois doutores, quatro procedimentos, três orçamentos, cinco materiais e oito movimentações de estoque. Consultas, caixa, usuários, auditoria, clínicas e relatórios diários começam vazios. Os cadastros foram criados para esta demonstração; nenhum dado veio de pacientes reais.
 
 Os registros salvos ficam na chave `dental_flow_demo_v1` do armazenamento local do navegador. Cada navegador/origem tem seus próprios dados. Não há compartilhamento entre visitantes, sincronização entre abas ou auditoria de servidor. O cenário escolhido nas opções é temporário e volta ao funcionamento normal após recarregar.
 
@@ -218,7 +245,7 @@ Ao carregar snapshots da primeira entrega, apenas os textos fixos dos exemplos i
 
 A ampliação de Pacientes mantém a chave `dental_flow_demo_v1` e `version: 1`. Ao ler um snapshot anterior, acrescenta somente os campos cadastrais ausentes como textos vazios e o histórico ausente como lista vazia, sem gravar automaticamente nem trocar identificadores/códigos. A próxima gravação efetiva persiste o formato ampliado. Campos existentes, pacientes/orçamentos criados pelo visitante e saldos/movimentações de estoque são preservados.
 
-A continuação acrescenta coleções ausentes de consultas, caixa, usuários e auditoria como listas vazias; não cria registros automaticamente nem salva na leitura. Dente e superfície ausentes continuam opcionais. Se o snapshot não puder ser aberto, a interface exibe os dados iniciais e bloqueia novas gravações para conservar o conteúdo original. A recuperação exige confirmação explícita antes de substituí-lo. Auditoria e alteração de dados são salvas juntas na mesma operação; uma falha conserva o estado anterior.
+A continuação acrescenta coleções ausentes de consultas, caixa, usuários e auditoria como listas vazias; não cria registros automaticamente nem salva na leitura. Clínicas e relatórios diários seguem a mesma regra: consultas e movimentações anteriores permanecem sem clínica, sem finalização e sem conferência até uma ação explícita. Dente e superfície ausentes continuam opcionais. Se o snapshot não puder ser aberto, a interface exibe os dados iniciais e bloqueia novas gravações para conservar o conteúdo original. A recuperação exige confirmação explícita antes de substituí-lo. Auditoria e alteração de dados são salvas juntas na mesma operação; uma falha conserva o estado anterior.
 
 ## Validação no navegador
 
@@ -281,17 +308,18 @@ Referências: [Vite: hospedagem estática e GitHub Pages](https://vite.dev/guide
 
 - `src/app`: rotas com hash, navegação e estrutura da aplicação.
 - `src/feature/access`: Login, Cadastro e estrutura externa; simulação somente em memória, sem relação com as contas da Administração.
-- `src/feature/dashboard`: resumo do dia, caixa mensal com comparação de seis meses, atenção ao estoque e orçamentos recentes.
+- `src/feature/dashboard`: indicadores do mês por clínica, produção e relatórios, caixa mensal com comparação de seis meses e convênios em conferência.
 - `src/feature/budget`: lista e editor de orçamentos.
 - `src/feature/inventory`: lista, detalhe, cadastro, entrada e saída de estoque.
 - `src/feature/patient`: busca, cadastro, detalhe, edição e histórico cadastral de pacientes.
-- `src/feature/agenda`: calendários semanal/mensal, cadastro, edição, detalhe e cancelamento de consultas.
+- `src/feature/agenda`: calendários semanal/mensal, cadastro, edição, detalhe, cancelamento e finalização de consultas.
+- `src/feature/report`: relatório diário, conferência, relatório mensal e glosas.
 - `src/feature/doctor`: lista, cadastro, edição e contexto de doutores.
 - `src/feature/cash`: entradas/saídas, filtros, saldo de movimentações e detalhe.
-- `src/feature/admin`: usuários, permissões configuráveis, bloqueio/reativação e auditoria local.
+- `src/feature/admin`: usuários, permissões configuráveis, bloqueio/reativação, clínicas, vinculação de registros e auditoria local.
 - `src/feature/review`: controles de teste, fora da navegação da clínica.
 - `src/component`: controles, feedback, carregamento e comportamento de formulários.
-- `src/demo`: cenário fictício, campos compatíveis, formatadores e fachada temporária; não são contratos de API.
+- `src/demo`: cenário fictício, campos compatíveis, formatadores e funções compartilhadas de clínica/finalização; não são contratos de API.
 - `src/data`: sessão compartilhada, repositories e adapter de armazenamento local.
 - `src/asset/brand`: logotipo original, incorporado sem redesenho.
 - `src/style`: fontes locais IBM Plex Sans, normalização e tokens compartilhados.
@@ -311,8 +339,9 @@ Ainda precisam ser definidas:
 - Gatilhos e relações entre orçamento, tratamento, consulta, cobrança, pagamento e compra; prevenção de duplicidade.
 - Anexos, limites, retenção, dados da clínica e formato de impressão/exportação.
 - Contratos reais de integração e tratamento de concorrência/erros do backend.
+- Controle de acesso das visões de doutor e dona, reabertura de relatório validado ou de consulta finalizada, cadastro do catálogo de procedimentos e de convênios, regras de cobrança/glosa das operadoras, repasses e estoque por clínica.
 
-Painel, Agenda, manutenção de Doutores, Caixa, usuários/permissões locais e orçamento com seleção dentária estão implementados neste recorte. Prontuário, procedimentos realizados, pagamentos integrados, anexos, relatórios financeiros e Acesso real continuam pendentes. A demonstração entra pelo Painel por solicitação do usuário; o destino Agenda após login descrito pela especificação depende do Acesso integrado e de sua definição de permissões.
+Painel, Agenda com finalização e procedimentos realizados, manutenção de Doutores, Caixa, clínicas, relatórios diário/mensal com acompanhamento de glosas, usuários/permissões locais e orçamento com seleção dentária estão implementados neste recorte. Prontuário, pagamentos integrados, anexos, relatórios fiscais/contábeis e Acesso real continuam pendentes. A demonstração entra pelo Painel por solicitação do usuário; o destino Agenda após login descrito pela especificação depende do Acesso integrado e de sua definição de permissões.
 
 ## Fontes e autoridade
 
@@ -321,6 +350,8 @@ O planejamento aprovado parte dos artefatos do repositório independente `docume
 A planilha atual tem registros consolidados e derivados; trechos do Markdown ainda descrevem o modelo anterior vazio. Essa divergência não foi corrigida neste recorte. Na revisão de Pacientes, foram comparados o design (linhas 478–530, 1027–1030) e as células atuais `Requisitos Funcionais!C13:G18`, `Conteúdo das Páginas!E32/E34` e `Tom de Voz!B9/D9`. `Identificação do Projeto!B18/B30` confirma a versão preenchida e preserva a falta de aprovação clínica; as stories continuam derivadas e sujeitas à validação. Nesta continuação o usuário confirmou os campos mínimos, as duas dentições, as situações de consulta e os quatro perfis apenas como convenções do protótipo. O Dashboard foi solicitado posteriormente pelo usuário; seu resumo deriva dos dados já existentes, sem acrescentar regras comerciais. Horários de expediente, pagamentos e matriz de permissões não foram promovidos a regras aprovadas. Os requisitos registrados na documentação não equivalem a cobertura integral por esta demonstração.
 
 ## Paginação — 08/10/2026
+
+*Registro histórico: os limites por lista abaixo foram substituídos pela seção de listas compactas no início deste arquivo; o componente e a regra de conservar a página na URL permanecem.*
 
 Todas as listagens de registros têm limite. Listas principais, relações, históricos, auditoria, consultas do dia e itens de orçamento mostram dez por página. No Painel, cada página mostra seis consultas, quatro materiais ou cinco orçamentos. Os diálogos de busca mantêm oito opções por página. Faixa exibida, total, Anterior/Próxima e número da página compartilham o mesmo componente.
 

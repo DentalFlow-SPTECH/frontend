@@ -3,7 +3,7 @@ import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { useResource } from '../../../component/use_resource.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { normalize, readMoney, today } from '../../../demo/format.js';
-import { isDate } from '../../../demo/clinic.js';
+import { clinicLabel, isDate, matchesClinic, withoutClinic } from '../../../demo/clinic.js';
 import { useClinicData, useClinicRepository } from '../../../app/app_provider.jsx';
 export function useCashViewModel() {
     const { data } = useClinicData();
@@ -14,10 +14,11 @@ export function useCashViewModel() {
     const type = params.get('tipo') ?? '';
     const category = params.get('categoria') ?? '';
     const paymentMethod = params.get('forma') ?? '';
+    const clinicId = params.get('clinica') === withoutClinic || data.clinics.some(value => value.id === params.get('clinica')) ? params.get('clinica') : '';
     const search = params.size ? `?${params.toString()}` : '';
     const invalidPeriod = !!from && !!until && until < from;
     const filtered = data.cashMovements.filter(movement => (!from || movement.date >= from) && (!until || movement.date <= until) &&
-        (!type || movement.type === type) && normalize(movement.category).includes(normalize(category)) &&
+        (!type || movement.type === type) && matchesClinic(movement, clinicId) && normalize(movement.category).includes(normalize(category)) &&
         normalize(movement.paymentMethod).includes(normalize(paymentMethod))).sort((a, b) => b.date.localeCompare(a.date));
     const entries = filtered.filter(value => value.type === 'Entrada').reduce((total, value) => total + value.amountCents, 0);
     const exits = filtered.filter(value => value.type === 'Saída').reduce((total, value) => total + value.amountCents, 0);
@@ -31,7 +32,9 @@ export function useCashViewModel() {
         setParams(next, { replace: true });
     }
     function clearFilters() { setParams({}); }
-    return { resource, params, from, until, type, category, paymentMethod, search, invalidPeriod, filtered, entries, exits, filter, clearFilters };
+    const clinics = data.clinics;
+    function clinicOf(movement) { return clinicLabel(clinics, movement.clinicId); }
+    return { resource, params, from, until, type, category, paymentMethod, clinicId, clinics, clinicOf, search, invalidPeriod, filtered, entries, exits, filter, clearFilters };
 }
 export function useCashDetailViewModel() {
     const { id } = useParams();
@@ -39,20 +42,16 @@ export function useCashDetailViewModel() {
     const { data } = useClinicData();
     const resource = useResource(`cash:${id}`);
     const movement = data.cashMovements.find(value => value.id === id);
-    if (resource.busy)
-        return { search, resource, movement };
-    if (resource.error)
-        return { search, resource, movement };
-    if (!movement)
-        return { search, resource, movement };
-    return { search, resource, movement };
+    const clinic = movement && (movement.clinicId || data.clinics.length) ? clinicLabel(data.clinics, movement.clinicId) : '';
+    return { search, resource, movement, clinic };
 }
 export function useCashFormViewModel({ type }) {
     const submissionLock = useRef(false);
+    const { data } = useClinicData();
     const { saveCashMovement } = useClinicRepository('cash');
     const { search } = useLocation();
     const resource = useResource(`cash-form:${type}`);
-    const [initial] = useState(() => ({ amount: '', date: today(), description: '', category: '', paymentMethod: '', responsible: '', observation: '' }));
+    const [initial] = useState(() => ({ amount: '', date: today(), description: '', category: '', paymentMethod: '', responsible: '', observation: '', clinicId: '' }));
     const [fields, setFields] = useState(initial);
     const [errors, setErrors] = useState({});
     const [saveError, setSaveError] = useState('');
@@ -85,7 +84,7 @@ export function useCashFormViewModel({ type }) {
         submissionLock.current = true;
         setSaving(true);
         try {
-            setSaved(await saveCashMovement({ type, amountCents: amountCents, date: fields.date, description: fields.description.trim(), category: fields.category.trim(), paymentMethod: fields.paymentMethod.trim(), responsible: fields.responsible.trim(), observation: fields.observation.trim() }));
+            setSaved(await saveCashMovement({ type, amountCents: amountCents, date: fields.date, description: fields.description.trim(), category: fields.category.trim(), paymentMethod: fields.paymentMethod.trim(), responsible: fields.responsible.trim(), observation: fields.observation.trim(), clinicId: fields.clinicId }));
         }
         catch (reason) {
             setSaveError(reason instanceof Error ? reason.message : 'Não foi possível salvar. Seu preenchimento foi mantido. Tente novamente.');
@@ -95,11 +94,5 @@ export function useCashFormViewModel({ type }) {
             setSaving(false);
         }
     }
-    if (saved)
-        return { search, resource, fields, errors, saveError, saving, saved, change, submit };
-    if (resource.busy)
-        return { search, resource, fields, errors, saveError, saving, saved, change, submit };
-    if (resource.error)
-        return { search, resource, fields, errors, saveError, saving, saved, change, submit };
-    return { search, resource, fields, errors, saveError, saving, saved, change, submit };
+    return { search, resource, clinics: data.clinics, fields, errors, saveError, saving, saved, change, submit };
 }

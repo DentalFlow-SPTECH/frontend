@@ -2,6 +2,9 @@ import { chooseRecord } from './record_picker_helpers.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createSeed } from '../../src/demo/seed.js';
+import { saveClinicModel } from '../../src/feature/admin/model/admin_model.js';
+import { finalizeAppointmentModel } from '../../src/feature/agenda/model/agenda_model.js';
+import { saveClaimModel, saveDailyReportModel } from '../../src/feature/report/model/report_model.js';
 const storageKey = 'dental_flow_demo_v1';
 function scenarioData() {
     const data = createSeed();
@@ -121,18 +124,18 @@ test('agenda móvel seleciona dia por teclado e conserva dia e doutor ao voltar'
     await page.getByRole('button', { name: 'Ver consultas de 04/10/2026', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { name: 'Consultas de 04/10/2026', exact: true })).toBeVisible();
-    await page.getByRole('link', { name: /Rafael Nogueira/ }).filter({ visible: true }).click();
+    await page.getByRole('link', { name: 'Rafael Nogueira', exact: true }).click();
     await page.getByRole('link', { name: /Voltar à agenda/ }).click();
     await expect(page.locator('#agenda_date')).toHaveValue('2026-10-04');
     await expect(page.locator('#agenda_doctor')).toHaveAttribute('value', 'd1');
     await page.reload();
     await expect(page.locator('#agenda_date')).toHaveValue('2026-10-04');
-    await page.getByRole('button', { name: 'Ver grade de horários da semana' }).click();
+    await page.getByRole('button', { name: 'Calendário', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Agenda semanal, dias e horários' })).toBeVisible();
 });
 test('tabela do gráfico de caixa abre o mês exato e mantém os totais em centavos', async ({ page }) => {
     await inject(page);
-    await open(page, '/painel?date=2026-10-03');
+    await open(page, '/painel?date=2026-10-03&aba=financeiro');
     await page.getByText('Ver valores por mês', { exact: true }).click();
     await page.getByRole('link', { name: 'Ver caixa de setembro de 2026', exact: true }).click();
     await expect(page.locator('#cash_from')).toHaveValue('2026-09-01');
@@ -149,22 +152,42 @@ const screens = [
     ['caixa', '/caixa?de=2026-10-01&ate=2026-10-31'], ['movimentacao', '/caixa/ux-cash'], ['caixa-entrada', '/caixa/entrada'], ['caixa-saida', '/caixa/saida'],
     ['administracao', '/administracao'], ['usuario', '/administracao/ux-user'], ['usuario-novo', '/administracao/novo'], ['usuario-editar', '/administracao/ux-user/editar'], ['revisao', '/revisao'],
 ];
-test('todas as telas: axe, textos longos, 320 px, ampliação equivalente a 200% e capturas', async ({ page }) => {
-    test.setTimeout(240_000);
+// Telas das clínicas, da finalização e dos relatórios, com dados produzidos pelos Models.
+const clinicScreens = [
+    ['painel-producao', '/painel?date=2026-10-03&aba=producao'], ['painel-financeiro', '/painel?date=2026-10-03&aba=financeiro'], ['agenda-horario', '/agenda?date=2026-10-03&view=week&faixa=540-600'], ['agenda-doutor', '/agenda?date=2026-10-03&doutor=d1'],
+    ['consulta-finalizar', '/agenda/ux-appointment-next/finalizar'], ['consulta-finalizada', '/agenda/ux-appointment'], ['consulta-corrigir', '/agenda/ux-appointment/finalizar'],
+    ['relatorio-diario', '/relatorios/diario?data=2026-10-03&doutor=d1'], ['relatorio-conferencia', '/relatorios/conferencia'], ['relatorio-mensal', '/relatorios/mensal?mes=2026-10'], ['relatorio-glosa', '/relatorios/mensal?mes=2026-10&item=ux-item'],
+    ['administracao-clinicas', '/administracao?aba=clinicas'], ['administracao-auditoria', '/administracao?aba=auditoria'], ['clinica-nova', '/administracao/clinicas/nova'], ['vinculos', '/administracao/vinculos'],
+];
+function clinicData(data) {
+    let next = saveClinicModel(data, { name: 'UnidadeExemplo'.repeat(12) }).data;
+    const clinicId = next.clinics[0].id;
+    next.appointments[0].clinicId = clinicId;
+    next = finalizeAppointmentModel(next, 'ux-appointment', { items: [{ procedureId: 'pr2', quantity: 1, tooth: '36', region: 'Oclusal' }], attendance: 'Convênio', insurance: 'ConvenioExemplo'.repeat(8), observation: 'Retorno em 15 dias.', pendingGuide: true }).data;
+    next.appointments[0].completion.items[0].id = 'ux-item';
+    next = saveClaimModel(next, 'ux-appointment', 'ux-item', { guide: 'GUIA-1', presentedCents: 18000, result: 'Glosa parcial', returnOn: '2026-11-04', glosaCents: 5000, reason: 'Motivo'.repeat(20) }).data;
+    return saveDailyReportModel(next, { date: '2026-10-03', doctorId: 'd1', clinicId }, 'Observação do dia.', true).data;
+}
+function longTextData() {
     const data = scenarioData();
-    const longName = 'PacienteExemplo'.repeat(24);
-    data.patients[0].name = longName;
+    data.patients[0].name = 'PacienteExemplo'.repeat(24);
     data.doctors[0].specialty = 'Especialidade'.repeat(24);
     data.products[0].name = 'MaterialExemplo'.repeat(24);
     data.users[0].name = 'UsuarioExemplo'.repeat(24);
+    return clinicData(data);
+}
+async function sweep(page, list) {
+    const data = longTextData();
     await inject(page, data);
+    // O axe mede o estado final: sem isto, pode ler a cor de um botão no meio da transição ao trocar de tela.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const originalViewport = page.viewportSize();
-    for (const [name, route] of screens) {
+    for (const [name, route] of list) {
         await page.setViewportSize(originalViewport);
         await open(page, route);
-        expect((await new AxeBuilder({ page }).analyze()).violations, name).toEqual([]);
+        expect((await new AxeBuilder({ page }).analyze()).violations.map(violation => ({ id: violation.id, nodes: violation.nodes.map(node => node.target) })), name).toEqual([]);
         for (const viewport of [originalViewport, { width: 320, height: 812 }, { width: 720, height: 480 }]) {
             await page.setViewportSize(viewport);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name} em ${viewport.width}px`).toBe(true);
@@ -172,6 +195,14 @@ test('todas as telas: axe, textos longos, 320 px, ampliação equivalente a 200%
     }
     expect(errors).toEqual([]);
     expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBe(JSON.stringify(data));
+}
+test('todas as telas: axe, textos longos, 320 px, ampliação equivalente a 200% e capturas', async ({ page }) => {
+    test.setTimeout(240_000);
+    await sweep(page, screens);
+});
+test('clínicas, finalização e relatórios: axe, textos longos, 320 px e ampliação equivalente a 200%', async ({ page }) => {
+    test.setTimeout(240_000);
+    await sweep(page, clinicScreens);
 });
 test('capturas das telas com cenário fictício de revisão', async ({ page }, testInfo) => {
     test.setTimeout(120_000);

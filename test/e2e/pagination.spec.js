@@ -25,44 +25,57 @@ async function open(page, route) {
     await expect(page.locator('main h1')).toBeVisible();
     await expect(page.getByText('Carregando registros…')).toHaveCount(0);
 }
+// Listas simples mostram oito registros; listas com totais e filtros, seis; relações, históricos e auditoria, seis; consultas do dia, quatro.
 const listings = [
-    { route: '/pacientes', label: 'Pacientes', filter: '#patient_search', term: 'Paciente fictício 01', back: 'Voltar aos pacientes' },
-    { route: '/doutores', label: 'Doutores', filter: '#doctor_search', term: 'Doutor fictício 01', back: 'Voltar aos doutores' },
-    { route: '/estoque', label: 'Materiais', filter: '#inventory_search', term: 'Material fictício 01', back: 'Voltar ao estoque' },
-    { route: '/caixa', label: 'Movimentações do caixa', filter: '#cash_type_filter', term: 'Entrada', back: 'Voltar ao caixa' },
-    { route: '/administracao', label: 'Usuários', filter: '#user_search', term: 'Usuário fictício 01', back: 'Voltar à administração' },
-    { route: '/orcamentos?paciente=p1', label: 'Orçamentos', back: 'Orçamentos do paciente' },
+    { route: '/pacientes', label: 'Pacientes', size: 8, filter: '#patient_search', term: 'Paciente fictício 01', back: 'Voltar aos pacientes' },
+    { route: '/doutores', label: 'Doutores', size: 8, filter: '#doctor_search', term: 'Doutor fictício 01', back: 'Voltar aos doutores' },
+    { route: '/estoque', label: 'Materiais', size: 8, filter: '#inventory_search', term: 'Material fictício 01', back: 'Voltar ao estoque' },
+    { route: '/caixa', label: 'Movimentações do caixa', size: 6, filter: '#cash_type_filter', term: 'Entrada', back: 'Voltar ao caixa' },
+    { route: '/administracao', label: 'Usuários', size: 6, filter: '#user_search', term: 'Usuário fictício 01', back: 'Voltar à administração' },
+    { route: '/orcamentos?paciente=p1', label: 'Orçamentos', size: 6, back: 'Orçamentos do paciente' },
 ];
+const range = (size, page, total = 24) => `Mostrando ${(page - 1) * size + 1}–${Math.min(page * size, total)} de ${total} registros`;
 for (const listing of listings) test(`${listing.label}: limite, últimas páginas, filtros e retorno preservam registros`, async ({ page }) => {
     const data = populated();
+    const { size } = listing;
+    const pages = Math.ceil(24 / size);
     await inject(page, data);
     await open(page, listing.route);
     const list = page.locator(`[data-page-list="${listing.label}"]`);
     const rows = list.locator('tbody tr:visible, ul > li:visible');
-    await expect(rows).toHaveCount(10);
-    await expect(list.getByRole('status')).toHaveText('Mostrando 1–10 de 24 registros');
+    await expect(rows).toHaveCount(size);
+    await expect(list.getByRole('status')).toHaveText(range(size, 1));
     await expect(list.getByRole('button', { name: 'Anterior' })).toBeDisabled();
+    // Em 1366 × 768 a busca e a paginação ficam na primeira tela, sem rolagem da página.
+    if ((page.viewportSize()?.width ?? 0) >= 768) {
+        const original = page.viewportSize();
+        await page.setViewportSize({ width: 1366, height: 768 });
+        await expect(list.getByRole('button', { name: 'Próxima' })).toBeInViewport({ ratio: 1 });
+        expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+        await page.setViewportSize(original);
+    }
     await list.getByRole('button', { name: 'Próxima' }).click();
     await expect(page).toHaveURL(/pagina=2/);
     await expect(list.getByRole('group')).toBeFocused();
-    await expect(list.getByRole('status')).toHaveText('Mostrando 11–20 de 24 registros');
+    await expect(list.getByRole('status')).toHaveText(range(size, 2));
     const selectedName = await list.locator('a:visible').first().innerText();
     await list.locator('a:visible').first().click();
     await page.getByRole('link', { name: listing.back, exact: false }).click();
-    await expect(list.getByRole('status')).toHaveText('Mostrando 11–20 de 24 registros');
+    await expect(list.getByRole('status')).toHaveText(range(size, 2));
     await expect(list.locator('a:visible').first()).toHaveText(selectedName);
     await page.reload();
-    await expect(list.getByRole('status')).toHaveText('Mostrando 11–20 de 24 registros');
-    await list.getByRole('button', { name: 'Próxima' }).click();
-    await expect(rows).toHaveCount(4);
-    await expect(list.getByRole('status')).toHaveText('Mostrando 21–24 de 24 registros');
+    await expect(list.getByRole('status')).toHaveText(range(size, 2));
+    for (let current = 3; current <= pages; current++)
+        await list.getByRole('button', { name: 'Próxima' }).click();
+    await expect(rows).toHaveCount(24 - size * (pages - 1));
+    await expect(list.getByRole('status')).toHaveText(range(size, pages));
     await expect(list.getByRole('button', { name: 'Próxima' })).toBeDisabled();
     if (listing.filter) {
         const filter = page.locator(listing.filter);
         if (listing.filter === '#cash_type_filter') await filter.selectOption(listing.term);
         else await filter.fill(listing.term);
         await expect(page).not.toHaveURL(/pagina=/);
-        await expect(list.getByRole('status')).toHaveText(listing.filter === '#cash_type_filter' ? 'Mostrando 1–10 de 12 registros' : 'Mostrando 1–1 de 1 registro');
+        await expect(list.getByRole('status')).toHaveText(listing.filter === '#cash_type_filter' ? range(size, 1, 12) : 'Mostrando 1–1 de 1 registro');
     }
     expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBe(JSON.stringify(data));
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -74,50 +87,46 @@ test('caixa mantém totais de toda a seleção e páginas inválidas permanecem 
     await inject(page, populated());
     await open(page, '/caixa?pagina=99999');
     const list = page.locator('[data-page-list="Movimentações do caixa"]');
-    await expect(list.getByRole('status')).toHaveText('Mostrando 21–24 de 24 registros');
+    await expect(list.getByRole('status')).toHaveText(range(6, 4));
     const totals = page.getByLabel('Totais de todas as movimentações da seleção').locator('dd');
     await expect(totals).toHaveText(['R$ 120,00', 'R$ 60,00', 'R$ 60,00']);
     await list.getByRole('button', { name: 'Anterior' }).click();
     await expect(totals).toHaveText(['R$ 120,00', 'R$ 60,00', 'R$ 60,00']);
     await open(page, '/caixa?pagina=-3');
-    await expect(list.getByRole('status')).toHaveText('Mostrando 1–10 de 24 registros');
+    await expect(list.getByRole('status')).toHaveText(range(6, 1));
 });
 
 test('históricos, relações, auditoria e consultas do dia também têm limite', async ({ page }) => {
     const data = populated();
     await inject(page, data);
-    for (const [route, labels] of [
+    for (const [route, labels, size = 6] of [
         ['/pacientes/p1', ['Histórico', 'Orçamentos do paciente']],
         ['/doutores/d1', ['Histórico', 'Consultas do doutor', 'Orçamentos do doutor']],
         ['/estoque/product-0', ['Movimentações do material']],
         ['/caixa/cash-0', ['Histórico']],
         ['/administracao/user-0', ['Histórico']],
-        ['/administracao', ['Auditoria']],
+        ['/administracao?aba=auditoria', ['Auditoria']],
         ['/orcamentos/budget-0', ['Histórico']],
-        ['/agenda?date=2026-10-08&view=month', ['Consultas do dia']],
+        ['/agenda?date=2026-10-08&view=month', ['Consultas do dia'], 4],
+        ['/agenda?date=2026-10-08&view=week', ['Consultas do dia'], 4],
     ]) {
         await open(page, route);
         for (const label of labels) {
             const list = page.locator(`[data-page-list="${label}"]:visible`);
-            await expect(list.locator('ol > li, ul > li, [class*="dayAppointments"] > a')).toHaveCount(10);
+            await expect(list.locator('ol > li, ul > li')).toHaveCount(size);
             await list.getByRole('button', { name: 'Próxima' }).click();
-            await expect(list.getByRole('status')).toHaveText('Mostrando 11–20 de 24 registros');
+            await expect(list.getByRole('status')).toHaveText(range(size, 2));
         }
     }
     expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBe(JSON.stringify(data));
 });
 
-test('painel permite percorrer todos os registros em cartões compactos', async ({ page }) => {
+test('painel mostra indicadores do conjunto completo sem listas paginadas', async ({ page }) => {
     await inject(page, populated());
     await open(page, '/painel?date=2026-10-08');
-    for (const [label, size] of [['Consultas do painel', 6], ['Materiais do painel', 4], ['Orçamentos do painel', 5]]) {
-        const list = page.locator(`[data-page-list="${label}"]`);
-        await expect(list.locator('ul > li')).toHaveCount(size);
-        await expect(list.getByRole('status')).toHaveText(`Mostrando 1–${size} de 24 registros`);
-        await list.getByRole('button', { name: 'Próxima' }).click();
-        await expect(list.getByRole('status')).toHaveText(`Mostrando ${size + 1}–${size * 2} de 24 registros`);
-    }
-    await expect(page.getByLabel('Resumo da clínica').locator('dd > span')).toHaveText(['24', '24', '24', '24']);
+    await expect(page.getByLabel('Indicadores de Outubro de 2026', { exact: true }).locator('dd > span').first()).toHaveText('24');
+    await expect(page.getByRole('region', { name: 'Pendências', exact: true }).locator('li').last().locator('strong')).toHaveText('24');
+    await expect(page.locator('[data-page-list]')).toHaveCount(0);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 

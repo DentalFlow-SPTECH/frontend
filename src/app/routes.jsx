@@ -4,13 +4,15 @@ import { PatientDetailPage, PatientFormPage, PatientListPage } from '../feature/
 import { BudgetEditorPage, BudgetListPage } from '../feature/budget/view/budget_view.jsx';
 import { InventoryListPage, ProductDetailPage, ProductFormPage, StockEntryPage, StockExitPage } from '../feature/inventory/view/inventory_view.jsx';
 import { ReviewPage } from '../feature/review/view/review_view.jsx';
-import { AgendaPage, AppointmentDetailPage, AppointmentFormPage } from '../feature/agenda/view/agenda_view.jsx';
+import { AgendaPage, AppointmentDetailPage, AppointmentFormPage, FinalizationPage } from '../feature/agenda/view/agenda_view.jsx';
 import { CashDetailPage, CashFormPage, CashPage } from '../feature/cash/view/cash_view.jsx';
 import { DoctorDetailPage, DoctorFormPage, DoctorListPage } from '../feature/doctor/view/doctor_view.jsx';
-import { AdminPage, UserDetailPage, UserFormPage } from '../feature/admin/view/admin_view.jsx';
+import { AdminPage, ClinicFormPage, ClinicLinkPage, UserDetailPage, UserFormPage } from '../feature/admin/view/admin_view.jsx';
 import { DashboardPage } from '../feature/dashboard/view/dashboard_view.jsx';
 import { LoginPage, RegistrationPage } from '../feature/access/view/access_view.jsx';
+import { DailyReportPage, MonthlyReportPage, ReportReviewPage } from '../feature/report/view/report_view.jsx';
 function LegacyDashboardRoute() { const { search } = useLocation(); return <Navigate to={`/painel${search}`} replace/>; }
+function ReportIndexRoute() { const { search } = useLocation(); return <Navigate to={`/relatorios/diario${search}`} replace/>; }
 export const router = createHashRouter([
     { path: 'login', element: <LoginPage />, errorElement: <RouteErrorPage /> },
     { path: 'cadastro', element: <RegistrationPage />, errorElement: <RouteErrorPage /> },
@@ -34,6 +36,7 @@ export const router = createHashRouter([
             { path: 'agenda/nova', element: <AppointmentFormPage /> },
             { path: 'agenda/:id', element: <AppointmentDetailPage /> },
             { path: 'agenda/:id/editar', element: <AppointmentFormPage /> },
+            { path: 'agenda/:id/finalizar', element: <FinalizationPage /> },
             { path: 'doutores', element: <DoctorListPage /> },
             { path: 'doutores/novo', element: <DoctorFormPage /> },
             { path: 'doutores/:id', element: <DoctorDetailPage /> },
@@ -44,8 +47,15 @@ export const router = createHashRouter([
             { path: 'caixa/:id', element: <CashDetailPage /> },
             { path: 'administracao', element: <AdminPage /> },
             { path: 'administracao/novo', element: <UserFormPage /> },
+            { path: 'administracao/vinculos', element: <ClinicLinkPage /> },
+            { path: 'administracao/clinicas/nova', element: <ClinicFormPage /> },
+            { path: 'administracao/clinicas/:id/editar', element: <ClinicFormPage /> },
             { path: 'administracao/:id', element: <UserDetailPage /> },
             { path: 'administracao/:id/editar', element: <UserFormPage /> },
+            { path: 'relatorios', element: <ReportIndexRoute /> },
+            { path: 'relatorios/diario', element: <DailyReportPage /> },
+            { path: 'relatorios/conferencia', element: <ReportReviewPage /> },
+            { path: 'relatorios/mensal', element: <MonthlyReportPage /> },
             { path: 'revisao', element: <ReviewPage /> },
             { path: '*', element: <NotFoundPage /> },
         ] }

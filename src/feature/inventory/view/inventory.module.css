@@ -1,13 +1,14 @@
-.searchToolbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 26px; }
+.searchToolbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 12px; }
 .searchToolbar > :first-child { max-width: 440px; flex: 1; }
 .checkFilter { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 0; font-size: 15px; cursor: pointer; }
 .checkFilter input { width: 20px; height: 20px; accent-color: var(--primary); flex: 0 0 auto; }
-.listHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-block: 20px 16px; border-top: 1px solid var(--line); }
+.listHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-block: 0 6px; }
 .listHeading p { color: var(--muted); font-size: 14px; }
+.desktopRecords td, .desktopRecords tbody th { padding-block: 4px !important; vertical-align: middle !important; }
 .materialCell { background: white !important; text-transform: none !important; letter-spacing: normal !important; color: var(--ink) !important; max-width: 430px; }
-.materialCell a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; padding-block: 4px; font-size: 16px; overflow-wrap: anywhere; }
-.materialCell > span { display: block; font-size: 14px; font-weight: 400; color: var(--muted); }
-.unit { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; }
+.materialCell a { display: inline-flex; align-items: center; min-height: 24px; font-weight: 500; padding-block: 0; font-size: 14.5px; overflow-wrap: anywhere; }
+.materialCell > span { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+.unit { display: inline; font-size: 13px; color: var(--muted); margin-left: 5px; }
 .mobileRecords { display: none; }
 .srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap; }
 .stockStrip { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 32px; padding: 26px 0; border-block: 1px solid var(--line); margin-bottom: 30px; }
@@ -27,7 +28,7 @@
 .sectionHeading > span { color: var(--muted); font-size: 14px; }
 .sectionHeading > span { flex-shrink: 0; }
 .movements { list-style: none; padding: 0; margin: 0; background: white; border-block: 1px solid var(--line); }
-.movements > li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 26px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.movements > li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 20px; padding: 10px 18px; border-bottom: 1px solid var(--line); }
 .movements > li:last-child { border-bottom: none; }
 .movementMeta time { display: block; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .movementMeta > span { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; }
@@ -35,7 +36,7 @@
 .movementTitle h3 { font-size: 15px; font-weight: 500; }
 .movementQuantity { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .movementContent > p { font-size: 14px; }
-.movementDetails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 16px 0 0; gap: 12px 24px; }
+.movementDetails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 6px 0 0; gap: 4px 20px; }
 .movementDetails dt { font-size: 14px; color: var(--muted); }
 .movementDetails dd { font-size: 15px; margin: 3px 0 0; overflow-wrap: anywhere; }
 .movementObservation { margin-top: 12px; color: var(--muted); }

@@ -38,6 +38,43 @@ export function daySegments(appointments, day) {
     return segments;
 }
 
+// Sem filtro de doutor a coluna do dia não comporta cartões lado a lado: as consultas que começam na mesma hora formam um bloco.
+export function hourBlocks(segments) {
+    const blocks = [];
+    for (const segment of segments) {
+        const start = Math.floor(segment.start / 60) * 60;
+        const block = blocks.find(value => value.start === start);
+        if (block)
+            block.items.push(segment);
+        else
+            blocks.push({ start, end: start + 60, items: [segment] });
+    }
+    return blocks;
+}
+// Com filtro de doutor cada consulta mantém posição e altura proporcionais; intervalos sobrepostos são reunidos em um bloco.
+export function overlapBlocks(segments) {
+    const blocks = [];
+    for (const segment of segments) {
+        const last = blocks.at(-1);
+        if (last && segment.start < last.end) {
+            last.items.push(segment);
+            last.end = Math.max(last.end, segment.end);
+        }
+        else
+            blocks.push({ start: segment.start, end: segment.end, items: [segment] });
+    }
+    return blocks;
+}
+// Consultas fora da faixa de horários visível continuam contadas, para que nenhuma fique escondida pela rolagem.
+export function outsideCounts(days, first, last) {
+    const blocks = days.flatMap(day => day.blocks);
+    const count = values => values.reduce((total, block) => total + block.items.length, 0);
+    return { before: count(blocks.filter(block => block.end <= first)), after: count(blocks.filter(block => block.start >= last)) };
+}
+export function statusCounts(appointments, statuses) {
+    return statuses.map(status => ({ status, count: appointments.filter(value => value.status === status).length })).filter(value => value.count > 0);
+}
+
 export function monthCells(date) {
     const first = `${date.slice(0, 7)}-01`;
     const offset = (parseDate(first).getDay() + 6) % 7;

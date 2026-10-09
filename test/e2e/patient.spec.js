@@ -47,9 +47,24 @@ async function scenario(page, value) {
 async function snapshot(page) {
     return page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
 }
+const sections = ['Dados pessoais', 'Contato', 'Endereço', 'Informações adicionais'];
+const sectionOf = { name: 0, cpf: 0, birthDate: 0, phone: 1, mobile: 1, email: 1, postalCode: 2, street: 2, number: 2, complement: 2, district: 2, city: 2, state: 2, observation: 3, emergencyContact: 3, insurance: 3, insuranceNumber: 3 };
+// O cadastro mostra uma seção por vez: abre a seção do campo pelo seletor (telas estreitas) ou pela navegação.
+async function showField(page, field) {
+    const control = page.locator(`#patient_${field}`);
+    await expect(page.locator('#patient_section')).toBeAttached();
+    if (!(await control.isVisible())) {
+        const select = page.locator('#patient_section');
+        if (await select.isVisible())
+            await select.selectOption(String(sectionOf[field]));
+        else
+            await page.getByRole('navigation', { name: 'Seções do cadastro' }).getByRole('button', { name: new RegExp(`^${sections[sectionOf[field]]}`) }).click();
+    }
+    await expect(control).toBeVisible();
+}
 async function fillPatient(page, values) {
     for (const [field, value] of Object.entries(values)) {
-        await expect(page.locator(`#patient_${field}`)).toBeVisible();
+        await showField(page, field);
         await page.locator(`#patient_${field}`).fill(value);
     }
 }
@@ -64,8 +79,10 @@ async function createPatient(page, values = { name: 'Clara Monteiro' }) {
     return patient;
 }
 async function expectValues(page, values) {
-    for (const [field, value] of Object.entries(values))
+    for (const [field, value] of Object.entries(values)) {
+        await showField(page, field);
         await expect(page.locator(`#patient_${field}`)).toHaveValue(value);
+    }
 }
 test('busca de pacientes conserva o filtro no detalhe, cadastro e retorno', async ({ page }) => {
     await open(page);
@@ -189,14 +206,23 @@ test('CPF e celular são pesquisáveis sem pontuação e edição sem mudanças 
 test('nome obrigatório associa o erro e recebe foco sem apagar os campos opcionais', async ({ page }) => {
     await open(page, '/pacientes/novo');
     await fillPatient(page, { cpf: '000.000.000-00', observation: 'Prefere atendimento no início da tarde.' });
+    // O envio parte da seção Informações adicionais: o erro abre Dados pessoais e leva o foco ao nome.
+    await expect(page.locator('#patient_name')).toHaveCount(0);
+    await expect(page.locator('main fieldset legend')).toHaveText('Informações adicionais');
     await page.getByRole('button', { name: 'Salvar paciente', exact: true }).click();
     await expect(page.locator('#patient_name')).toBeFocused();
+    await expect(page.locator('main fieldset legend')).toHaveText('Dados pessoais');
+    await expect(page.getByText('Dados pessoais: informe o nome completo. O preenchimento das outras seções foi mantido.', { exact: true })).toBeVisible();
+    if ((page.viewportSize()?.width ?? 0) >= 768) {
+        await expect(page.getByRole('button', { name: /^Dados pessoais 1 campo para revisar/ })).toHaveAttribute('aria-current', 'step');
+        await expect(page.getByRole('button', { name: /^Informações adicionais 1 de 4 preenchidos/ })).toBeVisible();
+    }
     await expect(page.locator('#patient_name')).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('#patient_name')).toHaveAttribute('aria-describedby', /patient_name_error/);
     await expect(page.locator('#patient_name_error')).toBeVisible();
     await expectValues(page, { cpf: '000.000.000-00', observation: 'Prefere atendimento no início da tarde.' });
     expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBeNull();
-    await page.locator('#patient_name').fill('Lívia Duarte');
+    await fillPatient(page, { name: 'Lívia Duarte' });
     await expect(page.locator('#patient_name')).not.toHaveAttribute('aria-invalid', 'true');
     await page.getByRole('button', { name: 'Salvar paciente', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Paciente cadastrado', exact: true })).toBeVisible();
@@ -387,8 +413,13 @@ test('novas telas e confirmação de pacientes têm acessibilidade, foco e largu
         await open(page, route);
         await inspect(route);
         if (route === '/pacientes/novo' || route === `/pacientes/${patient.id}/editar`) {
-            for (const field of ['name', ...optionalFields])
-                await expect(page.locator(`#patient_${field}`)).toBeVisible();
+            for (const field of optionalFields) {
+                await showField(page, field);
+                if (field === 'phone' || field === 'postalCode' || field === 'observation')
+                    await inspect(`${route} · seção de ${field}`);
+            }
+            await expect(page.getByRole('button', { name: 'Salvar paciente', exact: true })).toBeInViewport();
+            await showField(page, 'name');
             await page.locator('#patient_name').focus();
             await page.keyboard.press('Tab');
             const focus = await page.evaluate(() => { const active = document.activeElement; return { tag: active.tagName, outline: getComputedStyle(active).outlineStyle }; });

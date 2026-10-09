@@ -28,10 +28,10 @@ test('listas grandes limitam resultados, distinguem homônimos e persistem os id
     const dialog = page.getByRole('dialog', { name: 'Buscar paciente', exact: true });
     const search = dialog.getByLabel('Buscar paciente', { exact: true });
     await expect(search).toBeFocused();
-    await expect(dialog.locator('[data-record-id]')).toHaveCount(8);
+    await expect(dialog.locator('[data-record-id]')).toHaveCount(6);
     await dialog.getByRole('button', { name: 'Próxima', exact: true }).click();
-    await expect(dialog.getByRole('status')).toHaveText('9–16 de 1204 pacientes');
-    await expect(dialog.locator('[data-record-id]')).toHaveCount(8);
+    await expect(dialog.getByRole('status')).toHaveText('7–12 de 1204 pacientes');
+    await expect(dialog.locator('[data-record-id]')).toHaveCount(6);
     await search.fill('erica');
     await expect(dialog.locator('[data-record-id]')).toHaveCount(2);
     await expect(dialog.locator('[data-record-id="patient-1198"]')).toContainText('PAC-1298');
@@ -44,7 +44,7 @@ test('listas grandes limitam resultados, distinguem homônimos e persistem os id
     await expect(patient).toBeFocused();
     await expect(patient).toContainText('PAC-1299');
     await chooseRecord(page, page.locator('#appointment_doctorId'), 'doctor-119', 'SP-1119');
-    await page.locator('#appointment_procedure').selectOption('Profilaxia');
+    await chooseRecord(page, page.locator('#appointment_procedure'), 'pr2');
     await page.locator('#appointment_time').fill('09:00');
     await page.locator('#appointment_duration').fill('30');
     await page.getByRole('button', { name: 'Salvar consulta', exact: true }).click();
@@ -52,7 +52,7 @@ test('listas grandes limitam resultados, distinguem homônimos e persistem os id
     await page.reload();
     const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
     expect(saved.appointments).toHaveLength(1);
-    expect(saved.appointments[0]).toMatchObject({ patientId: 'patient-1199', doctorId: 'doctor-119', procedure: 'Profilaxia', duration: 30 });
+    expect(saved.appointments[0]).toMatchObject({ patientId: 'patient-1199', doctorId: 'doctor-119', procedureId: 'pr2', procedure: 'Profilaxia', duration: 30 });
     expect(saved.patients).toHaveLength(1204);
     expect(saved.doctors).toHaveLength(122);
     expect(saved.budgets).toHaveLength(3);
@@ -107,7 +107,7 @@ test('filtro de doutor mantém contexto e opção Todos sem gravar', async ({ pa
     await expect(page).toHaveURL(/date=2026-10-08&view=month&doutor=doctor-118/);
     await doctor.click();
     const dialog = page.getByRole('dialog', { name: 'Buscar doutor', exact: true });
-    await expect(dialog.locator('[data-record-id]')).toHaveCount(8);
+    await expect(dialog.locator('[data-record-id]')).toHaveCount(6);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await dialog.getByRole('button', { name: 'Todos os doutores', exact: true }).click();
     await expect(doctor).toHaveAttribute('value', '');
@@ -115,6 +115,58 @@ test('filtro de doutor mantém contexto e opção Todos sem gravar', async ({ pa
     await page.reload();
     await expect(doctor).toHaveAttribute('value', '');
     expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)).appointments.length, storageKey)).toBe(0);
+});
+
+test('procedimento usa a mesma busca em catálogo grande, permite trocar e conserva consultas vinculadas pelo nome', async ({ page }) => {
+    const data = createSeed();
+    data.procedures.push(...Array.from({ length: 140 }, (_, index) => ({ id: `catalogo-${index}`, name: index % 10 === 0 ? `Restauração em resina composta — variação ${index}` : `Procedimento de catálogo ${index}`, referencePriceCents: 10000 + index * 100 })));
+    data.appointments = [{ id: 'antiga', patientId: 'p1', doctorId: 'd1', procedure: 'Procedimento fora do catálogo', date: '2026-10-08', time: '15:00', duration: 30, status: 'Agendada', observation: '', attendance: 'convênio da empresa', budgetId: '', cancelReason: '', history: [] }];
+    await inject(page, data);
+    await open(page, '/agenda/nova?date=2026-10-08');
+    const procedure = page.locator('#appointment_procedure');
+    await expect(procedure).toContainText('Escolher procedimento');
+    await procedure.click();
+    const dialog = page.getByRole('dialog', { name: 'Buscar procedimento', exact: true });
+    const search = dialog.getByLabel('Buscar procedimento', { exact: true });
+    await expect(search).toBeFocused();
+    await expect(dialog.getByRole('status')).toHaveText('1–6 de 144 procedimentos');
+    await expect(dialog.locator('[data-record-id]')).toHaveCount(6);
+    await search.fill('restauracao');
+    await expect(dialog.getByRole('status')).toHaveText('1–6 de 15 procedimentos');
+    await dialog.getByRole('button', { name: 'Próxima', exact: true }).click();
+    await expect(dialog.getByRole('status')).toHaveText('7–12 de 15 procedimentos');
+    await search.fill('variação 130');
+    await expect(dialog.locator('[data-record-id]')).toHaveCount(1);
+    await expect(dialog.locator('[data-record-id="catalogo-130"]')).toContainText('Valor de referência: R$ 230,00');
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await dialog.locator('[data-record-id="catalogo-130"]').click();
+    await expect(procedure).toHaveAttribute('value', 'catalogo-130');
+    await expect(procedure).toContainText('Trocar');
+    await expect(procedure).toBeFocused();
+    await chooseRecord(page, procedure, 'pr3', 'resina');
+    await chooseRecord(page, page.locator('#appointment_patientId'), 'p2');
+    await chooseRecord(page, page.locator('#appointment_doctorId'), 'd2');
+    await page.locator('#appointment_time').fill('09:00');
+    await page.locator('#appointment_duration').fill('30');
+    await page.getByRole('radio', { name: 'Convênio', exact: true }).check();
+    await page.getByRole('button', { name: 'Salvar consulta', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Consulta agendada', exact: true })).toBeVisible();
+    // Consulta anterior: nome e texto livre aparecem como estavam e continuam gravados quando só o horário muda.
+    await open(page, '/agenda/antiga/editar?date=2026-10-08');
+    await expect(page.getByText('Registro anterior: “Procedimento fora do catálogo”. Busque no catálogo para trocar.', { exact: true })).toBeVisible();
+    await expect(page.getByText('Registro anterior: “convênio da empresa”. Escolha uma opção para substituir ou mantenha como está.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Particular', exact: true })).not.toBeChecked();
+    await expect(page.getByRole('radio', { name: 'Convênio', exact: true })).not.toBeChecked();
+    await page.locator('#appointment_time').fill('16:00');
+    await page.getByRole('button', { name: 'Salvar consulta', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Consulta atualizada', exact: true })).toBeVisible();
+    await page.reload();
+    const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
+    expect(saved.version).toBe(1);
+    expect(saved.appointments.find(value => value.id === 'antiga')).toMatchObject({ procedure: 'Procedimento fora do catálogo', procedureId: '', attendance: 'convênio da empresa', time: '16:00' });
+    expect(saved.appointments.find(value => value.id !== 'antiga')).toMatchObject({ procedureId: 'pr3', procedure: 'Restauração em resina', attendance: 'Convênio', patientId: 'p2' });
+    expect(saved.procedures).toHaveLength(144);
 });
 
 test('cadastros vazios na busca mantêm os outros campos e não criam registros', async ({ page }) => {

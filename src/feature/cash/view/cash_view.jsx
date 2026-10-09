@@ -9,17 +9,18 @@ function ReadError({ message, retry }) {
     return <Feedback tone="error" title="Não foi possível carregar"><p>{message}</p><Button variant="secondary" onClick={retry}>Tentar novamente</Button></Feedback>;
 }
 export function CashPage() {
-    const { resource, params, clearFilters, from, until, type, category, paymentMethod, search, invalidPeriod, filtered, entries, exits, filter } = useCashViewModel();
+    const { resource, params, clearFilters, from, until, type, category, paymentMethod, clinicId, clinics, clinicOf, search, invalidPeriod, filtered, entries, exits, filter } = useCashViewModel();
     return <>
     <PageHeader title="Caixa" description="Acompanhe as entradas e saídas registradas." action={<><ActionLink to={`/caixa/entrada${search}`}>Registrar entrada</ActionLink><ActionLink variant="secondary" to={`/caixa/saida${search}`}>Registrar saída</ActionLink></>}/>
     <section className={styles.filterSection} aria-labelledby="cash_filters">
-      <div className={styles.sectionHeading}><h2 id="cash_filters">Consultar movimentações</h2>{params.size > 0 && <Button variant="quiet" onClick={() => clearFilters()}>Limpar filtros</Button>}</div>
-      <div className={styles.filters}>
+      <h2 id="cash_filters" className={uiStyles.srOnly}>Consultar movimentações</h2>
+      <div className={`${styles.filters} ${clinics.length ? styles.withClinic : ''}`}>
         <Field id="cash_from" label="Data inicial"><input type="date" value={from} onChange={event => filter('de', event.target.value)}/></Field>
         <Field id="cash_until" label="Data final" error={invalidPeriod ? 'Escolha uma data igual ou posterior à data inicial.' : undefined}><input type="date" value={until} onChange={event => filter('ate', event.target.value)}/></Field>
-        <Field id="cash_type_filter" label="Tipo de movimentação"><select value={type} onChange={event => filter('tipo', event.target.value)}><option value="">Entradas e saídas</option><option value="Entrada">Entradas</option><option value="Saída">Saídas</option></select></Field>
-        <Field id="cash_category_filter" label="Filtrar por categoria"><input type="search" value={category} onChange={event => filter('categoria', event.target.value)} placeholder="Categoria informada"/></Field>
-        <Field id="cash_payment_filter" label="Filtrar por forma de pagamento"><input type="search" value={paymentMethod} onChange={event => filter('forma', event.target.value)} placeholder="Forma informada"/></Field>
+        <Field id="cash_type_filter" label="Tipo de movimentação"><select value={type} onChange={event => filter('tipo', event.target.value)}><option value="">Todos</option><option value="Entrada">Entradas</option><option value="Saída">Saídas</option></select></Field>
+        <Field id="cash_category_filter" label="Filtrar por categoria"><input type="search" value={category} onChange={event => filter('categoria', event.target.value)}/></Field>
+        <Field id="cash_payment_filter" label="Filtrar por forma de pagamento"><input type="search" value={paymentMethod} onChange={event => filter('forma', event.target.value)}/></Field>
+        {clinics.length > 0 && <Field id="cash_clinic_filter" label="Clínica"><select value={clinicId} onChange={event => filter('clinica', event.target.value)}><option value="">Todas as clínicas</option>{clinics.map(clinic => <option key={clinic.id} value={clinic.id}>{clinic.name}</option>)}<option value="sem">Sem clínica</option></select></Field>}
       </div>
       {invalidPeriod && <div className={styles.periodFeedback}><Feedback tone="error">A data final deve ser igual ou posterior à data inicial. Corrija o período para consultar as movimentações e os totais.</Feedback></div>}
     </section>
@@ -29,18 +30,20 @@ export function CashPage() {
         <div><dt>Saídas</dt><dd>{money(exits)}</dd></div>
         <div className={styles.balance}><dt>Saldo das movimentações</dt><dd>{money(entries - exits)}</dd></div>
       </dl>
-      <p className={styles.summaryHint}>Totais de todas as movimentações da seleção. O saldo corresponde às entradas menos as saídas.</p>
-      <div className={styles.sectionHeading}><h2>Movimentações</h2><p role="status">{filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}</p></div>
-      {filtered.length ? <PagedList records={filtered} label="Movimentações do caixa" pageKey="pagina">{rows => <ul className={styles.list}>{rows.map(movement => <li key={movement.id}>
-        <div className={styles.identity}><StatusLabel tone={movement.type === 'Entrada' ? 'success' : 'neutral'}>{movement.type}</StatusLabel><h3><Link to={`/caixa/${movement.id}${search}`}>{movement.description}</Link></h3><div className={styles.rowMeta}><time dateTime={movement.date}>{dateLabel(movement.date)}</time>{movement.category && <span>{movement.category}</span>}{movement.paymentMethod && <span>{movement.paymentMethod}</span>}</div></div>
-        <strong className={styles.amount}>{money(movement.amountCents)}</strong>
-        <ActionLink variant="secondary" to={`/caixa/${movement.id}${search}`} aria-label={`Ver movimentação: ${movement.description}`}>Ver detalhes</ActionLink>
-      </li>)}</ul>}</PagedList> : <EmptyState title={params.size ? 'Nenhuma movimentação encontrada' : 'Ainda não há movimentações'} detail={params.size ? 'Ajuste os filtros para consultar outros registros.' : 'Registre uma entrada ou uma saída para acompanhar o caixa.'} action={params.size ? <Button variant="secondary" onClick={() => clearFilters()}>Limpar filtros</Button> : <ActionLink to="/caixa/entrada">Registrar primeira entrada</ActionLink>}/>}
+      <div className={styles.sectionHeading}><h2>Movimentações</h2><p className={styles.summaryHint}>Totais de todas as movimentações da seleção. O saldo corresponde às entradas menos as saídas.</p>{params.size > 0 && <Button variant="quiet" onClick={() => clearFilters()}>Limpar filtros</Button>}<p role="status">{filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}</p></div>
+      {filtered.length ? <PagedList records={filtered} label="Movimentações do caixa" pageKey="pagina">{rows => <div className={`${uiStyles.records} ${clinics.length ? styles.columnsClinic : styles.columns}`}>
+        <div className={uiStyles.recordHead} aria-hidden="true"><span>Movimentação</span><span>Data</span><span>Categoria e forma</span>{clinics.length > 0 && <span>Clínica</span>}<span className={uiStyles.recordNumber}>Valor</span><span/></div>
+        <ul className={uiStyles.recordList}>{rows.map(movement => <li key={movement.id}>
+          <div className={styles.identity}><StatusLabel tone={movement.type === 'Entrada' ? 'success' : 'neutral'}>{movement.type}</StatusLabel><h3><Link to={`/caixa/${movement.id}${search}`}>{movement.description}</Link></h3></div>
+          <dl><div><dt>Data</dt><dd><time dateTime={movement.date}>{dateLabel(movement.date)}</time></dd></div><div><dt>Categoria e forma</dt><dd className={styles.rowMeta}>{movement.category && <span>{movement.category}</span>}{movement.paymentMethod && <span>{movement.paymentMethod}</span>}{!movement.category && !movement.paymentMethod && <span className={uiStyles.recordMuted}>Não informadas</span>}</dd></div>{clinics.length > 0 && <div><dt>Clínica</dt><dd className={movement.clinicId ? undefined : uiStyles.pending}>{clinicOf(movement)}</dd></div>}</dl>
+          <strong className={`${styles.amount} ${uiStyles.recordNumber}`}>{money(movement.amountCents)}</strong>
+          <div className={uiStyles.recordActions}><Link to={`/caixa/${movement.id}${search}`} aria-label={`Ver movimentação: ${movement.description}`}>Ver detalhes</Link></div>
+        </li>)}</ul></div>}</PagedList> : <EmptyState title={params.size ? 'Nenhuma movimentação encontrada' : 'Ainda não há movimentações'} detail={params.size ? 'Ajuste os filtros para consultar outros registros.' : 'Registre uma entrada ou uma saída para acompanhar o caixa.'} action={params.size ? <Button variant="secondary" onClick={() => clearFilters()}>Limpar filtros</Button> : <ActionLink to="/caixa/entrada">Registrar primeira entrada</ActionLink>}/>}
     </>}
   </>;
 }
 export function CashDetailPage() {
-    const { search, resource, movement } = useCashDetailViewModel();
+    const { search, resource, movement, clinic } = useCashDetailViewModel();
     if (resource.busy)
         return <LoadingState />;
     if (resource.error)
@@ -57,6 +60,7 @@ export function CashDetailPage() {
         <div><dt>Categoria</dt><dd>{movement.category || 'Não informada'}</dd></div>
         <div><dt>Forma de pagamento</dt><dd>{movement.paymentMethod || 'Não informada'}</dd></div>
         <div><dt>Responsável</dt><dd>{movement.responsible || 'Não informado'}</dd></div>
+        {clinic && <div><dt>Clínica</dt><dd>{movement.clinicId ? clinic : 'Sem clínica — pendente de vinculação'}</dd></div>}
         {movement.observation && <div className={styles.full}><dt>Observações</dt><dd>{movement.observation}</dd></div>}
       </dl>
     </section>
@@ -69,7 +73,7 @@ export function CashFormPage() {
     return <CashForm key={type} type={type}/>;
 }
 function CashForm({ type }) {
-    const { search, resource, fields, errors, saveError, saving, saved, change, submit } = useCashFormViewModel({ type });
+    const { search, resource, clinics, fields, errors, saveError, saving, saved, change, submit } = useCashFormViewModel({ type });
     async function handleSubmit(event) { event.preventDefault(); const target = await submit(); if (typeof target === 'string')
         requestAnimationFrame(() => document.getElementById(target)?.focus()); }
     const saveFeedback = useRef(null);
@@ -101,6 +105,7 @@ function CashForm({ type }) {
           <Field id="cash_category" label="Categoria"><input type="text" value={fields.category} onChange={event => change('category', event.target.value)}/></Field>
           <Field id="cash_paymentMethod" label="Forma de pagamento"><input type="text" value={fields.paymentMethod} onChange={event => change('paymentMethod', event.target.value)}/></Field>
           <Field id="cash_responsible" label="Responsável"><input type="text" value={fields.responsible} onChange={event => change('responsible', event.target.value)}/></Field>
+          {clinics.length > 0 && <Field id="cash_clinicId" label="Clínica (opcional)" hint="Sem escolha, a movimentação fica pendente de vinculação."><select value={fields.clinicId} onChange={event => change('clinicId', event.target.value)}><option value="">Sem clínica</option>{clinics.map(clinic => <option key={clinic.id} value={clinic.id}>{clinic.name}</option>)}</select></Field>}
           <div className={uiStyles.full}><Field id="cash_observation" label="Observações"><textarea value={fields.observation} onChange={event => change('observation', event.target.value)} rows={3}/></Field></div>
         </div>
       </fieldset>
