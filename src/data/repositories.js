@@ -1,16 +1,23 @@
-import { createPatientRepository } from '../feature/patient/repository/patient_repository.js';
-import { createDoctorRepository } from '../feature/doctor/repository/doctor_repository.js';
-import { createInventoryRepository } from '../feature/inventory/repository/inventory_repository.js';
-import { createBudgetRepository } from '../feature/budget/repository/budget_repository.js';
+import { createLookups } from './lookups.js';
+import { createAuthRepository } from '../feature/auth/repository/auth_repository.js';
 import { createAgendaRepository } from '../feature/agenda/repository/agenda_repository.js';
-import { createCashRepository } from '../feature/cash/repository/cash_repository.js';
-import { createAdminRepository } from '../feature/admin/repository/admin_repository.js';
-import { createReportRepository } from '../feature/report/repository/report_repository.js';
-export function createRepositories(session) {
+import { createPatientRepository } from '../feature/patient/repository/patient_repository.js';
+import { createClinicRepository } from '../feature/clinic/repository/clinic_repository.js';
+import { createDashboardRepository } from '../feature/dashboard/repository/dashboard_repository.js';
+import { createInventoryRepository } from '../feature/inventory/repository/inventory_repository.js';
+import { createDailyMapRepository } from '../feature/daily_map/repository/daily_map_repository.js';
+
+// Cada módulo recebe a API, a sessão (clínica e usuário autenticados) e o cache de cadastros.
+export function createRepositories(api, session) {
+    const lookups = createLookups(api, session);
+    const context = { api, session, lookups, clinicId: () => session.user()?.clinicId, user: () => session.user() };
     return {
-        patient: createPatientRepository(session), doctor: createDoctorRepository(session),
-        inventory: createInventoryRepository(session), budget: createBudgetRepository(session),
-        agenda: createAgendaRepository(session), cash: createCashRepository(session),
-        admin: createAdminRepository(session), report: createReportRepository(session),
+        auth: createAuthRepository(context),
+        agenda: createAgendaRepository(context),
+        patient: createPatientRepository(context),
+        clinic: createClinicRepository(context),
+        dashboard: createDashboardRepository(context),
+        inventory: createInventoryRepository(context),
+        dailyMap: createDailyMapRepository(context),
     };
 }

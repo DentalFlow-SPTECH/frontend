@@ -1,12 +1,28 @@
+/* Identidade "Direção A · Conversa" (aprovada em 28/10/2026). Os nomes semânticos seguem o shadcn/ui
+   (--background, --foreground, --primary, --muted, --border, --input, --ring, --radius) para que a equipe
+   reconheça o padrão; os valores são próprios do Dental Flow. */
 :root {
-  --ink: #01101f; --nav: #01101f; --accent: #1ed8cf; --primary: #145453;
-  --paper: #ffffff; --canvas: #f5f8f7; --muted: #35484e; --line: #d8e2df; --control-line: #65797d;
-  --success: #176545; --success-bg: #edf6f0; --warning: #875800; --warning-bg: #fff5da; --error: #a13636; --error-bg: #fff1ef;
-  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
-  --radius: 10px; --radius-card: 14px; --radius-panel: 18px; --font: 'IBM Plex Sans', sans-serif;
-  --appointment-scheduled-bg: #fff5d8; --appointment-scheduled-text: #704b00; --appointment-scheduled-line: #a16b00;
-  --appointment-confirmed-bg: #e6f5ec; --appointment-confirmed-text: #155739; --appointment-confirmed-line: #21824e;
-  --appointment-completed-bg: #eaf2ff; --appointment-completed-text: #245b94; --appointment-completed-line: #3578bf;
-  --appointment-cancelled-bg: #ffeded; --appointment-cancelled-text: #933434; --appointment-cancelled-line: #b94747;
-  --appointment-active-bg: #def5f2; --appointment-active-text: #145453; --appointment-active-line: #147771;
+  --background: #F6F2EC; --foreground: #1B2529;
+  --card: #FFFFFF; --card-soft: #FBF8F4;
+  --muted: #EEE8DF; --muted-foreground: #5B676C;
+  --border: #EAE3D9; --input: #CFC6B9; --ring: #0D6E66;
+  --primary: #0D6E66; --primary-hover: #0A5C55; --primary-foreground: #FFFFFF; --primary-soft: #E1F0EC;
+  --accent: #E8613C; --accent-text: #B9472A; --accent-soft: #FDE9E2;
+  --destructive: #B23B3B; --destructive-soft: #FBE7E7;
+  --warning: #7A5000; --warning-soft: #FFF1D2; --success: #1D7A45; --success-soft: #E2F3E8; --info: #2F5E9E; --info-soft: #E5EDF8;
+  --whatsapp: #187A43; --whatsapp-soft: #E3F4EA;
+
+  /* Situações da consulta: texto, fundo e barra lateral. Sempre acompanhadas de ícone e rótulo. */
+  --status-agendado-fg: #7A5000; --status-agendado-bg: #FFF0CC; --status-agendado-bar: #E5A21A;
+  --status-confirmado-fg: #1D7A45; --status-confirmado-bg: #E2F3E8; --status-confirmado-bar: #2E9A5B;
+  --status-atendimento-fg: #5B45C2; --status-atendimento-bg: #EDE9FC; --status-atendimento-bar: #7B66D9;
+  --status-concluido-fg: #2F5E9E; --status-concluido-bg: #E5EDF8; --status-concluido-bar: #5A85C2;
+  --status-cancelado-fg: #B23B3B; --status-cancelado-bg: #FBE7E7; --status-cancelado-bar: #D16464;
+  --status-faltou-fg: #545F64; --status-faltou-bg: #EEEFEF; --status-faltou-bar: #9AA3A6;
+
+  --radius-sm: 10px; --radius: 14px; --radius-lg: 20px; --radius-xl: 24px; --radius-full: 999px;
+  --shadow-sm: 0 1px 2px rgba(27, 37, 41, .06); --shadow: 0 8px 24px rgba(27, 37, 41, .08); --shadow-lg: 0 24px 50px rgba(27, 37, 41, .18);
+  --font: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --topbar: 68px; --tabbar: 76px; --page-x: 32px;
 }
+@media (max-width: 767px) { :root { --page-x: 16px; } }

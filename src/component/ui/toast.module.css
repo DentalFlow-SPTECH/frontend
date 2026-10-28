@@ -1,0 +1,16 @@
+.viewport { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: 24px; display: flex; flex-direction: column; gap: 10px; width: min(460px, calc(100vw - 32px)); margin: 0; padding: 0; list-style: none; outline: none; }
+@media (max-width: 1099px) { .viewport { bottom: calc(var(--tabbar) + 16px + env(safe-area-inset-bottom)); } }
+.toast { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; border-radius: 16px; background: var(--foreground); color: #fff; box-shadow: var(--shadow-lg); animation: rise .2s ease-out; }
+.toast[data-state=closed] { animation: fadeOut .14s ease-in forwards; }
+.toast[data-swipe=move] { transform: translateY(var(--radix-toast-swipe-move-y)); }
+@keyframes rise { from { transform: translateY(16px); opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
+.icon { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; background: rgba(255, 255, 255, .12); color: #8EE3D6; }
+.danger .icon { color: #FFB4A6; }
+.icon svg { width: 18px; height: 18px; }
+.text { flex: 1; min-width: 0; }
+.title { font-weight: 700; font-size: 15.5px; }
+.description { color: #C9D2D5; font-size: 14px; }
+.action { height: 38px; padding: 0 12px; border-radius: 10px; border: 0; background: rgba(255, 255, 255, .12); color: #8EE3D6; font-weight: 700; }
+.close { width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; color: #C9D2D5; display: grid; place-items: center; }
+.close svg { width: 18px; height: 18px; }

@@ -1,32 +1,31 @@
 import { createContext, useContext, useState, useSyncExternalStore } from 'react';
-import { createClinicSession } from '../data/clinic_session.js';
+import { createHttpClient } from '../data/api/http_client.js';
+import { createApi } from '../data/api/api.js';
+import { createSession } from '../data/session.js';
 import { createRepositories } from '../data/repositories.js';
-const ClinicContext = createContext(null);
-export function AppProvider({ children }) {
+
+const AppContext = createContext(null);
+
+// `adapter` permite trocar o transporte do axios nos testes; em uso normal fica indefinido.
+export function AppProvider({ children, adapter }) {
     const [services] = useState(() => {
-        // Access browser storage inside adapter calls so unavailable storage follows recovery handling.
-        const storage = {
-            getItem: key => localStorage.getItem(key),
-            setItem: (key, value) => localStorage.setItem(key, value),
-        };
-        const session = createClinicSession({ storage });
-        const repositories = createRepositories(session);
-        return { session, repositories };
+        const session = createSession();
+        const http = createHttpClient({
+            getCredentials: session.getCredentials,
+            onUnauthorized: () => session.end('Sua sessão terminou. Entre novamente para continuar.'),
+            adapter,
+        });
+        return { session, repositories: createRepositories(createApi(http), session) };
     });
-    const { session, repositories } = services;
-    const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-    const value = {
-        ...snapshot, repositories,
-        load: session.load, reset: session.reset, setScenario: session.setScenario,
-    };
-    return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;
+    const auth = useSyncExternalStore(services.session.subscribe, services.session.getSnapshot);
+    return <AppContext.Provider value={{ auth, repositories: services.repositories }}>{children}</AppContext.Provider>;
 }
-export function useClinicData() {
-    const value = useContext(ClinicContext);
+
+function useApp() {
+    const value = useContext(AppContext);
     if (!value)
         throw new Error('AppProvider não disponível');
     return value;
 }
-export function useClinicRepository(module) {
-    return useClinicData().repositories[module];
-}
+export const useAuth = () => useApp().auth;
+export const useRepository = name => useApp().repositories[name];

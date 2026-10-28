@@ -1,118 +1,120 @@
-import { PagedList } from '../../../component/paged_list.jsx';
-import { useEffect, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { budgetTotal, dateLabel, money } from '../../../demo/format.js';
-import { patientFieldLabels } from '../../../demo/patient.js';
-import { ActionLink, Button, EmptyState, Feedback, Field, HistoryList, LoadingState, PageHeader, uiStyles } from '../../../component/ui.jsx';
-import { patientSections } from '../model/patient_model.js';
-import { usePatientListViewModel } from '../view_model/use_patient_list_view_model.js';
-import { usePatientDetailViewModel } from '../view_model/use_patient_detail_view_model.js';
-import { usePatientFormViewModel } from '../view_model/use_patient_form_view_model.js';
+import { Link } from 'react-router-dom';
+import { CalendarPlus, Cake, ChevronRight, IdCard, Mail, MapPin, MessageCircle, Pencil, Phone, Search, UserPlus, UserRound, Users } from 'lucide-react';
+import { Alert, Avatar, Button, ButtonLink, Card, DefinitionList, EmptyState, ErrorState, ExternalButton, Field, FormGrid, Input, PageHeader, Skeleton } from '../../../component/ui/index.js';
+import { ageOf, dateShort, maskCep, maskCpf, maskPhone, telLink, whatsappLink } from '../../../component/format.js';
+import { patientSummary } from '../model/patient_model.js';
+import { usePatientDetailViewModel, usePatientFormViewModel, usePatientListViewModel } from '../view_model/use_patient_view_models.js';
 import styles from './patient.module.css';
-function ReadError({ message, retry }) {
-    return <Feedback tone="error" title="Não foi possível carregar"><p>{message}</p><Button variant="secondary" onClick={retry}>Tentar novamente</Button></Feedback>;
-}
-function MissingPatient() {
-    return <><PageHeader title="Paciente não encontrado"/><EmptyState title="Este cadastro não está disponível" detail="Volte à lista para consultar os pacientes." action={<ActionLink to="/pacientes">Voltar aos pacientes</ActionLink>}/></>;
-}
+
 export function PatientListPage() {
-    const { contextPatient, query, search, resource, patients: filtered, changeQuery, clearQuery } = usePatientListViewModel();
-    const { busy, error, retry } = resource;
+    const vm = usePatientListViewModel();
     return <>
-    <PageHeader title="Pacientes" description="Consulte os cadastros ou adicione um paciente para agendar e criar orçamentos." action={<ActionLink to={`/pacientes/novo${search}`}>Cadastrar paciente</ActionLink>}/>
-    {contextPatient && <div className={styles.context}><Button variant="quiet" onClick={() => clearQuery()}>Ver todos os pacientes</Button></div>}
-    <div className={uiStyles.listBar}><Field id="patient_search" label="Buscar paciente"><input type="search" value={query} onChange={event => changeQuery(event.target.value)} placeholder="Nome, CPF, código ou telefone"/></Field>{!busy && !error && <p role="status">{filtered.length} {filtered.length === 1 ? 'paciente' : 'pacientes'}</p>}</div>
-    {busy ? <LoadingState /> : error ? <ReadError message={error} retry={retry}/> : filtered.length ? <PagedList records={filtered} label="Pacientes" pageSize={8} pageKey="pagina">{rows => <div className={`${uiStyles.records} ${styles.columns}`}>
-      <div className={uiStyles.recordHead} aria-hidden="true"><span>Código</span><span>Paciente</span><span>Nascimento</span><span>Contato</span><span>Convênio</span><span/></div>
-      <ul className={uiStyles.recordList}>{rows.map(patient => <li key={patient.id}>
-        <div className={styles.identity}><span className={styles.code}>{patient.code}</span><h2><Link to={`/pacientes/${patient.id}${search}`}>{patient.name}</Link></h2></div>
-        <dl>
-          <div><dt>Nascimento</dt><dd>{patient.birthDate ? dateLabel(patient.birthDate) : <span className={uiStyles.recordMuted}>Não informado</span>}</dd></div>
-          <div><dt>Contato</dt><dd>{patient.mobile || patient.phone || (!patient.email && <span className={uiStyles.recordMuted}>Não informado</span>)}{patient.email && <small>{patient.email}</small>}</dd></div>
-          <div><dt>Convênio</dt><dd>{patient.insurance || <span className={uiStyles.recordMuted}>Não informado</span>}</dd></div>
-        </dl>
-        <div className={uiStyles.recordActions}><Link to={`/orcamentos?paciente=${patient.id}`}>Ver orçamentos<span className={styles.hidden}> de {patient.name}</span></Link></div>
-      </li>)}</ul></div>}</PagedList> : <EmptyState title={query ? 'Nenhum paciente encontrado' : 'Ainda não há pacientes'} detail={query ? 'Tente outro nome, CPF, código ou telefone.' : 'Cadastre um paciente para começar.'} action={query ? <Button variant="secondary" onClick={() => clearQuery()}>Limpar busca</Button> : <ActionLink to="/pacientes/novo">Cadastrar primeiro paciente</ActionLink>}/>}
-  </>;
+        <PageHeader title="Pacientes" subtitle={vm.loading ? 'Carregando…' : `${vm.total} ${vm.total === 1 ? 'cadastrado' : 'cadastrados'}`}
+            actions={<ButtonLink to="/pacientes/novo" icon={UserPlus} className={styles.newDesktop}>Novo paciente</ButtonLink>}/>
+        <div className={styles.search}>
+            <label htmlFor="patient_search" className="sr-only">Buscar paciente</label>
+            <Input id="patient_search" icon={Search} type="search" value={vm.term} onChange={event => vm.setTerm(event.target.value)} placeholder="Buscar pelo nome, CPF ou telefone" autoComplete="off"/>
+        </div>
+        {vm.error && !vm.total ? <ErrorState error={vm.error} onRetry={vm.reload}/>
+            : vm.loading ? <Skeleton rows={8} height={60}/>
+            : !vm.total ? <EmptyState icon={Users} title="Nenhum paciente cadastrado" action={<ButtonLink to="/pacientes/novo" icon={UserPlus}>Cadastrar o primeiro paciente</ButtonLink>}>Os pacientes cadastrados aparecem aqui, em ordem alfabética.</EmptyState>
+            : !vm.count ? <EmptyState icon={Search} title="Ninguém encontrado" action={<Button variant="secondary" onClick={() => vm.setTerm('')}>Limpar a busca</Button>}>Confira a grafia ou busque pelo CPF ou telefone.</EmptyState>
+            : <div className={styles.list}>
+                {vm.term && <p className={styles.count} role="status">{vm.count} {vm.count === 1 ? 'paciente encontrado' : 'pacientes encontrados'}</p>}
+                {vm.groups.map(group => <section key={group.letter} aria-label={`Letra ${group.letter}`}>
+                    <h2 className={styles.letter}>{group.letter}</h2>
+                    <ul className={styles.rows}>
+                        {group.items.map(patient => {
+                            const whatsapp = whatsappLink(patient.phone);
+                            return <li key={patient.id} className={styles.row}>
+                                <Link to={`/pacientes/${patient.id}`} className={styles.rowMain}>
+                                    <Avatar name={patient.name}/>
+                                    <span className={styles.rowText}><b>{patient.name}</b><small>{patientSummary(patient) || 'Sem dados adicionais'}</small></span>
+                                    <span className={styles.rowPhone}>{patient.phone ? maskPhone(patient.phone) : '—'}</span>
+                                    <span className={styles.rowCpf}>{maskCpf(patient.cpf)}</span>
+                                    <ChevronRight aria-hidden="true" className={styles.chevron}/>
+                                </Link>
+                                {whatsapp && <a className={styles.whats} href={whatsapp} target="_blank" rel="noreferrer" aria-label={`WhatsApp de ${patient.name}`}><MessageCircle aria-hidden="true"/></a>}
+                            </li>;
+                        })}
+                    </ul>
+                </section>)}
+                {vm.hasMore && <Button variant="secondary" block onClick={vm.showMore}>Mostrar mais pacientes</Button>}
+            </div>}
+        <ButtonLink to="/pacientes/novo" icon={UserPlus} className={styles.fab}>Novo paciente</ButtonLink>
+    </>;
 }
+
 export function PatientDetailPage() {
-    const { patient, budgets, search, resource } = usePatientDetailViewModel();
-    if (resource.busy)
-        return <LoadingState />;
-    if (resource.error)
-        return <ReadError message={resource.error} retry={resource.retry}/>;
-    if (!patient)
-        return <MissingPatient />;
+    const vm = usePatientDetailViewModel();
+    if (vm.error && !vm.patient)
+        return <><PageHeader title="Paciente" back={{ to: '/pacientes', label: 'Pacientes' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
+    if (vm.loading || !vm.patient)
+        return <><PageHeader title="Paciente" back={{ to: '/pacientes', label: 'Pacientes' }}/><Skeleton rows={3} height={140}/></>;
+    const { patient } = vm;
+    const age = ageOf(patient.birthDate);
+    const whatsapp = whatsappLink(patient.phone);
+    const tel = telLink(patient.phone);
     return <>
-    <Link className={uiStyles.back} to={`/pacientes${search}`}>← Voltar aos pacientes</Link>
-    <PageHeader eyebrow={patient.code} title={patient.name} action={<ActionLink to={`/pacientes/${patient.id}/editar${search}`}>Editar cadastro</ActionLink>}/>
-    {patientSections.map(group => {
-            const filled = group.keys.filter(key => key !== 'name' && patient[key]);
-            return filled.length > 0 && <section key={group.title} className={styles.detailSection} aria-label={group.title}><h2>{group.title}</h2><dl className={styles.definition}>{filled.map(key => <div key={key} className={key === 'observation' ? styles.full : undefined}><dt>{patientFieldLabels[key]}</dt><dd>{key === 'birthDate' ? dateLabel(patient[key]) : patient[key]}</dd></div>)}</dl></section>;
-        })}
-    <section className={styles.detailSection} aria-labelledby="patient_budgets"><div className={styles.sectionHeading}><h2 id="patient_budgets">Orçamentos</h2><div className={styles.relatedActions}><ActionLink to={`/orcamentos/novo?paciente=${patient.id}`}>Criar orçamento</ActionLink><ActionLink variant="secondary" to={`/orcamentos?paciente=${patient.id}`}>Ver orçamentos</ActionLink></div></div>
-      {budgets.length ? <PagedList records={budgets} label="Orçamentos do paciente">{rows => <ul className={styles.budgetList}>{rows.map(budget => <li key={budget.id}><Link to={`/orcamentos/${budget.id}`} aria-label={`Ver orçamento ${budget.code}`}>{budget.code}</Link><time dateTime={budget.createdOn}>{dateLabel(budget.createdOn)}</time><strong>{money(budgetTotal(budget.items))}</strong></li>)}</ul>}</PagedList> : <p className={uiStyles.muted}>Ainda não há orçamentos para este paciente.</p>}
-    </section>
-    {patient.history.length > 0 && <section className={styles.detailSection} aria-labelledby="patient_history"><h2 id="patient_history">Histórico cadastral</h2><HistoryList entries={patient.history}/></section>}
-  </>;
+        <PageHeader title={patient.name} back={{ to: '/pacientes', label: 'Pacientes' }}
+            actions={<ButtonLink to={`/pacientes/${patient.id}/editar`} variant="secondary" icon={Pencil}>Editar</ButtonLink>}/>
+        <div className={styles.detail}>
+            <Card className={styles.profile}>
+                <Avatar name={patient.name} size="xl"/>
+                <div><p className={styles.profileName}>{patient.name}</p><p className={styles.muted}>{[age !== null && `${age} anos`, patient.neighborhood].filter(Boolean).join(' · ')}</p></div>
+                <div className={styles.profileActions}>
+                    <ButtonLink to={`/agenda/nova?paciente=${patient.id}`} icon={CalendarPlus}>Agendar consulta</ButtonLink>
+                    {whatsapp && <ExternalButton href={whatsapp} variant="whatsapp" icon={MessageCircle}>WhatsApp</ExternalButton>}
+                    {tel && <a href={tel} className={styles.callLink}><Phone aria-hidden="true"/>Ligar</a>}
+                </div>
+            </Card>
+            <div className={styles.cards}>
+                <Card title="Contato"><DefinitionList items={[{ icon: Phone, label: 'Celular', value: patient.phone && maskPhone(patient.phone) }, { icon: Mail, label: 'E-mail', value: patient.email }]}/></Card>
+                <Card title="Documento"><DefinitionList items={[{ icon: IdCard, label: 'CPF', value: maskCpf(patient.cpf) }, { icon: Cake, label: 'Nascimento', value: patient.birthDate && `${dateShort(patient.birthDate)}${age !== null ? ` · ${age} anos` : ''}` }]}/></Card>
+                <Card title="Endereço"><DefinitionList items={[{ icon: MapPin, label: 'Rua e número', value: patient.address }, { icon: MapPin, label: 'Bairro e CEP', value: `${patient.neighborhood} · ${maskCep(patient.zipCode)}` }]}/></Card>
+            </div>
+        </div>
+    </>;
 }
+
 export function PatientFormPage() {
-    const { id } = useParams();
-    return <PatientForm key={id ?? 'new'} id={id}/>;
-}
-const inputTypes = { birthDate: 'date', phone: 'tel', mobile: 'tel', email: 'email' };
-const autoComplete = { name: 'name', birthDate: 'bday', phone: 'tel', mobile: 'tel', email: 'email', postalCode: 'postal-code', city: 'address-level2', state: 'address-level1' };
-const wide = ['name', 'street', 'observation', 'emergencyContact'];
-function PatientForm({ id }) {
-    const { search, resource, source, fields, nameError, saveError, saving, saved, dirty, section, sections, goToSection, change, submit, returnTo } = usePatientFormViewModel(id);
-    const saveFeedback = useRef(null);
-    useEffect(() => { if (saveError)
-        saveFeedback.current?.focus(); }, [saveError]);
-    async function handleSubmit(event) {
-        event.preventDefault();
-        const focusTarget = await submit();
-        // A seção com erro é aberta antes de levar o foco ao campo.
-        if (focusTarget)
-            requestAnimationFrame(() => document.getElementById(focusTarget)?.focus());
-    }
-    if (saved)
-        return <>
-    <PageHeader title={id ? 'Cadastro atualizado' : 'Paciente cadastrado'}/>
-    <Feedback tone="success">{saved.name} {id ? 'teve o cadastro salvo.' : 'está disponível para criar orçamentos.'}</Feedback>
-    <div className={uiStyles.formActions}><ActionLink to={`/pacientes/${saved.id}${search}`}>Ver paciente</ActionLink><ActionLink variant="secondary" to={`/orcamentos/novo?paciente=${saved.id}`}>Criar orçamento</ActionLink><ActionLink variant="secondary" to={`/orcamentos?paciente=${saved.id}`}>Ver orçamentos</ActionLink><ActionLink variant="quiet" to={`/pacientes${search}`}>Voltar aos pacientes</ActionLink></div>
-  </>;
-    if (resource.busy)
-        return <LoadingState />;
-    if (resource.error)
-        return <ReadError message={resource.error} retry={resource.retry}/>;
-    if (id && !source)
-        return <MissingPatient />;
-    const current = sections[section];
+    const vm = usePatientFormViewModel();
+    const title = vm.editing ? 'Editar paciente' : 'Novo paciente';
+    if (vm.error && !vm.form)
+        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
+    if (vm.loading || !vm.form)
+        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><Skeleton rows={3} height={160}/></>;
+    const { form, errors } = vm;
+    const input = (field, props = {}) => <Input value={form[field]} onChange={event => vm.change(field, event.target.value)} {...props}/>;
     return <>
-    <Link className={uiStyles.back} to={returnTo}>← {id ? 'Voltar ao paciente' : 'Voltar aos pacientes'}</Link>
-    <PageHeader eyebrow={source?.code} title={id ? 'Editar paciente' : 'Novo paciente'}/>
-    <p className={styles.formHint}>Preencha o nome completo. Os demais campos são opcionais.</p>
-    <form onSubmit={handleSubmit} noValidate className={styles.sectionForm}>
-      {saveError && <div ref={saveFeedback} tabIndex={-1} className={styles.formFeedback}><Feedback tone="error" title="Não foi possível salvar">{saveError}</Feedback></div>}
-      {nameError && <div className={styles.formFeedback}><Feedback tone="error" title="Revise o campo indicado">Dados pessoais: informe o nome completo. O preenchimento das outras seções foi mantido.</Feedback></div>}
-      <nav className={styles.steps} aria-label="Seções do cadastro">{sections.map(value => <button key={value.key} type="button" disabled={saving} className={`${styles.step} ${value.error ? styles.stepError : ''}`} aria-current={value.index === section ? 'step' : undefined} onClick={() => goToSection(value.index)}>
-        <b aria-hidden="true">{value.error ? '!' : value.index + 1}</b><span><strong>{value.title}</strong><small>{value.summary}</small></span>
-      </button>)}</nav>
-      <div className={styles.stepSelect}><Field id="patient_section" label="Seção do cadastro" hint={sections.filter(value => value.index !== section).map(value => `${value.title} ${value.filled}/${value.total}`).join(' · ')}><select value={section} disabled={saving} onChange={event => goToSection(Number(event.target.value))}>{sections.map(value => <option key={value.key} value={value.index}>{value.index + 1} de {sections.length} · {value.title}</option>)}</select></Field></div>
-      <fieldset key={current.key} className={styles.formSection} disabled={saving}><legend>{current.title}</legend><p className={styles.sectionNote}>Seção {section + 1} de {sections.length}{section > 0 ? ' · campos opcionais' : ''} · é possível salvar a partir de qualquer seção.</p><div className={uiStyles.formGrid}>
-        {current.keys.map(key => <div key={key} className={wide.includes(key) ? uiStyles.full : undefined}>
-          {key === 'insurance' && <p className={styles.subheading}>Convênio, quando houver</p>}
-          <Field id={`patient_${key}`} label={`${patientFieldLabels[key]} (${key === 'name' ? 'obrigatório' : 'opcional'})`} error={key === 'name' ? nameError : undefined}>
-            {key === 'observation' ? <textarea rows={3} value={fields[key]} onChange={event => change(key, event.target.value)}/> : <input type={inputTypes[key] ?? 'text'} autoComplete={autoComplete[key] ?? 'off'} required={key === 'name'} value={fields[key]} onChange={event => change(key, event.target.value)}/>}
-          </Field>
-        </div>)}
-      </div></fieldset>
-      <div className={styles.actionBar}>
-        {section > 0 && <Button variant="secondary" disabled={saving} onClick={() => goToSection(section - 1)}>← {sections[section - 1].title}</Button>}
-        {section < sections.length - 1 && <Button variant="secondary" disabled={saving} onClick={() => goToSection(section + 1)}>{sections[section + 1].title} →</Button>}
-        {dirty && <p className={styles.unsaved}>Alterações não salvas</p>}
-        <ActionLink variant="secondary" to={returnTo}>Cancelar</ActionLink><Button type="submit" busy={saving}>{saving ? 'Salvando paciente…' : 'Salvar paciente'}</Button>
-      </div>
-    </form>
-  </>;
+        <PageHeader title={title} back={{ to: vm.backLink, label: vm.editing ? 'Ficha do paciente' : 'Voltar' }}/>
+        <form className={styles.form} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
+            {vm.failure && <Alert tone="danger" title="Não foi possível salvar">{vm.failure}</Alert>}
+            {Object.keys(errors).some(key => errors[key]) && <Alert tone="warning">Confira os campos destacados abaixo.</Alert>}
+            <Card title={<span className={styles.sectionTitle}><UserRound aria-hidden="true"/>Quem é o paciente</span>}>
+                <FormGrid>
+                    <Field label="Nome completo" error={errors.name} className="full">{input('name', { autoComplete: 'name', maxLength: 100 })}</Field>
+                    <Field label="CPF" error={errors.cpf}>{input('cpf', { inputMode: 'numeric', placeholder: '000.000.000-00' })}</Field>
+                    <Field label="Data de nascimento" optional error={errors.birthDate}>{input('birthDate', { type: 'date' })}</Field>
+                </FormGrid>
+            </Card>
+            <Card title={<span className={styles.sectionTitle}><MessageCircle aria-hidden="true"/>Como falar com ele(a)</span>}>
+                <FormGrid>
+                    <Field label="Celular / WhatsApp" optional error={errors.phone}>{input('phone', { inputMode: 'tel', autoComplete: 'tel', placeholder: '(11) 98765-4321' })}</Field>
+                    <Field label="E-mail" optional error={errors.email}>{input('email', { type: 'email', inputMode: 'email', autoComplete: 'email', placeholder: 'nome@email.com' })}</Field>
+                </FormGrid>
+            </Card>
+            <Card title={<span className={styles.sectionTitle}><MapPin aria-hidden="true"/>Endereço</span>}>
+                <FormGrid>
+                    <Field label="CEP" error={errors.zipCode}>{input('zipCode', { inputMode: 'numeric', autoComplete: 'postal-code', placeholder: '00000-000' })}</Field>
+                    <Field label="Bairro" error={errors.neighborhood}>{input('neighborhood', { maxLength: 80 })}</Field>
+                    <Field label="Rua e número" error={errors.address} className="full">{input('address', { autoComplete: 'street-address', maxLength: 150 })}</Field>
+                </FormGrid>
+            </Card>
+            <div className={styles.footer}>
+                <ButtonLink to={vm.backLink} variant="secondary">Cancelar</ButtonLink>
+                <Button type="submit" size="lg" busy={vm.busy}>{vm.editing ? 'Salvar alterações' : 'Salvar paciente'}</Button>
+            </div>
+        </form>
+    </>;
 }

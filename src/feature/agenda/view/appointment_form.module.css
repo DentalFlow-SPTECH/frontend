@@ -1,0 +1,27 @@
+.layout { max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
+.main { display: flex; flex-direction: column; gap: 16px; }
+.sectionTitle { display: inline-flex; align-items: center; gap: 10px; }
+.sectionTitle svg { width: 20px; height: 20px; color: var(--primary); }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.label { font-weight: 700; font-size: 15px; }
+.error { color: var(--destructive); font-size: 14.5px; font-weight: 600; }
+.muted { color: var(--muted-foreground); font-size: 15px; }
+.chosen { display: flex; align-items: center; gap: 14px; }
+.chosen > span { flex: 1; min-width: 0; }
+.chosen b { display: block; font-size: 18px; } .chosen small { color: var(--muted-foreground); font-size: 14.5px; }
+.results { list-style: none; margin-top: 10px; border: 1px solid var(--border); border-radius: 16px; padding: 4px; max-height: 340px; overflow-y: auto; }
+.results button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 0; background: transparent; border-radius: 12px; text-align: left; }
+.results button:hover, .results button:focus-visible { background: var(--primary-soft); }
+.results b { display: block; font-size: 16px; } .results small { color: var(--muted-foreground); font-size: 14px; }
+.noResult { padding: 14px; color: var(--muted-foreground); }
+.newPatient { margin-top: 10px; }
+.slots { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.slotList { display: flex; flex-wrap: wrap; gap: 8px; }
+.slotList button { height: 42px; min-width: 76px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.slotList button:hover { border-color: var(--primary); }
+.slotList button[aria-pressed=true] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.slots + * { margin-top: 14px; }
+.footer { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 0; background: linear-gradient(transparent, var(--background) 30%); }
+@media (max-width: 1099px) { .footer { bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); } }
+@media (max-width: 599px) { .footer > * { flex: 1; } }
