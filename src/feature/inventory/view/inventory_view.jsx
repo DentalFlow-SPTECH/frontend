@@ -123,13 +123,13 @@ export function ProductFormPage() {
     const input = (field, props = {}) => <Input value={vm.form[field]} onChange={event => vm.change(field, event.target.value)} {...props}/>;
     return <InventoryFormShell title={vm.editing ? 'Editar material' : 'Novo material'} back={{ to: '/estoque', label: 'Estoque' }} vm={vm} submitLabel={vm.editing ? 'Salvar alterações' : 'Cadastrar material'}>
         {vm.form && <FormGrid>
-            <Field label="Nome do material" error={vm.errors.name} className="full">{input('name', { maxLength: 100, placeholder: 'Luva de procedimento' })}</Field>
+            <Field label="Nome do material" error={vm.errors.name} className="full">{input('name', { maxLength: 100 })}</Field>
             <Field label="Unidade" error={vm.errors.unit}>
                 <Select value={vm.form.unit} onChange={event => vm.change('unit', event.target.value)}>
                     {[...new Set([...units, vm.form.unit])].map(unit => <option key={unit} value={unit}>{unit.charAt(0) + unit.slice(1).toLowerCase()}</option>)}
                 </Select>
             </Field>
-            <Field label="Custo por unidade" optional error={vm.errors.unitCost}>{input('unitCost', { inputMode: 'decimal', placeholder: '25,90' })}</Field>
+            <Field label="Custo por unidade" optional error={vm.errors.unitCost}>{input('unitCost', { inputMode: 'decimal', placeholder: '0,00' })}</Field>
             {!vm.editing && <Field label="Quantidade em estoque agora" optional error={vm.errors.initialStock} hint="Vira a primeira movimentação (ajuste).">{input('initialStock', { inputMode: 'decimal', placeholder: '0' })}</Field>}
             <Field label="Estoque mínimo" optional error={vm.errors.minimumStock} hint="Abaixo disso, o material aparece como reposição.">{input('minimumStock', { inputMode: 'decimal', placeholder: '0' })}</Field>
             <div className="full"><Checkbox label="Material ativo" checked={vm.form.active} onChange={event => vm.change('active', event.target.checked)}/></div>
@@ -143,9 +143,9 @@ export function EquipmentFormPage() {
     const input = (field, props = {}) => <Input value={vm.form[field]} onChange={event => vm.change(field, event.target.value)} {...props}/>;
     return <InventoryFormShell title={vm.editing ? 'Editar equipamento' : 'Novo equipamento'} back={{ to: '/estoque?aba=equipamentos', label: 'Equipamentos' }} vm={vm} submitLabel={vm.editing ? 'Salvar alterações' : 'Cadastrar equipamento'}>
         {vm.form && <FormGrid>
-            <Field label="Nome do equipamento" error={vm.errors.name} className="full">{input('name', { maxLength: 100, placeholder: 'Autoclave 21 L' })}</Field>
+            <Field label="Nome do equipamento" error={vm.errors.name} className="full">{input('name', { maxLength: 100 })}</Field>
             <Field label="Descrição" optional className="full">{input('description', { placeholder: 'Sala, marca ou observação' })}</Field>
-            <Field label="Valor pago" error={vm.errors.acquisitionValue}>{input('acquisitionValue', { inputMode: 'decimal', placeholder: '8.500,00' })}</Field>
+            <Field label="Valor pago" error={vm.errors.acquisitionValue}>{input('acquisitionValue', { inputMode: 'decimal', placeholder: '0,00' })}</Field>
             <Field label="Vida útil (usos)" error={vm.errors.usefulLifeUses} hint="O custo por uso é calculado pela API.">{input('usefulLifeUses', { inputMode: 'numeric', type: 'number', min: 1 })}</Field>
             <Field label="Usos já feitos" optional error={vm.errors.completedUses}>{input('completedUses', { inputMode: 'numeric', type: 'number', min: 0 })}</Field>
             <div className="full"><Checkbox label="Equipamento ativo" checked={vm.form.active} onChange={event => vm.change('active', event.target.checked)}/></div>

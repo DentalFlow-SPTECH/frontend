@@ -103,7 +103,7 @@ export function ClinicFormPage() {
         {vm.form && <FormGrid>
             <Field label="Nome da clínica" error={vm.errors.name} className="full">{bind(vm, 'name', { maxLength: 100 })}</Field>
             <Field label="CNPJ" optional error={vm.errors.cnpj}>{bind(vm, 'cnpj', { inputMode: 'numeric', placeholder: '00.000.000/0000-00' })}</Field>
-            <Field label="Telefone" optional error={vm.errors.phone}>{bind(vm, 'phone', { inputMode: 'tel', placeholder: '(11) 3333-4444' })}</Field>
+            <Field label="Telefone" optional error={vm.errors.phone}>{bind(vm, 'phone', { inputMode: 'tel', placeholder: '(00) 0000-0000' })}</Field>
             <Field label="Endereço" optional error={vm.errors.address} className="full">{bind(vm, 'address', { maxLength: 150 })}</Field>
         </FormGrid>}
     </FormShell>;
@@ -113,9 +113,9 @@ export function DentistFormPage() {
     const vm = useDentistFormViewModel();
     return <FormShell title={vm.editing ? 'Editar dentista' : 'Novo dentista'} back={{ to: '/clinica/dentistas', label: 'Dentistas' }} vm={vm} submitLabel={vm.editing ? 'Salvar alterações' : 'Cadastrar dentista'}>
         {vm.form && <FormGrid>
-            <Field label="Nome" error={vm.errors.name} className="full" hint="Como aparece na agenda, por exemplo: Dra. Ana Lima.">{bind(vm, 'name', { maxLength: 100 })}</Field>
-            <Field label="CRO" error={vm.errors.cro}>{bind(vm, 'cro', { maxLength: 20, placeholder: 'CRO-SP-12345' })}</Field>
-            <Field label="Especialidade" optional error={vm.errors.specialty}>{bind(vm, 'specialty', { maxLength: 50, placeholder: 'Ortodontia' })}</Field>
+            <Field label="Nome" error={vm.errors.name} className="full" hint="Do jeito que deve aparecer na agenda.">{bind(vm, 'name', { maxLength: 100 })}</Field>
+            <Field label="CRO" error={vm.errors.cro}>{bind(vm, 'cro', { maxLength: 20, placeholder: 'CRO-UF-00000' })}</Field>
+            <Field label="Especialidade" optional error={vm.errors.specialty}>{bind(vm, 'specialty', { maxLength: 50 })}</Field>
             <Field label="Celular" optional error={vm.errors.phone}>{bind(vm, 'phone', { inputMode: 'tel' })}</Field>
         </FormGrid>}
     </FormShell>;
@@ -125,9 +125,9 @@ export function ProcedureFormPage() {
     const vm = useProcedureFormViewModel();
     return <FormShell title={vm.editing ? 'Editar procedimento' : 'Novo procedimento'} back={{ to: '/clinica/procedimentos', label: 'Procedimentos' }} vm={vm} submitLabel={vm.editing ? 'Salvar alterações' : 'Cadastrar procedimento'}>
         {vm.form && <FormGrid>
-            <Field label="Nome" error={vm.errors.name} className="full">{bind(vm, 'name', { maxLength: 100, placeholder: 'Limpeza' })}</Field>
-            <Field label="Preço" optional error={vm.errors.price} hint="Usado como valor sugerido no mapa do dia.">{bind(vm, 'price', { inputMode: 'decimal', placeholder: '180,00' })}</Field>
-            <Field label="Duração em minutos" optional error={vm.errors.durationMinutes} hint="Define o tamanho do cartão na agenda.">{bind(vm, 'durationMinutes', { inputMode: 'numeric', type: 'number', min: 5, step: 5, placeholder: '60' })}</Field>
+            <Field label="Nome" error={vm.errors.name} className="full">{bind(vm, 'name', { maxLength: 100 })}</Field>
+            <Field label="Preço" optional error={vm.errors.price} hint="Usado como valor sugerido no mapa do dia.">{bind(vm, 'price', { inputMode: 'decimal', placeholder: '0,00' })}</Field>
+            <Field label="Duração em minutos" optional error={vm.errors.durationMinutes} hint="Define o tamanho do cartão na agenda.">{bind(vm, 'durationMinutes', { inputMode: 'numeric', type: 'number', min: 5, step: 5 })}</Field>
         </FormGrid>}
         <p className={styles.note}><Clock aria-hidden="true"/>Sem duração, a agenda considera 30 minutos.</p>
     </FormShell>;
@@ -150,7 +150,7 @@ export function UserFormPage() {
                     {vm.dentists.map(dentist => <option key={dentist.id} value={dentist.id}>{dentist.name}</option>)}
                 </Select>
             </Field>}
-            <Field label="Usuário para entrar" error={vm.errors.login} hint="Sem espaços. Ex.: carla">{bind(vm, 'login', { maxLength: 50, autoComplete: 'off', autoCapitalize: 'none', spellCheck: false })}</Field>
+            <Field label="Usuário para entrar" error={vm.errors.login} hint="Sem espaços. A pessoa usa este nome para entrar.">{bind(vm, 'login', { maxLength: 50, autoComplete: 'off', autoCapitalize: 'none', spellCheck: false })}</Field>
             <Field label="Senha inicial" error={vm.errors.password} hint="Pelo menos 6 caracteres.">
                 <Input type={vm.showPassword ? 'text' : 'password'} value={vm.form.password} onChange={event => vm.change('password', event.target.value)} autoComplete="new-password"
                     trailing={<button type="button" onClick={vm.togglePassword} aria-label={vm.showPassword ? 'Esconder senha' : 'Mostrar senha'} aria-pressed={vm.showPassword}>{vm.showPassword ? <EyeOff aria-hidden="true"/> : <Eye aria-hidden="true"/>}</button>}/>

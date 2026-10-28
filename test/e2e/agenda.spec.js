@@ -35,8 +35,9 @@ test.describe('agenda e hoje', () => {
     });
 
     test('mudar situação mostra aviso com Desfazer e cancelar pede confirmação', async ({ page }) => {
-        const db = await useFakeApi(page);
-        await signIn(page, 'ana', '/agenda?ver=dia&consulta=107');
+        // Relógio real: o temporizador do aviso não convive com o relógio congelado no build de produção.
+        const db = await useFakeApi(page, { clock: false });
+        await signIn(page, 'ana', '/agenda?ver=dia&data=2026-10-28&consulta=107');
         const panel = page.getByRole('dialog');
         await expect(panel.getByRole('heading', { name: 'Roberto Nunes' })).toBeVisible();
         await panel.getByRole('button', { name: 'Confirmar' }).click();

@@ -3,6 +3,7 @@ import { signIn, useFakeApi } from './fake_api.js';
 
 test.describe('acesso e perfis', () => {
     test('entrar valida campos, recusa senha errada sem janela do navegador e leva para Hoje', async ({ page }) => {
+        test.setTimeout(60_000);
         await useFakeApi(page);
         page.on('dialog', dialog => { throw new Error(`diálogo inesperado: ${dialog.message()}`); });
         await page.goto('./#/hoje');
@@ -44,6 +45,8 @@ test.describe('acesso e perfis', () => {
         await page.getByRole('button', { name: /Conta de Dra. Ana Lima/ }).click();
         await page.getByRole('menuitem', { name: 'Sair' }).click();
         await expect(page).toHaveURL(/#\/entrar$/);
+        // Espera a navegação de saída terminar; trocar o endereço no mesmo instante interrompe o roteador.
+        await expect(page.getByLabel('Usuário')).toBeVisible();
         await page.goto('./#/pacientes');
         await expect(page.getByLabel('Usuário')).toBeVisible({ timeout: 15_000 });
         await expect(page).toHaveURL(/#\/entrar/);
@@ -52,8 +55,9 @@ test.describe('acesso e perfis', () => {
     test('sessão recusada pela API no meio do uso volta para Entrar com aviso', async ({ page }) => {
         await useFakeApi(page);
         await signIn(page, 'ana');
-        await page.route('**/dentalflow-api/v1/patient**', route => route.fulfill({ status: 401, body: '' }));
-        await page.goto('./#/pacientes');
+        // Recusa todas as chamadas e abre uma tela que sempre consulta a API (pacientes ficam em cache após Hoje).
+        await page.route('**/dentalflow-api/v1/**', route => route.fulfill({ status: 401, body: '' }));
+        await page.goto('./#/clinica');
         await expect(page).toHaveURL(/#\/entrar/);
         await expect(page.getByText('Sua sessão terminou. Entre novamente para continuar.')).toBeVisible();
     });

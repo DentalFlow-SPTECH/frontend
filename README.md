@@ -36,7 +36,7 @@ npm run dev
 
 Abra `http://127.0.0.1:5178/`. O Vite repassa `/dentalflow-api` para `http://localhost:8080` (o backend não tem CORS); use `DENTAL_FLOW_API` para outro endereço. Em produção, sirva frontend e API na mesma origem ou defina `VITE_API_URL` com uma API que libere a origem, sempre em HTTPS.
 
-Banco vazio: a API ainda não tem fluxo para o primeiro usuário `DENTISTA`. Depois de criá-lo direto no banco, `node test/seed/seed_api.mjs [baseUrl] [login] [senha]` cadastra pela própria API dentistas, procedimentos, pacientes, consultas da semana, um acesso de recepção, estoque e um mapa do dia fictícios.
+Banco vazio: a API ainda não tem fluxo para o primeiro usuário `DENTISTA`. Depois de criá-lo direto no banco, `node test/seed/seed_api.mjs [baseUrl] [login] [senha]` cadastra pela própria API dentistas, procedimentos, pacientes, consultas da semana, um acesso de recepção, estoque e um mapa do dia fictícios. Em seguida, `node test/seed/seed_history.mjs` acrescenta um histórico pequeno (semana anterior atendida, próxima semana agendada, mapas do dia do mês e movimentações de estoque); ele pula o que já existe. O frontend não tem dados fixos: tudo vem da API.
 
 ## Verificação
 
@@ -49,7 +49,7 @@ $env:E2E_REAL_API = '1'; npx playwright test real_api.spec.js --project=desktop 
 
 Os testes E2E usam uma API falsa no navegador (`test/e2e/fake_api.js`) que segue o contrato do guia, com relógio fixo em 28/10/2026 09:40. `real_api.spec.js` só roda com `E2E_REAL_API=1` e cria registros novos a cada execução.
 
-**Resultado em 28/10/2026:** lint sem erros; 22 testes unitários; `npm run build` e `npm run build:pages` aprovados; `npm run test:e2e` com 34 aprovados e 8 ignorados por projeto/ambiente (cenários exclusivos de desktop ou celular e os testes de API real); `real_api.spec.js` com 2 aprovados contra a API local (MySQL 8.4 em Docker). Inclui axe nas telas principais, ausência de rolagem horizontal e reflow em 320 px. O pacote JavaScript tem 639 kB (o aviso do Vite acima de 500 kB continua). É evidência local com Edge/Playwright: não equivale a publicação nem a teste com pessoas, leitor de tela ou dispositivo físico.
+**Resultado em 28/10/2026:** lint sem erros; 22 testes unitários; `npm run build` e `npm run build:pages` aprovados; `npm run test:e2e` com 34 aprovados e 8 ignorados por projeto/ambiente (cenários exclusivos de desktop ou celular e os testes de API real), no servidor de desenvolvimento e na prévia do build para Pages (`TEST_BASE_URL=http://127.0.0.1:4178/frontend/`); `real_api.spec.js` com 2 aprovados contra a API local (MySQL 8.4 em Docker). Inclui axe nas telas principais, ausência de rolagem horizontal e reflow em 320 px. O pacote JavaScript tem 639 kB (o aviso do Vite acima de 500 kB continua). É evidência local com Edge/Playwright: não equivale a publicação nem a teste com pessoas, leitor de tela ou dispositivo físico.
 
 ## Limites conhecidos
 

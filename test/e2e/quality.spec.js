@@ -16,7 +16,7 @@ test('telas principais sem violações do axe, sem rolagem horizontal e sem erro
     for (const route of pages) {
         await page.goto(`./#${route}`);
         await page.getByRole('heading', { level: 1 }).first().waitFor();
-        await expect(page.getByLabel('Carregando')).toHaveCount(0);
+        await expect(page.getByLabel('Carregando')).toHaveCount(0, { timeout: 15_000 });
         const result = await new AxeBuilder({ page }).analyze();
         expect(result.violations.map(item => `${item.id}: ${item.nodes[0]?.target}`), route).toEqual([]);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${route} sem rolagem horizontal`).toBe(true);

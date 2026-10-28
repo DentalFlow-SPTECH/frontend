@@ -100,7 +100,7 @@ export function PatientFormPage() {
             </Card>
             <Card title={<span className={styles.sectionTitle}><MessageCircle aria-hidden="true"/>Como falar com ele(a)</span>}>
                 <FormGrid>
-                    <Field label="Celular / WhatsApp" optional error={errors.phone}>{input('phone', { inputMode: 'tel', autoComplete: 'tel', placeholder: '(11) 98765-4321' })}</Field>
+                    <Field label="Celular / WhatsApp" optional error={errors.phone}>{input('phone', { inputMode: 'tel', autoComplete: 'tel', placeholder: '(00) 00000-0000' })}</Field>
                     <Field label="E-mail" optional error={errors.email}>{input('email', { type: 'email', inputMode: 'email', autoComplete: 'email', placeholder: 'nome@email.com' })}</Field>
                 </FormGrid>
             </Card>

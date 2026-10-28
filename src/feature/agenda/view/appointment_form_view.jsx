@@ -26,7 +26,7 @@ export function AppointmentFormPage() {
                         </div>
                         : <>
                             <Field label="Buscar paciente" error={vm.errors.patientId} hint="Digite o nome, o CPF ou o telefone.">
-                                <Input icon={Search} value={vm.search} onChange={event => vm.setSearch(event.target.value)} placeholder="Ex.: Maria" autoComplete="off" autoFocus/>
+                                <Input icon={Search} value={vm.search} onChange={event => vm.setSearch(event.target.value)} autoComplete="off" autoFocus/>
                             </Field>
                             {vm.search && <ul className={styles.results} aria-label="Pacientes encontrados">
                                 {vm.patientResults.map(item => <li key={item.id}><button type="button" onClick={() => vm.choosePatient(item)}>

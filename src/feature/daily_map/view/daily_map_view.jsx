@@ -131,7 +131,7 @@ export function DailyMapFormPage() {
                             </Field>
                             <Field label="Chegada"><Input type="time" value={visit.entryTime} onChange={event => vm.changeRow('visits', index, 'entryTime', event.target.value)}/></Field>
                             <Field label="Saída"><Input type="time" value={visit.exitTime} onChange={event => vm.changeRow('visits', index, 'exitTime', event.target.value)}/></Field>
-                            <Field label="Ficha"><Input value={visit.recordNumber} onChange={event => vm.changeRow('visits', index, 'recordNumber', event.target.value)} placeholder="F-100"/></Field>
+                            <Field label="Ficha"><Input value={visit.recordNumber} onChange={event => vm.changeRow('visits', index, 'recordNumber', event.target.value)}/></Field>
                         </div>
                         <div className={styles.rowEnd}>
                             <Checkbox label="Conferido" checked={visit.checked} onChange={event => vm.changeRow('visits', index, 'checked', event.target.checked)}/>
