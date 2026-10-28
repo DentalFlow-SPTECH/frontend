@@ -73,3 +73,14 @@ test('semana, mês e períodos do dia', () => {
     assert.equal(october.filter(cell => cell.currentMonth).length, 31);
     assert.deepEqual(groupByPeriod([item('t', 840, 870), item('m', 540, 570)]).map(group => group.title), ['Manhã', 'Tarde']);
 });
+
+test('clique na grade vira horário arredondado e só agenda do agora em diante', async () => {
+    const { slotFromOffset, canScheduleAt } = await import('../../src/feature/agenda/model/agenda_model.js');
+    assert.equal(slotFromOffset(0, 80, 420), 420);
+    assert.equal(slotFromOffset(650, 80, 420), 900, '650 px abaixo de 07:00 com 80 px/h → 15:00');
+    assert.equal(slotFromOffset(100, 80, 420, 30), 480, '75 min abaixo de 07:00, em passos de 30 → 08:00');
+    assert.equal(canScheduleAt({ past: true }, 900, 0), false);
+    assert.equal(canScheduleAt({ isToday: true }, 570, 580), false);
+    assert.equal(canScheduleAt({ isToday: true }, 600, 580), true);
+    assert.equal(canScheduleAt({}, 300, 900), true, 'dia futuro aceita qualquer horário');
+});

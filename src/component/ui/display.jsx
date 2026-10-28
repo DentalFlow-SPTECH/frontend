@@ -97,8 +97,8 @@ export function Card({ title, action, children, className = '', padded = true, a
 }
 
 // Filtros em chips, como Instagram e iFood. `value` vazio representa "Todos".
-export function Chips({ label, options, value, onChange }) {
-    return <div className={styles.chips} role="group" aria-label={label}>
+export function Chips({ label, options, value, onChange, wrap = false }) {
+    return <div className={`${styles.chips} ${wrap ? styles.chipsWrap : ''}`} role="group" aria-label={label}>
         {options.map(option => <button key={option.value ?? 'all'} type="button" className={styles.chip} aria-pressed={String(option.value ?? '') === String(value ?? '')} onClick={() => onChange(option.value)}>
             {option.avatar && <Avatar name={option.avatar} size="xs"/>}
             {option.label}{option.count !== undefined && <span className={styles.chipCount}>{option.count}</span>}
@@ -112,16 +112,21 @@ export function Segmented({ label, options, value, onChange, full = false }) {
     </div>;
 }
 
-export function StepTrack({ steps, current }) {
+// Etapas já alcançadas (inclusive a atual) ficam concluídas; a seguinte aparece como próximo passo.
+export function StepTrack({ steps, current, caption }) {
     const index = steps.findIndex(step => step.value === current);
-    return <ol className={styles.steps} aria-label="Etapas">
-        {steps.map((step, position) => {
-            const state = position < index ? 'done' : position === index ? 'current' : 'next';
-            return <li key={step.value} data-state={state} aria-current={state === 'current' ? 'step' : undefined}>
-                <span className={styles.stepDot}>{state === 'done' && <Check aria-hidden="true"/>}</span>{step.label}
-            </li>;
-        })}
-    </ol>;
+    return <div className={styles.stepBox}>
+        {caption && <p className={styles.stepCaption}>{caption}</p>}
+        <ol className={styles.steps} aria-label="Etapas da consulta">
+            {steps.map((step, position) => {
+                const state = position <= index ? 'done' : position === index + 1 ? 'next' : 'pending';
+                return <li key={step.value} data-state={state} aria-current={position === index ? 'step' : undefined}>
+                    <span className={styles.stepDot}>{state === 'done' && <Check aria-hidden="true"/>}</span>{step.label}
+                    {state === 'next' && <span className="sr-only"> (próximo passo)</span>}
+                </li>;
+            })}
+        </ol>
+    </div>;
 }
 
 export function Stat({ icon: Icon, label, value, hint, tone = 'neutral', highlight = false }) {

@@ -11,7 +11,7 @@ test.describe('formulários integrados', () => {
         await page.getByLabel('Procedimento').selectOption({ label: 'Limpeza · 60 min · R$ 180,00' });
         await expect(page.getByRole('button', { name: '09:00', exact: true })).toHaveCount(0);
         await page.getByRole('button', { name: '10:00', exact: true }).click();
-        await page.getByRole('button', { name: 'Agendar consulta' }).click();
+        await page.getByRole('button', { name: /^Agendar( consulta)?$/ }).click();
         await expect(page.getByText(/Consulta agendada/).first()).toBeVisible();
         await expect(page).toHaveURL(/ver=dia&data=2026-10-29&consulta=\d+/);
         const created = db.appointments.at(-1);
@@ -23,9 +23,9 @@ test.describe('formulários integrados', () => {
         await useFakeApi(page);
         await signIn(page, 'ana', '/agenda/nova?data=2026-10-28&dentista=3&paciente=2');
         await page.getByLabel('Procedimento').selectOption({ label: 'Avaliação · 30 min · R$ 120,00' });
-        await page.getByLabel('Horário').fill('10:10');
-        await expect(page.getByText('Este horário já está ocupado')).toBeVisible();
-        await expect(page.getByText('10:00 · Ana Clara Mendes')).toBeVisible();
+        await page.getByLabel('Horário', { exact: true }).fill('10:10');
+        await expect(page.getByText('Este horário já está ocupado').filter({ visible: true })).toBeVisible();
+        await expect(page.getByText(/10:00 · Ana Clara Mendes/).filter({ visible: true })).toBeVisible();
     });
 
     test('novo paciente valida campos e mostra o CPF duplicado no próprio campo', async ({ page }) => {

@@ -12,13 +12,16 @@
   --warning: #7A5000; --warning-soft: #FFF1D2; --success: #1D7A45; --success-soft: #E2F3E8; --info: #2F5E9E; --info-soft: #E5EDF8;
   --whatsapp: #187A43; --whatsapp-soft: #E3F4EA;
 
-  /* Situações da consulta: texto, fundo e barra lateral. Sempre acompanhadas de ícone e rótulo. */
-  --status-agendado-fg: #7A5000; --status-agendado-bg: #FFF0CC; --status-agendado-bar: #E5A21A;
-  --status-confirmado-fg: #1D7A45; --status-confirmado-bg: #E2F3E8; --status-confirmado-bar: #2E9A5B;
-  --status-atendimento-fg: #5B45C2; --status-atendimento-bg: #EDE9FC; --status-atendimento-bar: #7B66D9;
-  --status-concluido-fg: #2F5E9E; --status-concluido-bg: #E5EDF8; --status-concluido-bar: #5A85C2;
-  --status-cancelado-fg: #B23B3B; --status-cancelado-bg: #FBE7E7; --status-cancelado-bar: #D16464;
-  --status-faltou-fg: #545F64; --status-faltou-bg: #EEEFEF; --status-faltou-bar: #9AA3A6;
+  /* Situações da consulta (revisão de 28/10/2026): cor e forma diferentes para não depender só da cor.
+     Agendado = vazado/tracejado (ainda não confirmado); Em atendimento = roxo cheio (destaque do momento);
+     Concluído = cinza (já passou); Cancelado e Faltou = hachurados. Sempre com ícone e rótulo. */
+  --status-agendado-fg: #7A5000; --status-agendado-bg: #FFFFFF; --status-agendado-bar: #D9940E;
+  --status-confirmado-fg: #17663B; --status-confirmado-bg: #DCF3E5; --status-confirmado-bar: #1F8A4C;
+  --status-atendimento-fg: #FFFFFF; --status-atendimento-bg: #5B45C2; --status-atendimento-bar: #3E2C99;
+  --status-concluido-fg: #4A5559; --status-concluido-bg: #ECEEEF; --status-concluido-bar: #A3ACB0;
+  --status-cancelado-fg: #A12F2F; --status-cancelado-bg: #FBE7E7; --status-cancelado-bar: #D16464;
+  --status-faltou-fg: #934010; --status-faltou-bg: #FCEBDD; --status-faltou-bar: #E07B3F;
+  --hatch: repeating-linear-gradient(135deg, rgba(255, 255, 255, .55) 0 6px, transparent 6px 12px);
 
   --radius-sm: 10px; --radius: 14px; --radius-lg: 20px; --radius-xl: 24px; --radius-full: 999px;
   --shadow-sm: 0 1px 2px rgba(27, 37, 41, .06); --shadow: 0 8px 24px rgba(27, 37, 41, .08); --shadow-lg: 0 24px 50px rgba(27, 37, 41, .18);

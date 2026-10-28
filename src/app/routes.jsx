@@ -1,5 +1,5 @@
 import { createHashRouter, Navigate } from 'react-router-dom';
-import { AppShell, NotFoundPage, RequireAuth, RequireDentist, RouteErrorPage } from './app_shell.jsx';
+import { AppShell, NotFoundPage, RequireAuth, RequireDentist, RouteErrorPage, ScreenErrorPage } from './app_shell.jsx';
 import { LoginPage } from '../feature/auth/view/login_view.jsx';
 import { TodayPage } from '../feature/agenda/view/today_view.jsx';
 import { AgendaPage } from '../feature/agenda/view/agenda_view.jsx';
@@ -16,7 +16,9 @@ const dentist = element => <RequireDentist>{element}</RequireDentist>;
 export const router = createHashRouter([
     { path: 'entrar', element: <LoginPage/>, errorElement: <RouteErrorPage/> },
     {
-        element: <RequireAuth><AppShell/></RequireAuth>, errorElement: <RouteErrorPage/>, children: [
+        element: <RequireAuth><AppShell/></RequireAuth>, errorElement: <RouteErrorPage/>, children: [{
+            // Rota sem caminho: um erro numa tela aparece dentro do shell, com o menu.
+            errorElement: <ScreenErrorPage/>, children: [
             { index: true, element: <Navigate to="/hoje" replace/> },
             { path: 'hoje', element: <TodayPage/> },
             { path: 'agenda', element: <AgendaPage/> },
@@ -47,6 +49,6 @@ export const router = createHashRouter([
             { path: 'estoque/equipamentos/novo', element: dentist(<EquipmentFormPage/>) },
             { path: 'estoque/equipamentos/:id/editar', element: dentist(<EquipmentFormPage/>) },
             { path: '*', element: <NotFoundPage/> },
-        ],
+        ] }],
     },
 ]);

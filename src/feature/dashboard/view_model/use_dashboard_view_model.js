@@ -10,7 +10,7 @@ export function useDashboardViewModel() {
     const period = monthParam(params.get('mes'));
     const dentistId = params.get('dentista') ?? '';
     const query = useQuery(`dashboard:${period.year}-${period.month}:${dentistId}`, () => Promise.all([repository.month({ ...period, dentistId }), repository.dentists()])
-        .then(([dashboard, dentists]) => ({ dashboard, dentists })));
+        .then(([dashboard, dentists]) => ({ dashboard, dentists })), { keepPrevious: true });
     const now = new Date();
     const isCurrent = period.year === now.getFullYear() && period.month === now.getMonth() + 1;
     function update(next) {

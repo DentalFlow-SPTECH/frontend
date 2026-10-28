@@ -29,7 +29,7 @@ export function AgendaPage() {
             : vm.firstLoad ? <Skeleton rows={1} height={480}/>
             : vm.view === 'mes' ? <MonthView vm={vm}/>
             : <TimeGrid label={`Agenda: ${vm.title}`} columns={vm.columns} from={vm.hours.from} to={vm.hours.to} hourHeight={vm.wide ? 80 : 68} now={vm.now}
-                onSelect={vm.select} selectedId={vm.selected?.id} showDentist={!vm.dentistId && !vm.byDentist}/>}
+                onSelect={vm.select} onCreate={vm.createAt} selectedId={vm.selected?.id} showDentist={!vm.dentistId && !vm.byDentist}/>}
         <ButtonLink to={vm.newLink} icon={Plus} className={styles.fab}>Agendar</ButtonLink>
         <Panel open={Boolean(vm.selected)} onOpenChange={open => { if (!open) vm.select(null); }} title="Consulta">
             {vm.selected && <AppointmentDetail item={vm.selected} today={vm.today} actions={vm.actions}/>}

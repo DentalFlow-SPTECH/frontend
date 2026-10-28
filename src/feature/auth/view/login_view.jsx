@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Eye, EyeOff, LifeBuoy, LockKeyhole, UserRound } from 'lucide-react';
 import { Alert, Button, Field, Input } from '../../../component/ui/index.js';
 import { BrandMark } from '../../../component/brand.jsx';
@@ -8,14 +9,16 @@ import styles from './login.module.css';
 export function LoginPage() {
     const vm = useLoginViewModel();
     useEffect(() => { document.title = 'Entrar — Dental Flow'; }, []);
+    if (vm.signedIn && !vm.busy)
+        return <Navigate to={vm.target} replace/>;
     return <main className={styles.page}>
         <section className={styles.hero} aria-hidden="true">
-            <BrandMark size={72}/>
+            <BrandMark size={88}/>
             <p className={styles.heroTitle}>Olá! Que bom<br/>ter você aqui.</p>
             <p className={styles.heroText}>A agenda, os pacientes e o dia da clínica em um só lugar.</p>
         </section>
         <section className={styles.panel}>
-            <div className={styles.brandRow}><BrandMark size={40}/><span>Dental<b>Flow</b></span></div>
+            <div className={styles.brandRow}><BrandMark size={36}/><span>Dental<b>Flow</b></span></div>
             <h1 className={styles.title}>Entrar</h1>
             <p className={styles.lead}>Use o usuário e a senha que a clínica criou para você.</p>
             {vm.notice && <Alert tone="info">{vm.notice}</Alert>}

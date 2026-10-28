@@ -91,6 +91,15 @@ export function hourWindow(items) {
     return { from, to };
 }
 
+// Posição vertical clicada na grade → horário de início, arredondado para baixo em `step` minutos.
+export function slotFromOffset(offsetY, hourHeight, from, step = 15) {
+    const minutes = Math.max(0, offsetY) / hourHeight * 60;
+    return from + Math.floor(minutes / step) * step;
+}
+
+// Só oferece agendar em dias futuros ou, hoje, a partir do horário atual.
+export const canScheduleAt = (column, minutes, nowMinutes) => !column.past && !(column.isToday && minutes < nowMinutes);
+
 export function nextStatus(status) {
     const index = statusOrder.indexOf(status);
     return index >= 0 && index < statusOrder.length - 1 ? statusOrder[index + 1] : null;

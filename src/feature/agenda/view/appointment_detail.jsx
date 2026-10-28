@@ -41,7 +41,7 @@ export function AppointmentDetail({ item, today, actions }) {
         ]}/>
         {item.status === 'CANCELADO' || item.status === 'FALTOU'
             ? <Alert tone={item.status === 'CANCELADO' ? 'danger' : 'warning'} title={item.status === 'CANCELADO' ? 'Consulta cancelada' : 'Paciente faltou'}>Para atender de novo, agende uma nova consulta.</Alert>
-            : <StepTrack steps={steps} current={item.status}/>}
+            : <StepTrack steps={steps} current={item.status} caption={<>Situação: <b>{appointmentStatus[item.status].label}</b>{next ? <> · Próximo: <b>{actionLabel(item.status).toLowerCase()}</b></> : ''}</>}/>}
         {item.status === 'CONCLUIDO' && <Alert tone="success" title="Atendimento concluído"/>}
         <div className={styles.detailActions}>
             {open && next && <Button size="lg" block icon={next === 'CONFIRMADO' ? Clock : Stethoscope} busy={actions.busy === next} onClick={() => actions.advance(item)}>{actionLabel(item.status)}</Button>}

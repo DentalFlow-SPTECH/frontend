@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Dental Flow — versões do logotipo</title>
+<style>
+@font-face { font-family: Figtree; font-weight: 600; src: url(../../node_modules/@fontsource/figtree/files/figtree-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: Figtree; font-weight: 800; src: url(../../node_modules/@fontsource/figtree/files/figtree-latin-800-normal.woff2) format('woff2'); }
+* { box-sizing: border-box; margin: 0; }
+body { font-family: Figtree, sans-serif; background: #E7E9EB; padding: 32px; color: #1B2529; }
+.board { width: 1500px; display: flex; flex-direction: column; gap: 22px; }
+.board > h1 { font-size: 30px; font-weight: 800; }
+.board > p { color: #4B575C; font-size: 17px; margin-top: -12px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.card { background: #fff; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.stage { height: 200px; display: grid; place-items: center; background: #F6F2EC; }
+.stage.dark { background: #0F1A1D; }
+.stage.split { display: grid; grid-template-columns: 1fr 1fr; place-items: center; }
+.stage.split > div { width: 100%; height: 100%; display: grid; place-items: center; }
+.stage.split > div:last-child { background: #0F1A1D; }
+.label { padding: 12px 16px 14px; font-size: 15px; font-weight: 600; color: #3B474B; }
+.label b { display: block; font-size: 17px; font-weight: 800; color: #1B2529; }
+.tag { display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: #0D6E66; background: #E1F0EC; padding: 3px 8px; border-radius: 6px; }
+
+/* Peças exportadas (data-export): tamanho base para PNG em 2x. */
+.mark { display: block; height: 96px; width: auto; }
+.icon { width: 120px; height: 120px; border-radius: 30px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.icon img { width: 60%; height: auto; }
+.icon.teal { background: #0D6E66; }
+.icon.cream { background: #F6F2EC; box-shadow: inset 0 0 0 2px #E2DACE; }
+.icon.gradient { background: linear-gradient(135deg, #0D6E66 0%, #13A49B 55%, #1ED8CF 100%); }
+.icon.coral { background: #E8613C; border-radius: 50%; }
+.lockup { display: flex; align-items: center; gap: 14px; padding: 6px 4px; }
+.lockup img { height: 58px; width: auto; }
+.lockup span { font-size: 40px; font-weight: 800; letter-spacing: -1px; color: #1B2529; }
+.lockup span b { color: #0D6E66; font-weight: 800; }
+.lockup.on-dark span { color: #fff; }
+.lockup.on-dark span b { color: #1ED8CF; }
+.stacked { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px; }
+.stacked img { height: 96px; width: auto; }
+.stacked span { font-size: 34px; font-weight: 800; letter-spacing: -.8px; color: #1B2529; }
+.stacked span b { color: #0D6E66; }
+
+/* Prévia na barra de cima. */
+.nav { display: flex; align-items: center; gap: 28px; height: 60px; padding: 0 24px; background: #fff; border-radius: 14px; border: 1px solid #EAE3D9; }
+.nav .tabs { display: flex; gap: 6px; font-weight: 600; color: #5B676C; font-size: 15px; }
+.nav .tabs span { padding: 9px 14px; border-radius: 999px; }
+.nav .tabs span:first-child { background: #E1F0EC; color: #0D6E66; }
+.navs { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.navs .label { padding: 8px 4px 0; }
+.small-lockup { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -.4px; }
+.small-lockup img { height: 34px; }
+.small-lockup b { color: #0D6E66; }
+.small-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+.small-icon img { width: 62%; height: auto; }
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>Dental Flow · versões do logotipo</h1>
+  <p>Gerado a partir do símbolo original (dente), sem o quadrado escuro. PNG com fundo transparente.</p>
+  <div class="grid">
+    <div class="card"><div class="stage split"><div><img class="mark" data-export="simbolo_verde" src="out/mark_teal.png" alt=""></div><div><img class="mark" data-export="simbolo_branco" src="out/mark_white.png" alt=""></div></div>
+      <div class="label"><b>1 · Símbolo verde / branco</b>Para a barra clara e fundos escuros<br><span class="tag">Recomendado na barra</span></div></div>
+    <div class="card"><div class="stage split"><div><img class="mark" data-export="simbolo_turquesa" src="out/mark_turquoise.png" alt=""></div><div><img class="mark" src="out/mark_turquoise.png" alt=""></div></div>
+      <div class="label"><b>2 · Símbolo turquesa original</b>Mais vivo; no fundo claro fica suave</div></div>
+    <div class="card"><div class="stage"><div class="icon teal" data-export="icone_verde"><img src="out/mark_white.png" alt=""></div></div>
+      <div class="label"><b>3 · Ícone invertido</b>Dente branco sobre verde: favicon e app<br><span class="tag">Recomendado no favicon</span></div></div>
+    <div class="card"><div class="stage dark"><div class="icon cream" data-export="icone_creme"><img src="out/mark_teal.png" alt=""></div></div>
+      <div class="label"><b>4 · Ícone creme</b>Dente verde sobre o creme da marca</div></div>
+    <div class="card"><div class="stage"><div class="icon gradient" data-export="icone_gradiente"><img src="out/mark_white.png" alt=""></div></div>
+      <div class="label"><b>5 · Ícone degradê</b>Do verde da marca ao turquesa do logo</div></div>
+    <div class="card"><div class="stage"><div class="icon coral" data-export="icone_coral"><img src="out/mark_white.png" alt=""></div></div>
+      <div class="label"><b>6 · Selo coral</b>Usa o coral do “agora”; para destaques</div></div>
+    <div class="card"><div class="stage"><div class="lockup" data-export="logo_horizontal"><img src="out/mark_teal.png" alt=""><span>Dental<b>Flow</b></span></div></div>
+      <div class="label"><b>7 · Logotipo horizontal</b>Símbolo + nome, para fundo claro</div></div>
+    <div class="card"><div class="stage dark"><div class="lockup on-dark" data-export="logo_horizontal_escuro"><img src="out/mark_turquoise.png" alt=""><span>Dental<b>Flow</b></span></div></div>
+      <div class="label"><b>8 · Logotipo horizontal escuro</b>Para fundos escuros e apresentações</div></div>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="stage" style="height:240px"><div class="stacked" data-export="logo_empilhado"><img src="out/mark_teal.png" alt=""><span>Dental<b>Flow</b></span></div></div>
+      <div class="label"><b>9 · Empilhado</b>Para a tela Entrar</div></div>
+    <div class="card"><div class="stage" style="height:240px;gap:18px;display:flex;align-items:center;justify-content:center">
+        <img src="../../public/favicon-512.png" width="128" height="128" alt="">
+        <img src="../../public/apple-touch-icon.png" width="45" height="45" style="border-radius:10px" alt="">
+        <img src="../../public/favicon-32.png" width="16" height="16" alt=""></div>
+      <div class="label"><b>10 · Favicon</b>Ícone 3 em 128, 45 e 16 px (arquivos de <code>public/</code>)</div></div>
+    <div class="card" style="grid-column: span 2"><div class="stage" style="height:240px;padding:16px 20px">
+        <div class="navs" style="width:100%">
+          <div><div class="nav"><span class="small-lockup"><img src="out/mark_teal.png" alt=""><span>Dental<b>Flow</b></span></span><span class="tabs"><span>Hoje</span><span>Agenda</span><span>Pacientes</span></span></div></div>
+          <div><div class="nav"><span class="small-lockup"><span class="small-icon" style="background:#0D6E66"><img src="out/mark_white.png" alt=""></span><span>Dental<b>Flow</b></span></span><span class="tabs"><span>Hoje</span><span>Agenda</span><span>Pacientes</span></span></div></div>
+        </div></div>
+      <div class="label"><b>Como fica na barra de cima</b>Em cima: símbolo 1 · Embaixo: ícone 3 (hoje é o quadrado escuro com o dente turquesa)</div></div>
+  </div>
+</div>
+</body>
+</html>

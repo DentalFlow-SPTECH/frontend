@@ -4,8 +4,8 @@ import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
-import { clock, firstName, isoDate, minutesOf, normalizeText, digits } from '../../../component/format.js';
-import { conflictsWith, defaultDuration, emptyAppointmentForm, formFromAppointment, validateAppointment } from '../model/agenda_model.js';
+import { clock, dateLong, dateShort, digits, firstName, isoDate, minutesOf, normalizeText, weekdayShort } from '../../../component/format.js';
+import { conflictsWith, defaultDuration, emptyAppointmentForm, formFromAppointment, periodOf, validateAppointment } from '../model/agenda_model.js';
 
 const slotStart = 7 * 60;
 const slotEnd = 20 * 60;
@@ -40,6 +40,7 @@ export function useAppointmentFormViewModel() {
     const procedures = source.data?.procedures ?? [];
     const patient = patients.find(item => String(item.id) === current?.patientId) ?? null;
     const procedure = procedures.find(item => String(item.id) === current?.procedureId) ?? null;
+    const dentist = dentists.find(item => String(item.id) === current?.dentistId) ?? null;
     const duration = procedure?.durationMinutes || defaultDuration;
     const dayItems = day.data?.byDate?.[current?.date] ?? [];
     const candidate = current?.time && current?.dentistId ? { id: editing ? Number(id) : -1, dentistId: Number(current.dentistId), start: minutesOf(current.time), end: minutesOf(current.time) + duration } : null;
@@ -95,8 +96,25 @@ export function useAppointmentFormViewModel() {
         }
     }
 
+    // Horários livres agrupados por período (Manhã, Tarde, Noite), para a lista não ficar enorme no celular.
+    const slotGroups = [];
+    for (const time of freeSlots) {
+        const title = periodOf(minutesOf(time));
+        if (slotGroups.at(-1)?.title !== title)
+            slotGroups.push({ title, times: [] });
+        slotGroups.at(-1).times.push(time);
+    }
+    const start = current?.time ? minutesOf(current.time) : null;
+    const summary = current ? {
+        patient: patient?.name ?? null,
+        dentist: dentist?.name ?? null,
+        procedure: procedure ? `${procedure.name} · ${duration} min${procedure.price ? ` · ${procedure.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : ''}` : null,
+        when: current.date ? `${dateLong(current.date)}${start !== null ? ` · ${current.time} às ${clock(start + duration)}` : ''}` : null,
+        short: current.date ? `${weekdayShort(current.date)} ${dateShort(current.date).slice(0, 5)} · ${current.time || '--:--'} · ${duration} min` : '',
+    } : null;
+
     return {
-        editing, loading: source.firstLoad, error: source.error, reload: source.reload,
+        editing, loading: source.firstLoad, error: source.error, reload: source.reload, dentist, slotGroups, summary,
         form: current, errors, failure, busy,
         patients, dentists, procedures, patient, procedure, duration,
         search, setSearch, patientResults,

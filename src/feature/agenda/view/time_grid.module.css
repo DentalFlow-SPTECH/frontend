@@ -23,11 +23,15 @@
 .block::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--bar); }
 .block:hover { filter: brightness(.97); z-index: 2; }
 .block:focus-visible { outline: 3px solid var(--ring); outline-offset: 1px; z-index: 3; }
-.block[data-status=agendado] { --fg: var(--status-agendado-fg); --bg: var(--status-agendado-bg); --bar: var(--status-agendado-bar); }
+.block[data-status=agendado] { --fg: var(--status-agendado-fg); --bg: var(--status-agendado-bg); --bar: var(--status-agendado-bar); border: 1.5px dashed var(--status-agendado-bar); }
+.block[data-status=agendado]::before { display: none; }
 .block[data-status=confirmado] { --fg: var(--status-confirmado-fg); --bg: var(--status-confirmado-bg); --bar: var(--status-confirmado-bar); }
-.block[data-status=atendimento] { --fg: var(--status-atendimento-fg); --bg: var(--status-atendimento-bg); --bar: var(--status-atendimento-bar); }
+.block[data-status=atendimento] { --fg: var(--status-atendimento-fg); --bg: var(--status-atendimento-bg); --bar: var(--status-atendimento-bar); color: #fff; box-shadow: 0 4px 12px rgba(91, 69, 194, .3); }
+.block[data-status=atendimento] .detail, .block[data-status=atendimento] .who { color: #E4DEFB; }
 .block[data-status=concluido] { --fg: var(--status-concluido-fg); --bg: var(--status-concluido-bg); --bar: var(--status-concluido-bar); }
-.block[data-status=cancelado] { --fg: var(--status-cancelado-fg); --bg: var(--status-cancelado-bg); --bar: var(--status-cancelado-bar); }
+.block[data-status=concluido] .name { color: var(--status-concluido-fg); }
+.block[data-status=cancelado] { --fg: var(--status-cancelado-fg); --bg: var(--status-cancelado-bg); --bar: var(--status-cancelado-bar); background-image: var(--hatch); }
+.block[data-status=faltou] { --fg: var(--status-faltou-fg); --bg: var(--status-faltou-bg); --bar: var(--status-faltou-bar); background-image: var(--hatch); }
 .time { display: flex; align-items: center; gap: 4px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .time svg { width: 14px; height: 14px; stroke-width: 2.6; margin-left: auto; flex: none; }
 .name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -36,10 +40,15 @@
 .who > span { width: 18px; height: 18px; font-size: 8.5px; }
 .oneLine { flex-direction: row; align-items: center; gap: 5px; }
 .pastBlock { opacity: .72; }
-.cancelled .name { text-decoration: line-through; color: var(--muted-foreground); }
+.block[data-status=cancelado] .name { text-decoration: line-through; color: var(--muted-foreground); }
 .selected { box-shadow: 0 0 0 2.5px var(--primary), 0 8px 18px rgba(13, 110, 102, .25); z-index: 3; }
-.nowLine { position: absolute; z-index: 4; height: 2px; background: var(--accent); pointer-events: none; }
+.creating { cursor: pointer; }
+.ghost { position: absolute; left: 3px; right: 3px; z-index: 2; display: flex; align-items: flex-start; gap: 4px; padding: 4px 8px; border-radius: 9px; border: 1.5px dashed var(--primary); background: rgba(225, 240, 236, .85); color: var(--primary); font-size: 12.5px; font-weight: 700; pointer-events: none; white-space: nowrap; overflow: hidden; }
+.ghost svg { width: 14px; height: 14px; flex: none; margin-top: 1px; }
+/* Linha "agora": atravessa a grade inteira; mais forte na(s) coluna(s) de hoje. */
+.nowLine { position: absolute; z-index: 4; left: var(--axis); right: 0; height: 2px; margin-top: -1px; background: rgb(232 97 60 / .45); pointer-events: none; }
 .nowLine::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.nowToday { position: absolute; z-index: 4; left: 0; right: 0; height: 3px; margin-top: -1.5px; background: var(--accent); pointer-events: none; }
 .nowTime { position: absolute; z-index: 4; left: 4px; transform: translateY(-50%); background: var(--accent-text); color: #fff; font-size: 11.5px; font-weight: 800; border-radius: 6px; padding: 2px 5px; font-variant-numeric: tabular-nums; pointer-events: none; }
 @media (max-width: 899px) {
   .grid { --axis: 46px; border-radius: 18px; }

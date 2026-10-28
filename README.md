@@ -20,7 +20,7 @@ Orçamentos, Caixa, Relatórios e auditoria da demonstração anterior saíram d
 ## Arquitetura
 
 - `src/data/api/http_client.js`: axios com Basic Auth em todas as chamadas, `X-Requested-With` (evita a janela de login do navegador no 401), desembrulha `data` e normaliza erros em `{ code, status, message }`.
-- `src/data/api/api.js`: rotas do guia. `src/data/session.js`: sessão **somente em memória** (atualizar a página pede login). `src/data/lookups.js`: cache de dentistas, procedimentos e pacientes por clínica, porque a consulta retorna só IDs.
+- `src/data/api/api.js`: rotas do guia. `src/data/session.js`: sessão em **sessionStorage** (decisão de 28/10/2026, provisória até a API emitir JWT): o F5 não desconecta, fechar a aba sim, e 30 minutos sem uso encerram a sessão. `src/data/lookups.js`: cache de dentistas, procedimentos e pacientes por clínica, porque a consulta retorna só IDs.
 - `src/feature/<módulo>/{model,repository,view_model,view}`: Models puros, Repositories sobre a API, ViewModels como hooks e Views em JSX. O ESLint verifica essas fronteiras.
 - `src/component/ui/`: componentes no padrão do shadcn/ui (código no projeto, `variant`/`size`, primitivos Radix), estilizados com CSS Modules e tokens da direção A em `src/style/tokens.css`. Ícones: `lucide-react`. Fonte: Figtree via `@fontsource`.
 - O `clinicId` vem sempre de `/auth/me`. Menus escondem o que a persona não acessa e as telas também tratam 401 (volta para Entrar) e 403 (tela de sem acesso).
@@ -49,7 +49,14 @@ $env:E2E_REAL_API = '1'; npx playwright test real_api.spec.js --project=desktop 
 
 Os testes E2E usam uma API falsa no navegador (`test/e2e/fake_api.js`) que segue o contrato do guia, com relógio fixo em 28/10/2026 09:40. `real_api.spec.js` só roda com `E2E_REAL_API=1` e cria registros novos a cada execução.
 
-**Resultado em 28/10/2026:** lint sem erros; 22 testes unitários; `npm run build` e `npm run build:pages` aprovados; `npm run test:e2e` com 34 aprovados e 8 ignorados por projeto/ambiente (cenários exclusivos de desktop ou celular e os testes de API real), no servidor de desenvolvimento e na prévia do build para Pages (`TEST_BASE_URL=http://127.0.0.1:4178/frontend/`); `real_api.spec.js` com 2 aprovados contra a API local (MySQL 8.4 em Docker). Inclui axe nas telas principais, ausência de rolagem horizontal e reflow em 320 px. O pacote JavaScript tem 639 kB (o aviso do Vite acima de 500 kB continua). É evidência local com Edge/Playwright: não equivale a publicação nem a teste com pessoas, leitor de tela ou dispositivo físico.
+**Resultado em 28/10/2026:** lint sem erros; 26 testes unitários; `npm run build` e `npm run build:pages` aprovados; `npm run test:e2e` com 51 aprovados e 11 ignorados por projeto/ambiente (cenários exclusivos de desktop ou celular e os testes de API real), no servidor de desenvolvimento e na prévia do build para Pages (`TEST_BASE_URL=http://127.0.0.1:4178/frontend/`); `real_api.spec.js` com 2 aprovados contra a API local (MySQL 8.4 em Docker). Inclui axe nas telas principais, ausência de rolagem horizontal e reflow em 320 px. O pacote JavaScript tem 639 kB (o aviso do Vite acima de 500 kB continua). É evidência local com Edge/Playwright: não equivale a publicação nem a teste com pessoas, leitor de tela ou dispositivo físico.
+
+## Marca
+
+O sistema usa o símbolo verde do dente, sem quadrado, na barra de cima e na tela Entrar (`src/asset/brand/dental_flow_symbol.png`). O favicon e o ícone de atalho são o dente branco sobre verde (`public/favicon-32.png`, `apple-touch-icon.png` e `favicon-512.png`).
+
+- `python -I scripts/brand/make_marks.py` extrai o dente do logotipo original (`src/asset/brand/dental_flow_logo.png`) com transparência. Gera as versões recoloridas, o símbolo e os favicons.
+- `node scripts/brand/export_variants.mjs` monta, a partir de `scripts/brand/variants.html`, as demais versões em PNG transparente (ícones, logotipo horizontal e empilhado) e a prancha `scripts/brand/out/export/prancha_logotipo.png`.
 
 ## Limites conhecidos
 

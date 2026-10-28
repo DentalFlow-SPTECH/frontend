@@ -1,8 +1,8 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
 import { useMediaQuery, useNow } from '../../../component/use_media_query.js';
-import { addDays, dateLong, dayOfMonth, firstName, isoDate, monthName, parseDate, rangeLabel, weekdayShort } from '../../../component/format.js';
+import { addDays, clock, dateLong, dayOfMonth, firstName, isoDate, monthName, parseDate, rangeLabel, weekdayShort } from '../../../component/format.js';
 import { findNext, hourWindow, minutesUntil, monthCells, monthDates, threeDaysOf, weekOf } from '../model/agenda_model.js';
 import { useAppointmentActions } from './use_appointment_actions.js';
 
@@ -12,6 +12,7 @@ const views = ['dia', '3dias', 'semana', 'mes'];
 export function useAgendaViewModel() {
     const repository = useRepository('agenda');
     const [params, setParams] = useSearchParams();
+    const navigate = useNavigate();
     const wide = useMediaQuery('(min-width: 900px)');
     const now = useNow();
     const today = isoDate(now);
@@ -24,8 +25,8 @@ export function useAgendaViewModel() {
     const selectedId = Number(params.get('consulta')) || null;
     const dates = view === 'semana' ? weekOf(date) : view === '3dias' ? threeDaysOf(date) : view === 'dia' ? [date] : [];
 
-    const query = useQuery(`days:${dates.join(',')}`, () => (dates.length ? repository.days(dates) : repository.references().then(refs => ({ byDate: {}, ...refs }))));
-    const month = useQuery(`month:${view === 'mes' ? date.slice(0, 7) : ''}`, () => (view === 'mes' ? repository.monthCounts(monthDates(date)) : Promise.resolve({})));
+    const query = useQuery(`days:${dates.join(',')}`, () => (dates.length ? repository.days(dates) : repository.references().then(refs => ({ byDate: {}, ...refs }))), { keepPrevious: true });
+    const month = useQuery(`month:${view === 'mes' ? date.slice(0, 7) : ''}`, () => (view === 'mes' ? repository.monthCounts(monthDates(date)) : Promise.resolve({})), { keepPrevious: true });
 
     function update(next) {
         setParams(current => {
@@ -58,11 +59,11 @@ export function useAgendaViewModel() {
     const columns = byDentist
         ? dentists.filter(dentist => !dentistId || String(dentist.id) === dentistId).map(dentist => {
             const items = visible.filter(item => item.dentistId === dentist.id);
-            return { key: `dentista-${dentist.id}`, title: dentist.name, subtitle: `${dentist.specialty ?? 'Dentista'} · ${items.length} ${items.length === 1 ? 'consulta' : 'consultas'}`, avatar: dentist.name, isToday: date === today, past: date < today, items };
+            return { key: `dentista-${dentist.id}`, date, dentistId: dentist.id, title: dentist.name, subtitle: `${dentist.specialty ?? 'Dentista'} · ${items.length} ${items.length === 1 ? 'consulta' : 'consultas'}`, avatar: dentist.name, isToday: date === today, past: date < today, items };
         })
         : dates.map(day => {
             const items = (data?.byDate?.[day] ?? []).filter(matches);
-            return { key: day, title: `${weekdayShort(day)} ${dayOfMonth(day)}`, subtitle: `${day === today ? 'Hoje · ' : ''}${items.length} ${items.length === 1 ? 'consulta' : 'consultas'}`, isToday: day === today, past: day < today, empty: !items.length && data !== undefined, items };
+            return { key: day, date: day, title: `${weekdayShort(day)} ${dayOfMonth(day)}`, subtitle: `${day === today ? 'Hoje · ' : ''}${items.length} ${items.length === 1 ? 'consulta' : 'consultas'}`, isToday: day === today, past: day < today, empty: !items.length && data !== undefined, items };
         });
     const hours = hourWindow(visible);
     const next = dates.includes(today) ? findNext(visible, today, nowMinutes) : null;
@@ -91,5 +92,10 @@ export function useAgendaViewModel() {
         shift,
         openDay: day => update({ ver: 'dia', data: day }),
         select: item => update({ consulta: item?.id ?? '' }),
+        // Clique num horário livre da grade: abre o agendamento com dia, hora e dentista preenchidos.
+        createAt({ date: day, minutes, dentistId: columnDentist }) {
+            const dentist = columnDentist ?? (dentistId || null);
+            navigate(`/agenda/nova?data=${day}&hora=${clock(minutes)}${dentist ? `&dentista=${dentist}` : ''}`);
+        },
     };
 }

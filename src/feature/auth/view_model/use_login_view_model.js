@@ -5,7 +5,7 @@ import { validateLogin } from '../model/auth_model.js';
 
 export function useLoginViewModel() {
     const repository = useRepository('auth');
-    const { notice } = useAuth();
+    const { notice, user } = useAuth();
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const [form, setForm] = useState({ login: '', password: '' });
@@ -13,6 +13,8 @@ export function useLoginViewModel() {
     const [failure, setFailure] = useState('');
     const [busy, setBusy] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const back = params.get('volta');
+    const target = back && back.startsWith('/') && !back.startsWith('//') && back !== '/entrar' ? back : '/hoje';
 
     function change(field, value) {
         setForm(current => ({ ...current, [field]: value }));
@@ -29,8 +31,7 @@ export function useLoginViewModel() {
         setFailure('');
         try {
             await repository.signIn(form.login, form.password);
-            const back = params.get('volta');
-            navigate(back && back.startsWith('/') && !back.startsWith('//') ? back : '/hoje', { replace: true });
+            navigate(target, { replace: true });
             return true;
         }
         catch (error) {
@@ -43,5 +44,5 @@ export function useLoginViewModel() {
         }
     }
 
-    return { form, errors, failure, notice, busy, showPassword, togglePassword: () => setShowPassword(value => !value), change, submit };
+    return { signedIn: Boolean(user), target, form, errors, failure, notice, busy, showPassword, togglePassword: () => setShowPassword(value => !value), change, submit };
 }

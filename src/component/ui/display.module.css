@@ -11,6 +11,10 @@
 [data-status=atendimento] { --fg: var(--status-atendimento-fg); --bg: var(--status-atendimento-bg); }
 [data-status=concluido] { --fg: var(--status-concluido-fg); --bg: var(--status-concluido-bg); }
 [data-status=cancelado] { --fg: var(--status-cancelado-fg); --bg: var(--status-cancelado-bg); }
+[data-status=faltou] { --fg: var(--status-faltou-fg); --bg: var(--status-faltou-bg); }
+.status[data-status=agendado], .statusDot[data-status=agendado] { box-shadow: inset 0 0 0 1.5px var(--status-agendado-bar); background-image: none; }
+.status[data-status=agendado] { border: 1.5px dashed var(--status-agendado-bar); box-shadow: none; }
+.status[data-status=cancelado], .status[data-status=faltou], .statusDot[data-status=cancelado], .statusDot[data-status=faltou] { background-image: var(--hatch); }
 .status { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: var(--radius-full); font-weight: 600; font-size: 14px; white-space: nowrap; }
 .status svg { width: 16px; height: 16px; stroke-width: 2.4; }
 .statusDot { width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; }
@@ -69,6 +73,7 @@
 
 .chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .chips::-webkit-scrollbar { display: none; }
+.chipsWrap { flex-wrap: wrap; overflow: visible; }
 .chip { flex: none; height: 40px; padding: 0 14px; border-radius: var(--radius-full); background: var(--card); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; color: var(--foreground); }
 .chip .avatar { margin-left: -6px; }
 .chip[aria-pressed=true] { background: var(--foreground); border-color: var(--foreground); color: #fff; }
@@ -88,9 +93,12 @@
 .stepDot svg { width: 14px; height: 14px; stroke-width: 3; }
 .steps li[data-state=done] { color: var(--foreground); }
 .steps li[data-state=done] .stepDot { background: var(--primary); border-color: var(--primary); color: #fff; }
-.steps li[data-state=done]::before, .steps li[data-state=current]::before { background: var(--primary); }
-.steps li[data-state=current] { color: var(--foreground); }
-.steps li[data-state=current] .stepDot { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+.steps li[data-state=done]::before { background: var(--primary); }
+.steps li[data-state=next] { color: var(--primary); font-weight: 800; }
+.steps li[data-state=next] .stepDot { background: #fff; border-color: var(--primary); border-style: dashed; box-shadow: 0 0 0 4px var(--primary-soft); }
+.stepBox { display: flex; flex-direction: column; gap: 12px; }
+.stepCaption { font-size: 14.5px; color: var(--muted-foreground); }
+.stepCaption b { color: var(--foreground); }
 
 .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .statIcon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 8px; }

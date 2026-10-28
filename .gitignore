@@ -6,3 +6,6 @@ playwright-report/
 .env
 .env.local
 .env.*.local
+
+# Insumos gerados por scripts/brand/make_marks.py
+scripts/brand/out/mark_*.png

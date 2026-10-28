@@ -10,7 +10,6 @@
 .tabs a svg { width: 19px; height: 19px; }
 .tabs a:hover { background: var(--muted); color: var(--foreground); }
 .tabs a.active { background: var(--primary-soft); color: var(--primary); }
-.search { flex: none; }
 .me { display: flex; align-items: center; gap: 10px; border: 0; background: transparent; padding: 4px 6px; border-radius: 14px; text-align: left; flex: none; }
 .me:hover { background: var(--muted); }
 .me > svg { width: 18px; height: 18px; color: var(--muted-foreground); }
@@ -33,6 +32,7 @@
 .signOut { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--card); color: var(--destructive); font-weight: 700; font-size: 16px; }
 .signOut svg { width: 20px; height: 20px; }
 
+.errorActions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .errorPage { max-width: 640px; margin: 80px auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 
 @media (max-width: 1279px) { .tabs a { padding: 0 11px; font-size: 15px; } .meText { display: none; } .topbar { gap: 18px; } }

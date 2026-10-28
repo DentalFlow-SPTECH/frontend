@@ -3,12 +3,13 @@
 .filters > :first-child { min-width: 0; max-width: 100%; }
 .legend { list-style: none; margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; font-weight: 600; color: var(--muted-foreground); }
 .legend li { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 10px; height: 10px; border-radius: 3px; background: var(--status-faltou-bar); }
-.legend i[data-status=agendado] { background: var(--status-agendado-bar); }
-.legend i[data-status=confirmado] { background: var(--status-confirmado-bar); }
-.legend i[data-status=atendimento] { background: var(--status-atendimento-bar); }
-.legend i[data-status=concluido] { background: var(--status-concluido-bar); }
-.legend i[data-status=cancelado] { background: var(--status-cancelado-bar); }
+.legend i { --legend-bg: var(--status-faltou-bg); --legend-bar: var(--status-faltou-bar); display: inline-block; width: 20px; height: 14px; border-radius: 4px; background: var(--legend-bg); border: 1px solid var(--legend-bar); border-left-width: 4px; }
+.legend i[data-status=agendado] { --legend-bg: #fff; --legend-bar: var(--status-agendado-bar); border: 1.5px dashed var(--legend-bar); }
+.legend i[data-status=confirmado] { --legend-bg: var(--status-confirmado-bg); --legend-bar: var(--status-confirmado-bar); }
+.legend i[data-status=atendimento] { --legend-bg: var(--status-atendimento-bg); --legend-bar: var(--status-atendimento-bar); }
+.legend i[data-status=concluido] { --legend-bg: var(--status-concluido-bg); --legend-bar: var(--status-concluido-bar); }
+.legend i[data-status=cancelado] { --legend-bg: var(--status-cancelado-bg); --legend-bar: var(--status-cancelado-bar); background-image: var(--hatch); }
+.legend i[data-status=faltou] { background-image: var(--hatch); }
 .fab { display: none !important; }
 
 .next { display: flex; align-items: center; gap: 16px; background: var(--foreground); color: #fff; border-radius: 18px; padding: 10px 12px 10px 18px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -75,7 +76,8 @@
 .nowMark { display: flex; align-items: center; gap: 10px; margin: 4px 14px; color: var(--accent-text); font-weight: 700; font-size: 13px; }
 .nowMark::after { content: ''; flex: 1; height: 2px; background: var(--accent); border-radius: 2px; }
 .nowMark i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.side { position: sticky; top: calc(var(--topbar) + 20px); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; }
+/* O detalhe acompanha a rolagem e rola sozinho: nunca fica mais alto que a tela. */
+.side { position: sticky; top: calc(var(--topbar) + 20px); max-height: calc(100dvh - var(--topbar) - 40px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; }
 .sideEmpty { color: var(--muted-foreground); text-align: center; padding: 28px 8px; }
 
 @media (max-width: 1279px) { .todayLayout { grid-template-columns: minmax(0, 1fr) 380px; } .legend { display: none; } }

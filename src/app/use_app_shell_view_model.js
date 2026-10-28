@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, CalendarDays, ChartColumn, ClipboardList, Package, Sun, Users } from 'lucide-react';
 import { useAuth, useRepository } from './app_provider.jsx';
@@ -21,6 +21,24 @@ export function useAppShellViewModel() {
     const navigate = useNavigate();
     const [moreOpen, setMoreOpen] = useState(false);
     const items = navigation.filter(item => !item.dentist || isDentist(user));
+    // Inatividade: cada toque ou tecla renova a sessão; após 30 min sem uso, o próximo toque
+    // (ou a checagem periódica) encerra e a proteção de rota leva a Entrar com o aviso.
+    useEffect(() => {
+        const onActivity = event => {
+            if (!repository.activity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+        window.addEventListener('pointerdown', onActivity, true);
+        window.addEventListener('keydown', onActivity, true);
+        const timer = setInterval(() => repository.checkIdle(), 30000);
+        return () => {
+            window.removeEventListener('pointerdown', onActivity, true);
+            window.removeEventListener('keydown', onActivity, true);
+            clearInterval(timer);
+        };
+    }, [repository]);
     return {
         user,
         role: roleLabel(user?.accessLevel),

@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Ellipsis, LogOut, Search, ShieldAlert, MapPinOff } from 'lucide-react';
+import { ChevronDown, ChevronRight, Ellipsis, LogOut, MapPinOff, RotateCw, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { useAuth } from './app_provider.jsx';
 import { useAppShellViewModel } from './use_app_shell_view_model.js';
-import { Avatar, ButtonLink, DropdownMenu, EmptyState, IconLink, Panel } from '../component/ui/index.js';
+import { Avatar, Button, ButtonLink, DropdownMenu, EmptyState, Panel } from '../component/ui/index.js';
 import { BrandMark } from '../component/brand.jsx';
 import styles from './app_shell.module.css';
 
 function Brand() {
-    return <Link to="/hoje" className={styles.brand} aria-label="Dental Flow — Hoje"><BrandMark size={38}/><span>Dental<b>Flow</b></span></Link>;
+    return <Link to="/hoje" className={styles.brand} aria-label="Dental Flow — Hoje"><BrandMark size={34}/><span>Dental<b>Flow</b></span></Link>;
 }
 
 function UserMenu({ vm, compact = false }) {
@@ -38,7 +38,6 @@ export function AppShell() {
             <nav className={styles.tabs} aria-label="Navegação principal">
                 {vm.items.map(item => <NavLink key={item.to} to={item.to} className={({ isActive }) => isActive ? styles.active : undefined}><item.icon aria-hidden="true"/>{item.label}</NavLink>)}
             </nav>
-            <IconLink to="/pacientes" label="Ir para pacientes" icon={Search} variant="secondary" className={styles.search}/>
             <UserMenu vm={vm}/>
         </header>
         <header className={styles.mobileTop}>
@@ -81,6 +80,16 @@ export function ForbiddenPage() {
 export function NotFoundPage() {
     return <div className={styles.page}><h1 className="sr-only">Página não encontrada</h1>
         <EmptyState icon={MapPinOff} title="Não encontramos esta página" action={<ButtonLink to="/hoje">Voltar para Hoje</ButtonLink>}>O endereço pode ter mudado. Use o menu para chegar à tela que você procura.</EmptyState>
+    </div>;
+}
+
+// Erro dentro de uma tela: mantém o menu e oferece tentar de novo (a sessão sobrevive ao recarregar).
+export function ScreenErrorPage() {
+    return <div className={styles.page}><h1 className="sr-only">Erro nesta tela</h1>
+        <EmptyState icon={TriangleAlert} title="Algo deu errado nesta tela" action={<div className={styles.errorActions}>
+            <Button icon={RotateCw} onClick={() => window.location.reload()}>Tentar de novo</Button>
+            <ButtonLink to="/hoje" variant="secondary">Voltar para Hoje</ButtonLink>
+        </div>}>Os dados salvos não foram afetados. Se continuar, avise o suporte.</EmptyState>
     </div>;
 }
 
