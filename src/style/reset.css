@@ -3,6 +3,8 @@ html { font-family: var(--font); color: var(--foreground); background: var(--bac
 body { margin: 0; min-width: 320px; background: var(--background); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+/* O campo de senha já tem o próprio botão de mostrar; esconde o olho nativo do Edge para não aparecerem dois. */
+input::-ms-reveal, input::-ms-clear { display: none; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 img, svg { max-width: 100%; }
