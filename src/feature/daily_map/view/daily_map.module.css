@@ -26,7 +26,7 @@
 .counts b { display: block; font-size: 22px; color: var(--foreground); }
 .notes { margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--card-soft); white-space: pre-wrap; }
 
-.form { display: flex; flex-direction: column; gap: 16px; max-width: 1180px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
 .rows { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
 .row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: start; border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin: 0; min-width: 0; }
 .row .lineNo { margin-top: 32px; }

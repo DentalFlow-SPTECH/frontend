@@ -56,6 +56,10 @@
 .spinner svg { width: 22px; height: 22px; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.page { width: 100%; min-width: 0; margin-inline: auto; }
+.page[data-width=form] { max-width: 820px; }
+.page[data-width=wide] { max-width: 1180px; }
+
 .pageHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 20px; }
 .pageTitle { min-width: 0; }
 .pageTitle h1 { font-size: 34px; font-weight: 800; letter-spacing: -.8px; line-height: 1.1; overflow-wrap: anywhere; }
@@ -64,6 +68,11 @@
 .back { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-bottom: 4px; font-weight: 600; font-size: 15px; text-decoration: none; }
 .back svg { width: 18px; height: 18px; }
 @media (max-width: 767px) { .pageTitle h1 { font-size: 28px; } .pageHeader { margin-bottom: 16px; } }
+
+.listHeader { display: grid; align-items: end; gap: 14px; padding: 10px 12px 8px; margin-bottom: 2px; border-bottom: 1px solid var(--border); color: var(--muted-foreground); font-size: 12.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+.listHeader > span { min-width: 0; white-space: nowrap; }
+.listHeaderEnd { text-align: right; }
+@media (max-width: 767px) { .listHeader { display: none; } }
 
 .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); min-width: 0; }
 .cardPadded { padding: 20px 22px; }

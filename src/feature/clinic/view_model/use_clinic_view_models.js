@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth, useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
+import { usePagination } from '../../../component/use_pagination.js';
+import { useCepLookup } from '../../../component/use_cep_lookup.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
-import { maskCnpj, maskPhone, normalizeText } from '../../../component/format.js';
+import { maskCep, maskCnpj, maskPhone, normalizeText } from '../../../component/format.js';
 import { isDentist } from '../../auth/model/auth_model.js';
 import {
     emptyClinicForm, emptyDentistForm, emptyProcedureForm, emptyUserForm, formFromClinic, formFromDentist, formFromProcedure,
@@ -19,6 +21,8 @@ export function useClinicHubViewModel() {
     return { canEdit: isDentist(user), data: query.data, loading: query.firstLoad, error: query.error, reload: query.reload };
 }
 
+const catalogPageSize = 20;
+
 export function useCatalogViewModel(kind) {
     const repository = useRepository('clinic');
     const { user } = useAuth();
@@ -27,7 +31,12 @@ export function useCatalogViewModel(kind) {
     const text = normalizeText(term);
     const items = [...(query.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
         .filter(item => !text || normalizeText(`${item.name} ${item.cro ?? ''} ${item.specialty ?? ''}`).includes(text));
-    return { canEdit: isDentist(user), items, total: query.data?.length ?? 0, term, setTerm, loading: query.firstLoad, error: query.error, reload: query.reload };
+    const pager = usePagination(items, catalogPageSize);
+    return {
+        canEdit: isDentist(user), items: pager.items, pager, total: query.data?.length ?? 0, term,
+        setTerm: value => { setTerm(value); pager.setPage(1); },
+        loading: query.firstLoad, error: query.error, reload: query.reload,
+    };
 }
 
 // Formulário genérico de cadastro: carrega (na edição), valida, envia e mostra o erro da API no campo certo.
@@ -47,6 +56,11 @@ function useEntityForm({ key, load, empty, fromEntity, validate, save, masks = {
         setErrors(found => ({ ...found, [field]: undefined }));
         setFailure('');
         setDirty(true);
+    }
+    // Atualiza vários campos de uma vez a partir do estado mais recente (ex.: resposta do CEP que chega depois).
+    function patch(values) {
+        setForm(found => ({ ...(found ?? current), ...values }));
+        setErrors(found => ({ ...found, ...Object.fromEntries(Object.keys(values).map(key => [key, undefined])) }));
     }
     async function submit() {
         const found = validate(current);
@@ -73,16 +87,27 @@ function useEntityForm({ key, load, empty, fromEntity, validate, save, masks = {
             setBusy(false);
         }
     }
-    return { form: current, errors, failure, busy, change, submit, loading: query.firstLoad, error: query.error, reload: query.reload, dirty };
+    return { form: current, errors, failure, busy, change, patch, submit, loading: query.firstLoad, error: query.error, reload: query.reload, dirty };
 }
 
 export function useClinicFormViewModel() {
     const repository = useRepository('clinic');
-    return useEntityForm({
+    const cep = useCepLookup(repository.findAddress);
+    const vm = useEntityForm({
         key: 'clinic-form', load: () => repository.clinic(), empty: emptyClinicForm, fromEntity: formFromClinic, validate: validateClinic,
-        save: form => repository.updateClinic(form), masks: { cnpj: maskCnpj, phone: maskPhone },
+        save: form => repository.updateClinic(form), masks: { cnpj: maskCnpj, phone: maskPhone, zipCode: maskCep, state: value => value.toUpperCase().slice(0, 2) },
         done: () => ({ message: 'Dados da clínica atualizados', to: '/clinica' }), apiField: message => (normalizeText(message).includes('cnpj') ? 'cnpj' : null),
     });
+    // Com o CEP completo, o ViaCEP preenche rua, bairro, cidade e UF; número e complemento ficam com a pessoa.
+    const fillAddress = address => vm.patch(Object.fromEntries(Object.entries({ street: address.street, neighborhood: address.neighborhood, city: address.city, state: address.state }).filter(([, value]) => value)));
+    return {
+        ...vm, cep,
+        change(field, value) {
+            vm.change(field, value);
+            if (field === 'zipCode')
+                cep.lookup(value, fillAddress);
+        },
+    };
 }
 
 export function useDentistFormViewModel() {
@@ -118,5 +143,8 @@ export function useUserFormViewModel() {
         done: (_, form) => ({ message: `Acesso de ${form.name.split(' ')[0]} criado. Usuário: ${form.login.trim().toLowerCase()}`, to: '/clinica' }),
         apiField: message => (normalizeText(message).includes('login') ? 'login' : normalizeText(message).includes('dentista') ? 'dentistId' : null),
     });
-    return { ...vm, dentists: dentists.data ?? [], showPassword, togglePassword: () => setShowPassword(value => !value) };
+    return {
+        ...vm, showPassword, togglePassword: () => setShowPassword(value => !value),
+        dentistOptions: (dentists.data ?? []).map(dentist => ({ value: String(dentist.id), label: dentist.name, detail: dentist.cro, avatar: dentist.name })),
+    };
 }

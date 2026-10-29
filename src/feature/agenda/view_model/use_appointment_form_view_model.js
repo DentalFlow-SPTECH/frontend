@@ -4,11 +4,12 @@ import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
-import { clock, dateLong, dateShort, digits, firstName, isoDate, minutesOf, normalizeText, weekdayShort } from '../../../component/format.js';
+import { brl, clock, dateLong, dateShort, digits, firstName, isoDate, minutesOf, normalizeText, weekdayShort } from '../../../component/format.js';
 import { conflictsWith, defaultDuration, emptyAppointmentForm, formFromAppointment, periodOf, validateAppointment } from '../model/agenda_model.js';
 
 const slotStart = 7 * 60;
 const slotEnd = 20 * 60;
+const maxDentistChips = 6;
 
 export function useAppointmentFormViewModel() {
     const repository = useRepository('agenda');
@@ -119,7 +120,11 @@ export function useAppointmentFormViewModel() {
         patients, dentists, procedures, patient, procedure, duration,
         search, setSearch, patientResults,
         freeSlots, slotsLoading: day.loading, conflicts,
+        // Poucos dentistas cabem em chips; acima disso, a escolha vira busca para a tela não encher de botões.
+        dentistPicker: dentists.length > maxDentistChips ? 'search' : 'chips',
         dentistOptions: dentists.map(dentist => ({ value: String(dentist.id), label: firstName(dentist.name), avatar: dentist.name })),
+        dentistSearchOptions: dentists.map(dentist => ({ value: String(dentist.id), label: dentist.name, detail: dentist.specialty ?? '', avatar: dentist.name })),
+        procedureOptions: procedures.map(item => ({ value: String(item.id), label: item.name, detail: [item.durationMinutes && `${item.durationMinutes} min`, item.price && brl(item.price)].filter(Boolean).join(' · ') })),
         change, submit,
         choosePatient: item => { change('patientId', String(item.id)); setSearch(''); },
         clearPatient: () => change('patientId', ''),

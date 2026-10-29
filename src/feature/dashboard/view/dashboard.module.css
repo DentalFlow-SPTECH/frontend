@@ -7,17 +7,36 @@
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; align-items: start; }
 .grid:has(> :only-child) { grid-template-columns: 1fr; }
 .muted { color: var(--muted-foreground); font-size: 14.5px; }
-.legend { display: flex; gap: 16px; font-size: 14px; color: var(--muted-foreground); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted-foreground); font-weight: 600; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legendBar { width: 12px; height: 12px; border-radius: 3px; background: #8CCBC1; }
-.legendLine { width: 14px; height: 3px; border-radius: 3px; background: var(--accent); }
-.chart { margin: 0; }
-.chart svg { width: 100%; height: auto; display: block; }
+.legend b { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.keyIn, .keyOut { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.keyIn { background: var(--chart-in); }
+.keyOut { background: var(--chart-out); }
+
+.chart { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.chartScroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.plot { position: relative; }
+.plot svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gridLine { stroke: #F0EBE3; stroke-width: 1; }
+.baseLine { stroke: #CFC6B9; stroke-width: 1.5; }
 .axis { fill: #6E797D; font-size: 12px; font-family: var(--font); }
-.chartBar { fill: #8CCBC1; }
-.line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.dot { fill: var(--accent); }
+.dayNumber { fill: var(--foreground); font-size: 13px; font-weight: 700; font-family: var(--font); }
+.day { cursor: pointer; outline: none; }
+.hit { fill: transparent; }
+.day[data-active] .hit { fill: var(--primary-soft); opacity: .6; }
+.day:focus-visible .hit { fill: var(--primary-soft); stroke: var(--ring); stroke-width: 2; opacity: 1; }
+.day[data-active] .dayNumber { fill: var(--primary); }
+.barIn { fill: var(--chart-in); }
+.barOut { fill: var(--chart-out); }
+.tip { position: absolute; top: 0; z-index: 2; transform: translateX(-50%); display: flex; flex-direction: column; gap: 4px; min-width: 210px; padding: 10px 12px; border-radius: 12px; background: var(--foreground); color: #fff; font-size: 13.5px; box-shadow: var(--shadow); pointer-events: none; }
+.tip[data-edge=start] { transform: translateX(-12%); }
+.tip[data-edge=end] { transform: translateX(-88%); }
+.tip > b { font-size: 14px; margin-bottom: 2px; }
+.tip span { display: flex; align-items: center; gap: 8px; color: #C9D2D5; }
+.tip strong { margin-left: auto; color: #fff; font-variant-numeric: tabular-nums; }
+.tipBalance { border-top: 1px solid rgba(255, 255, 255, .16); padding-top: 4px; margin-top: 2px; }
+.caption { color: var(--muted-foreground); font-size: 13.5px; }
 .funnel { display: flex; align-items: center; gap: 24px; }
 .donut { position: relative; flex: none; }
 .donutCenter { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 112px; height: 112px; border-radius: 50%; background: var(--card); display: grid; place-content: center; text-align: center; }

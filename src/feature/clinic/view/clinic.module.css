@@ -8,26 +8,28 @@
 .hubIcon svg { width: 24px; height: 24px; }
 .readOnly { margin-bottom: 14px; }
 .search { max-width: 520px; margin-bottom: 14px; }
-.items { list-style: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 6px; }
-.item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto 24px; gap: 14px; align-items: center; padding: 10px 12px; border-radius: 14px; color: var(--foreground); text-decoration: none; }
+/* Colunas numa variável só, para o cabeçalho e as linhas alinharem (largura fixa no valor, e não `auto`). */
+.items { --cols: 44px minmax(0, 1fr) 170px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 6px; }
+.itemList { list-style: none; }
+.itemHead, .item { grid-template-columns: var(--cols) 24px; }
+.itemHeadRead, div.item { grid-template-columns: var(--cols); }
+.item { display: grid; gap: 14px; align-items: center; padding: 10px 12px; border-radius: 14px; color: var(--foreground); text-decoration: none; }
 a.item:hover { background: var(--card-soft); }
-div.item { grid-template-columns: 44px minmax(0, 1fr) auto; }
 .itemText { min-width: 0; }
 .itemText b { display: block; font-size: 16.5px; } .itemText small { display: block; color: var(--muted-foreground); font-size: 14px; }
 .itemMeta { color: var(--muted-foreground); font-size: 15px; white-space: nowrap; }
-.itemPrice { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.itemPrice { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 .itemIcon { width: 44px; height: 44px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
 .itemIcon svg { width: 21px; height: 21px; }
 .itemAction { width: 18px; height: 18px; color: var(--muted-foreground); }
-.form { max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
-.footer { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 0; background: linear-gradient(transparent, var(--background) 30%); }
-.note { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: 14.5px; margin-top: 16px; }
+.sectionTitle { display: inline-flex; align-items: center; gap: 10px; }
+.sectionTitle svg { width: 20px; height: 20px; color: var(--primary); }
+.note {display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: 14.5px; margin-top: 16px; }
 .note svg { width: 18px; height: 18px; flex: none; }
 .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .role { text-align: left; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--border); background: var(--card); color: var(--foreground); }
 .role b { display: block; font-size: 16.5px; } .role small { display: block; color: var(--muted-foreground); font-size: 14px; margin-top: 2px; }
 .role[aria-checked=true] { border: 2px solid var(--primary); background: var(--primary-soft); }
-@media (max-width: 1099px) { .footer { bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); } }
 @media (max-width: 899px) { .hub { grid-template-columns: 1fr; } }
 @media (max-width: 599px) {
   .roles { grid-template-columns: 1fr; }
@@ -35,5 +37,4 @@ div.item { grid-template-columns: 44px minmax(0, 1fr) auto; }
   .itemMeta { display: none; }
   .itemPrice { grid-column: 2; grid-row: 2; margin-top: -6px; font-size: 15px; }
   div.item { grid-template-columns: 44px minmax(0, 1fr); }
-  .footer > * { flex: 1; }
 }

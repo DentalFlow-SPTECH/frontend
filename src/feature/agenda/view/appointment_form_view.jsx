@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CalendarClock, Search, Sparkles, Stethoscope, StickyNote, UserPlus, UserRound, X } from 'lucide-react';
-import { Alert, Avatar, Button, ButtonLink, Card, Chips, ErrorState, Field, FormGrid, Input, PageHeader, Select, Skeleton, Textarea } from '../../../component/ui/index.js';
-import { ageOf, brl, maskPhone } from '../../../component/format.js';
+import { Alert, Avatar, Button, ButtonLink, Card, Chips, Combobox, ErrorState, Field, FormGrid, Input, Page, PageHeader, Skeleton, Textarea } from '../../../component/ui/index.js';
+import { ageOf, maskPhone } from '../../../component/format.js';
 import { useAppointmentFormViewModel } from '../view_model/use_appointment_form_view_model.js';
 import styles from './appointment_form.module.css';
 
@@ -12,13 +12,13 @@ export function AppointmentFormPage() {
     const [expanded, setExpanded] = useState([]);
     const title = vm.editing ? 'Remarcar consulta' : 'Agendar consulta';
     if (vm.error && !vm.form)
-        return <><PageHeader title={title} back={{ to: '/agenda', label: 'Agenda' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
+        return <Page width="wide"><PageHeader title={title} back={{ to: '/agenda', label: 'Agenda' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></Page>;
     if (vm.loading || !vm.form)
-        return <><PageHeader title={title} back={{ to: '/agenda', label: 'Agenda' }}/><Skeleton rows={4} height={120}/></>;
+        return <Page width="wide"><PageHeader title={title} back={{ to: '/agenda', label: 'Agenda' }}/><Skeleton rows={4} height={120}/></Page>;
     const { form, summary } = vm;
     const submitLabel = vm.editing ? 'Salvar alterações' : 'Agendar consulta';
     const conflict = vm.conflicts.length > 0 && <Alert tone="warning" title="Este horário já está ocupado">{vm.conflicts.map(item => `${item.time} · ${item.patientName}`).join('; ')}. Você pode salvar mesmo assim, mas confira com o dentista.</Alert>;
-    return <>
+    return <Page width="wide">
         <PageHeader title={title} back={{ to: vm.cancelLink, label: vm.editing ? 'Consulta' : 'Agenda' }}/>
         <form className={styles.layout} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
             <div className={styles.main}>
@@ -45,16 +45,17 @@ export function AppointmentFormPage() {
                 </Card>
                 <Card title={<span className={styles.sectionTitle}><Sparkles aria-hidden="true"/>Dentista e procedimento</span>}>
                     <div className={styles.stack}>
-                        <div className={styles.field}>
-                            <span className={styles.label}>Dentista</span>
-                            <Chips wrap label="Dentista" options={vm.dentistOptions} value={form.dentistId} onChange={value => vm.change('dentistId', value ?? '')}/>
-                            {vm.errors.dentistId && <p className={styles.error} role="alert">{vm.errors.dentistId}</p>}
-                        </div>
+                        {vm.dentistPicker === 'chips'
+                            ? <div className={styles.field}>
+                                <span className={styles.label}>Dentista</span>
+                                <Chips wrap label="Dentista" options={vm.dentistOptions} value={form.dentistId} onChange={value => vm.change('dentistId', value ?? '')}/>
+                                {vm.errors.dentistId && <p className={styles.error} role="alert">{vm.errors.dentistId}</p>}
+                            </div>
+                            : <Field label="Dentista" error={vm.errors.dentistId}>
+                                <Combobox options={vm.dentistSearchOptions} value={form.dentistId} onChange={value => vm.change('dentistId', value)} placeholder="Digite o nome do dentista"/>
+                            </Field>}
                         <Field label="Procedimento" error={vm.errors.procedureId}>
-                            <Select value={form.procedureId} onChange={event => vm.change('procedureId', event.target.value)}>
-                                <option value="">Escolha o procedimento</option>
-                                {vm.procedures.map(item => <option key={item.id} value={item.id}>{item.name}{item.durationMinutes ? ` · ${item.durationMinutes} min` : ''}{item.price ? ` · ${brl(item.price)}` : ''}</option>)}
-                            </Select>
+                            <Combobox options={vm.procedureOptions} value={form.procedureId} onChange={value => vm.change('procedureId', value)} placeholder="Digite o nome do procedimento"/>
                         </Field>
                     </div>
                 </Card>
@@ -104,7 +105,7 @@ export function AppointmentFormPage() {
                 <Button type="submit" busy={vm.busy}>{vm.editing ? 'Salvar' : 'Agendar'}</Button>
             </div>
         </form>
-    </>;
+    </Page>;
 }
 
 function SummaryRow({ icon: Icon, label, value }) {

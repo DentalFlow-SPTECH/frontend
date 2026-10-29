@@ -207,10 +207,17 @@ function handle(db, method, path, query, body, user) {
     return fail(404, 'NFD001', `Rota não simulada: ${method} ${path}`);
 }
 
+// ViaCEP simulado: os testes não acessam a internet. Outros CEPs respondem como inexistentes.
+const viaCep = { '01001000': { cep: '01001-000', logradouro: 'Praça da Sé', complemento: 'lado ímpar', bairro: 'Sé', localidade: 'São Paulo', uf: 'SP' } };
+
 export async function useFakeApi(page, { clock = true } = {}) {
     const db = seed();
     if (clock)
         await page.clock.setFixedTime(now);
+    await page.route('https://viacep.com.br/ws/**', async route => {
+        const cep = /\/ws\/(\d{8})\/json/.exec(route.request().url())?.[1];
+        await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(viaCep[cep] ?? { erro: true }) });
+    });
     await page.route('**/dentalflow-api/v1/**', async route => {
         const request = route.request();
         const url = new URL(request.url());
@@ -225,6 +232,12 @@ export async function useFakeApi(page, { clock = true } = {}) {
         await route.fulfill({ status: result.status, contentType: 'application/json', body: JSON.stringify(result.body) });
     });
     return db;
+}
+
+// Escolhe uma opção num campo de busca (Combobox): digita parte do nome e clica na sugestão.
+export async function chooseOption(page, label, text, option = text) {
+    await page.getByRole('combobox', { name: label }).fill(text);
+    await page.getByRole('option', { name: option }).first().click();
 }
 
 export async function signIn(page, login = 'ana', route = '/hoje') {

@@ -1,10 +1,11 @@
 import { toClinicPayload, toDentistPayload, toProcedurePayload, toUserPayload } from '../model/clinic_model.js';
 
 // Clínica, dentistas, procedimentos e usuários. Escrita é exclusiva de DENTISTA (a API responde 403 para a recepção).
-export function createClinicRepository({ api, lookups, clinicId }) {
+export function createClinicRepository({ api, lookups, cep, clinicId }) {
     return {
         clinic: () => api.clinic.get(clinicId()),
         updateClinic: form => api.clinic.update(clinicId(), toClinicPayload(form)),
+        findAddress: value => cep.lookup(value),
         dentists: () => lookups.dentists(),
         dentist: id => api.dentist.get(id),
         async saveDentist(id, form) {

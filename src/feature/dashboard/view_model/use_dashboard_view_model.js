@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
 import { firstName, monthName } from '../../../component/format.js';
-import { funnelParts, hasFinancialData, monthParam, production, shiftMonth, sortAlerts } from '../model/dashboard_model.js';
+import { chartTotals, funnelParts, hasFinancialData, monthParam, production, shiftMonth, sortAlerts } from '../model/dashboard_model.js';
 
 export function useDashboardViewModel() {
     const repository = useRepository('dashboard');
@@ -34,6 +34,7 @@ export function useDashboardViewModel() {
         alerts: sortAlerts(dashboard?.alerts).filter(alert => alert.code !== 'NO_FINANCIAL_DATA'),
         funnel: funnelParts(dashboard?.appointmentFunnel),
         production: production(dashboard?.summary),
+        chartTotals: chartTotals(dashboard?.dailyEvolution ?? []),
         breakdown: dentistId ? [] : (dashboard?.breakdown ?? []),
         dentistId,
         dentistOptions: [{ value: '', label: 'Todos' }, ...dentists.map(dentist => ({ value: String(dentist.id), label: firstName(dentist.name), avatar: dentist.name }))],

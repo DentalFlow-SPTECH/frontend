@@ -71,6 +71,11 @@ export function Spinner({ label = 'Carregando' }) {
     return <span className={styles.spinner} role="status"><LoaderCircle aria-hidden="true"/><span className="sr-only">{label}</span></span>;
 }
 
+// Coluna da tela: `form` e `wide` limitam a largura e centralizam cabeçalho e conteúdo juntos.
+export function Page({ width = 'full', children }) {
+    return <div className={styles.page} data-width={width}>{children}</div>;
+}
+
 // Cabeçalho de página: o h1 recebe foco a cada navegação, para a leitura assistiva anunciar a tela.
 export function PageHeader({ title, subtitle, back, actions, children }) {
     const heading = useRef(null);
@@ -87,6 +92,17 @@ export function PageHeader({ title, subtitle, back, actions, children }) {
         {actions && <div className={styles.pageActions}>{actions}</div>}
         {children}
     </header>;
+}
+
+// Rótulos das colunas de uma lista em grade. `className` traz o mesmo grid das linhas.
+// É só visual: as células levam o rótulo em texto oculto para os leitores de tela.
+export function ListHeader({ columns, className = '' }) {
+    return <div className={`${styles.listHeader} ${className}`} aria-hidden="true">
+        {columns.map((column, index) => {
+            const { label, end } = typeof column === 'string' ? { label: column } : column;
+            return <span key={index} className={end ? styles.listHeaderEnd : undefined}>{label}</span>;
+        })}
+    </div>;
 }
 
 export function Card({ title, action, children, className = '', padded = true, as: Tag = 'section' }) {

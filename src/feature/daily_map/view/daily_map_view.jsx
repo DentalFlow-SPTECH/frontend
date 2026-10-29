@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowDownLeft, ArrowUpRight, CheckCheck, ChevronLeft, ChevronRight, ClipboardList, Lock, Pencil, Plus, Receipt, Trash2, Users, Wallet } from 'lucide-react';
-import { Alert, Badge, Button, ButtonLink, Card, Checkbox, ConfirmDialog, EmptyState, ErrorState, Field, FormGrid, IconButton, Input, PageHeader, Select, Skeleton, Stat, Textarea } from '../../../component/ui/index.js';
+import { Alert, Badge, Button, ButtonLink, Card, Checkbox, Combobox, ConfirmDialog, EmptyState, ErrorState, Field, FormGrid, IconButton, Input, Page, PageHeader, Select, Skeleton, Stat, Textarea } from '../../../component/ui/index.js';
 import { brl, dateLong, dayOfMonth, weekdayShort } from '../../../component/format.js';
 import { counters, discounts, paymentCodes, paymentLabels, visitTypes } from '../model/daily_map_model.js';
 import { useDailyMapDetailViewModel, useDailyMapFormViewModel, useDailyMapListViewModel } from '../view_model/use_daily_map_view_models.js';
@@ -90,15 +90,15 @@ export function DailyMapFormPage() {
     const vm = useDailyMapFormViewModel();
     const title = vm.editing ? 'Editar mapa do dia' : 'Lançar mapa do dia';
     if (vm.error && !vm.form)
-        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
+        return <Page width="wide"><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></Page>;
     if (vm.loading || !vm.form)
-        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><Skeleton rows={3} height={140}/></>;
+        return <Page width="wide"><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><Skeleton rows={3} height={140}/></Page>;
     if (vm.existing)
-        return <><PageHeader title={title} back={{ to: '/mapa', label: 'Mapa do dia' }}/>
-            <EmptyState icon={ClipboardList} title={`Já existe um mapa em ${dateLong(vm.date)}`} action={<ButtonLink to={`/mapa/${vm.existing.id}`}>Abrir o mapa</ButtonLink>}>Cada dentista tem um mapa por dia.</EmptyState></>;
+        return <Page width="wide"><PageHeader title={title} back={{ to: '/mapa', label: 'Mapa do dia' }}/>
+            <EmptyState icon={ClipboardList} title={`Já existe um mapa em ${dateLong(vm.date)}`} action={<ButtonLink to={`/mapa/${vm.existing.id}`}>Abrir o mapa</ButtonLink>}>Cada dentista tem um mapa por dia.</EmptyState></Page>;
     const { form, errors } = vm;
     const err = (list, index, field) => errors[`${list}.${index}.${field}`];
-    return <>
+    return <Page width="wide">
         <PageHeader title={title} subtitle={dateLong(vm.date)} back={{ to: vm.backLink, label: 'Voltar' }}/>
         <form className={styles.form} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
             {vm.failure && <Alert tone="danger">{vm.failure}</Alert>}
@@ -111,11 +111,8 @@ export function DailyMapFormPage() {
                         <span className={styles.lineNo}>{index + 1}</span>
                         <div className={styles.rowFields}>
                             <Field label="Paciente" error={err('visits', index, 'patientName')}><Input value={visit.patientName} onChange={event => vm.changeRow('visits', index, 'patientName', event.target.value)}/></Field>
-                            <Field label="Procedimento">
-                                <Select value={visit.procedureId} onChange={event => vm.changeRow('visits', index, 'procedureId', event.target.value)}>
-                                    <option value="">Não informado</option>
-                                    {vm.procedures.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-                                </Select>
+                            <Field label="Procedimento" optional>
+                                <Combobox options={vm.procedureOptions} value={visit.procedureId} onChange={value => vm.changeRow('visits', index, 'procedureId', value)} placeholder="Buscar procedimento"/>
                             </Field>
                             <Field label="Valor" error={err('visits', index, 'value')}><Input inputMode="decimal" value={visit.value} onChange={event => vm.changeRow('visits', index, 'value', event.target.value)} placeholder="0,00"/></Field>
                             <Field label="Pagamento">
@@ -183,5 +180,5 @@ export function DailyMapFormPage() {
                 </div>
             </div>
         </form>
-    </>;
+    </Page>;
 }

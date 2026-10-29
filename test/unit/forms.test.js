@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fieldFromApiMessage, searchPatients, toPatientPayload, validatePatient } from '../../src/feature/patient/model/patient_model.js';
-import { parseMoney, toProcedurePayload, toUserPayload, validateProcedure, validateUser } from '../../src/feature/clinic/model/clinic_model.js';
+import { fieldFromApiMessage, formFromPatient, searchPatients, toPatientPayload, validatePatient } from '../../src/feature/patient/model/patient_model.js';
+import { emptyClinicForm, formFromClinic, parseMoney, toClinicPayload, toProcedurePayload, toUserPayload, validateClinic, validateProcedure, validateUser } from '../../src/feature/clinic/model/clinic_model.js';
 import { toMovementPayload, toProductPayload, validateMovement } from '../../src/feature/inventory/model/inventory_model.js';
 import { previewTotals, readyToClose, toDailyMapPayload, validateDailyMap, visitsFromAppointments } from '../../src/feature/daily_map/model/daily_map_model.js';
 import { alertTone, funnelParts, monthParam, shiftMonth, sortAlerts } from '../../src/feature/dashboard/model/dashboard_model.js';
 
-const patient = { name: 'Maria Oliveira', cpf: '123.456.789-00', birthDate: '1990-05-20', phone: '(11) 98765-4321', email: 'maria@email.com', zipCode: '01234-567', address: 'Rua A, 10', neighborhood: 'Centro' };
+const patient = { name: 'Maria Oliveira', cpf: '123.456.789-00', birthDate: '1990-05-20', phone: '(11) 98765-4321', email: 'maria@email.com', zipCode: '01234-567', street: 'Rua A', number: '10', complement: '', neighborhood: 'Centro' };
 
 test('paciente segue as regras da API e envia CPF/CEP mascarados', () => {
     assert.deepEqual(validatePatient(patient, '2026-10-28'), {});
@@ -14,6 +14,25 @@ test('paciente segue as regras da API e envia CPF/CEP mascarados', () => {
     assert.deepEqual(Object.keys(errors).sort(), ['birthDate', 'cpf', 'email', 'zipCode']);
     assert.deepEqual(toPatientPayload(patient, 1), { clinicId: 1, name: 'Maria Oliveira', cpf: '123.456.789-00', address: 'Rua A, 10', neighborhood: 'Centro', zipCode: '01234-567', phone: '11987654321', email: 'maria@email.com', birthDate: '1990-05-20' });
     assert.equal(fieldFromApiMessage('Já existe um paciente cadastrado com este CPF na mesma clínica.'), 'cpf');
+});
+
+test('paciente: endereço em rua, número e complemento, montado num texto só para a API', () => {
+    assert.equal(toPatientPayload({ ...patient, street: 'Praça da Sé', number: '100', complement: 'Sala 2' }, 1).address, 'Praça da Sé, 100 - Sala 2');
+    assert.deepEqual(validatePatient({ ...patient, street: '', number: '' }, '2026-10-28'), { street: 'Informe a rua.' });
+    assert.deepEqual(validatePatient({ ...patient, number: '' }, '2026-10-28'), { number: 'Informe o número (ou s/n).' });
+    // Cadastro antigo com o número dentro da rua continua salvando sem exigir o campo Número.
+    assert.deepEqual(validatePatient({ ...patient, street: 'Avenida Paulista 1000', number: '' }, '2026-10-28'), {});
+    assert.ok(validatePatient({ ...patient, street: 'R'.repeat(140), complement: 'Bloco B' }, '2026-10-28').street);
+    assert.deepEqual(formFromPatient({ name: 'Ana', cpf: '12345678900', address: 'Rua das Acácias, 101 - Apto 4', neighborhood: 'Centro', zipCode: '01234567' }),
+        { name: 'Ana', cpf: '123.456.789-00', birthDate: '', phone: '', email: '', zipCode: '01234-567', street: 'Rua das Acácias', number: '101', complement: 'Apto 4', neighborhood: 'Centro' });
+});
+
+test('clínica: o endereço separado vira um texto só e volta separado na edição', () => {
+    const form = { ...emptyClinicForm(), name: 'Clínica Sorriso', street: 'Rua X', number: '123', complement: 'Sala 2', neighborhood: 'Vila Mariana', city: 'São Paulo', state: 'SP', zipCode: '04010-100' };
+    assert.equal(toClinicPayload(form).address, 'Rua X, 123 - Sala 2, Vila Mariana, São Paulo/SP, 04010-100');
+    assert.equal(toClinicPayload(emptyClinicForm()).address, null);
+    assert.deepEqual(formFromClinic({ name: 'Clínica Sorriso', address: toClinicPayload(form).address }), { ...form, cnpj: '', phone: '' });
+    assert.deepEqual(Object.keys(validateClinic({ ...form, zipCode: '0401', state: 'São Paulo' })).sort(), ['state', 'zipCode']);
 });
 
 test('busca de pacientes ignora acentos e aceita CPF ou telefone', () => {

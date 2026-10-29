@@ -9,7 +9,7 @@ test.describe('painel, estoque e mapa do dia', () => {
         await expect(page.getByText('Faltas acima do esperado')).toBeVisible();
         await expect(page.getByText('R$ 1.300,00').first()).toBeVisible();
         await expect(page.getByText('Sobrou 89,7% do que entrou')).toBeVisible();
-        await expect(page.getByRole('img', { name: 'Entradas e saídas por dia do mês' })).toBeVisible();
+        await expect(page.getByRole('group', { name: 'Entradas e saídas por dia do mês' })).toBeVisible();
         await expect(page.getByText('Concluídas 62,5%')).toBeVisible();
     });
 

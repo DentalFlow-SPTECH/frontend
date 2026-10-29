@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CalendarPlus, Cake, ChevronRight, IdCard, Mail, MapPin, MessageCircle, Pencil, Phone, Search, UserPlus, UserRound, Users } from 'lucide-react';
-import { Alert, Avatar, Button, ButtonLink, Card, DefinitionList, EmptyState, ErrorState, ExternalButton, Field, FormGrid, Input, PageHeader, Skeleton } from '../../../component/ui/index.js';
+import { AddressFields, Alert, Avatar, Button, ButtonLink, Card, DefinitionList, EmptyState, ErrorState, ExternalButton, Field, FormGrid, FormPage, Input, ListHeader, PageHeader, Paginated, Skeleton } from '../../../component/ui/index.js';
 import { ageOf, dateShort, maskCep, maskCpf, maskPhone, telLink, whatsappLink } from '../../../component/format.js';
 import { patientSummary } from '../model/patient_model.js';
 import { usePatientDetailViewModel, usePatientFormViewModel, usePatientListViewModel } from '../view_model/use_patient_view_models.js';
@@ -19,8 +19,9 @@ export function PatientListPage() {
             : vm.loading ? <Skeleton rows={8} height={60}/>
             : !vm.total ? <EmptyState icon={Users} title="Nenhum paciente cadastrado" action={<ButtonLink to="/pacientes/novo" icon={UserPlus}>Cadastrar o primeiro paciente</ButtonLink>}>Os pacientes cadastrados aparecem aqui, em ordem alfabética.</EmptyState>
             : !vm.count ? <EmptyState icon={Search} title="Ninguém encontrado" action={<Button variant="secondary" onClick={() => vm.setTerm('')}>Limpar a busca</Button>}>Confira a grafia ou busque pelo CPF ou telefone.</EmptyState>
-            : <div className={styles.list}>
+            : <Paginated pager={vm.pager} noun="pacientes" className={styles.paged}><div className={styles.list}>
                 {vm.term && <p className={styles.count} role="status">{vm.count} {vm.count === 1 ? 'paciente encontrado' : 'pacientes encontrados'}</p>}
+                <ListHeader className={styles.head} columns={['', 'Paciente', 'Celular', 'CPF', '', 'WhatsApp']}/>
                 {vm.groups.map(group => <section key={group.letter} aria-label={`Letra ${group.letter}`}>
                     <h2 className={styles.letter}>{group.letter}</h2>
                     <ul className={styles.rows}>
@@ -30,8 +31,8 @@ export function PatientListPage() {
                                 <Link to={`/pacientes/${patient.id}`} className={styles.rowMain}>
                                     <Avatar name={patient.name}/>
                                     <span className={styles.rowText}><b>{patient.name}</b><small>{patientSummary(patient) || 'Sem dados adicionais'}</small></span>
-                                    <span className={styles.rowPhone}>{patient.phone ? maskPhone(patient.phone) : '—'}</span>
-                                    <span className={styles.rowCpf}>{maskCpf(patient.cpf)}</span>
+                                    <span className={styles.rowPhone}><span className="sr-only">Celular: </span>{patient.phone ? maskPhone(patient.phone) : '—'}</span>
+                                    <span className={styles.rowCpf}><span className="sr-only">CPF: </span>{maskCpf(patient.cpf)}</span>
                                     <ChevronRight aria-hidden="true" className={styles.chevron}/>
                                 </Link>
                                 {whatsapp && <a className={styles.whats} href={whatsapp} target="_blank" rel="noreferrer" aria-label={`WhatsApp de ${patient.name}`}><MessageCircle aria-hidden="true"/></a>}
@@ -39,8 +40,7 @@ export function PatientListPage() {
                         })}
                     </ul>
                 </section>)}
-                {vm.hasMore && <Button variant="secondary" block onClick={vm.showMore}>Mostrar mais pacientes</Button>}
-            </div>}
+            </div></Paginated>}
         <ButtonLink to="/pacientes/novo" icon={UserPlus} className={styles.fab}>Novo paciente</ButtonLink>
     </>;
 }
@@ -79,18 +79,12 @@ export function PatientDetailPage() {
 
 export function PatientFormPage() {
     const vm = usePatientFormViewModel();
-    const title = vm.editing ? 'Editar paciente' : 'Novo paciente';
-    if (vm.error && !vm.form)
-        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
-    if (vm.loading || !vm.form)
-        return <><PageHeader title={title} back={{ to: vm.backLink, label: 'Voltar' }}/><Skeleton rows={3} height={160}/></>;
     const { form, errors } = vm;
     const input = (field, props = {}) => <Input value={form[field]} onChange={event => vm.change(field, event.target.value)} {...props}/>;
-    return <>
-        <PageHeader title={title} back={{ to: vm.backLink, label: vm.editing ? 'Ficha do paciente' : 'Voltar' }}/>
-        <form className={styles.form} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
-            {vm.failure && <Alert tone="danger" title="Não foi possível salvar">{vm.failure}</Alert>}
-            {Object.keys(errors).some(key => errors[key]) && <Alert tone="warning">Confira os campos destacados abaixo.</Alert>}
+    return <FormPage title={vm.editing ? 'Editar paciente' : 'Novo paciente'} back={{ to: vm.backLink, label: vm.editing ? 'Ficha do paciente' : 'Voltar' }} vm={vm}
+        submitLabel={vm.editing ? 'Salvar alterações' : 'Salvar paciente'} skeleton={{ rows: 3, height: 160 }}
+        notice={Object.keys(errors).some(key => errors[key]) && <Alert tone="warning">Confira os campos destacados abaixo.</Alert>}>
+        {form && <>
             <Card title={<span className={styles.sectionTitle}><UserRound aria-hidden="true"/>Quem é o paciente</span>}>
                 <FormGrid>
                     <Field label="Nome completo" error={errors.name} className="full">{input('name', { autoComplete: 'name', maxLength: 100 })}</Field>
@@ -105,16 +99,8 @@ export function PatientFormPage() {
                 </FormGrid>
             </Card>
             <Card title={<span className={styles.sectionTitle}><MapPin aria-hidden="true"/>Endereço</span>}>
-                <FormGrid>
-                    <Field label="CEP" error={errors.zipCode}>{input('zipCode', { inputMode: 'numeric', autoComplete: 'postal-code', placeholder: '00000-000' })}</Field>
-                    <Field label="Bairro" error={errors.neighborhood}>{input('neighborhood', { maxLength: 80 })}</Field>
-                    <Field label="Rua e número" error={errors.address} className="full">{input('address', { autoComplete: 'street-address', maxLength: 150 })}</Field>
-                </FormGrid>
+                <AddressFields form={form} errors={errors} cep={vm.cep} onChange={vm.change}/>
             </Card>
-            <div className={styles.footer}>
-                <ButtonLink to={vm.backLink} variant="secondary">Cancelar</ButtonLink>
-                <Button type="submit" size="lg" busy={vm.busy}>{vm.editing ? 'Salvar alterações' : 'Salvar paciente'}</Button>
-            </div>
-        </form>
-    </>;
+        </>}
+    </FormPage>;
 }

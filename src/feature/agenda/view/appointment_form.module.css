@@ -1,5 +1,5 @@
 /* Computador: formulário à esquerda e resumo fixo à direita. Celular/tablet: uma coluna e barra inferior. */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; max-width: 1180px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
 .main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .sectionTitle { display: inline-flex; align-items: center; gap: 10px; }
 .sectionTitle svg { width: 20px; height: 20px; color: var(--primary); }
@@ -41,7 +41,7 @@
 .bar { display: none; }
 
 @media (max-width: 1099px) {
-  .layout { grid-template-columns: minmax(0, 1fr); max-width: 760px; padding-bottom: 84px; }
+  .layout { grid-template-columns: minmax(0, 1fr); padding-bottom: 84px; }
   .summary { display: none; }
   .inlineConflict:not(:empty) { display: block; margin-top: 14px; }
   .bar { position: fixed; z-index: 25; left: 0; right: 0; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; padding: 10px var(--page-x); background: var(--card); border-top: 1px solid var(--border); box-shadow: 0 -8px 24px rgba(27, 37, 41, .08); }

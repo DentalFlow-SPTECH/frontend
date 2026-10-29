@@ -1,0 +1,4 @@
+.form { display: flex; flex-direction: column; gap: 16px; }
+.footer { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 0; background: linear-gradient(transparent, var(--background) 30%); }
+@media (max-width: 1099px) { .footer { bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); } }
+@media (max-width: 767px) { .footer > * { flex: 1; } }

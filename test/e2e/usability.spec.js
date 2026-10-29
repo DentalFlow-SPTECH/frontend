@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { now, signIn, useFakeApi } from './fake_api.js';
+import { chooseOption, now, signIn, useFakeApi } from './fake_api.js';
 
 // Ajustes pedidos depois do primeiro teste de uso (28/10/2026).
 test.describe('ajustes de uso', () => {
@@ -82,7 +82,7 @@ test.describe('ajustes de uso', () => {
             await page.setViewportSize({ width, height: 800 });
             await useFakeApi(page);
             await signIn(page, 'carla', '/agenda/nova?data=2026-10-29&paciente=1&dentista=3');
-            await page.getByLabel('Procedimento').selectOption({ index: 1 });
+            await chooseOption(page, 'Procedimento', 'avalia', /^Avaliação/);
             const avatar = await page.locator('form').getByText('AM', { exact: true }).boundingBox();
             expect(Math.abs(avatar.width - avatar.height)).toBeLessThan(2);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

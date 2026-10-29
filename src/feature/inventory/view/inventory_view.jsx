@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Cog, Package, PackagePlus, Pencil, Plus, Scale, Search } from 'lucide-react';
-import { Alert, Badge, Button, ButtonLink, Card, Checkbox, Chips, EmptyState, ErrorState, Field, FormGrid, Input, PageHeader, Panel, Segmented, Select, Skeleton, Stat, Textarea } from '../../../component/ui/index.js';
+import { Alert, Badge, Button, ButtonLink, Card, Checkbox, Chips, EmptyState, ErrorState, Field, FormGrid, FormPage, Input, ListHeader, PageHeader, Paginated, Panel, Segmented, Select, Skeleton, Stat, Textarea } from '../../../component/ui/index.js';
 import { brl, numberLabel } from '../../../component/format.js';
 import { stockLevel, units, usagePercent } from '../model/inventory_model.js';
 import { useEquipmentFormViewModel, useInventoryViewModel, useProductDetailViewModel, useProductFormViewModel } from '../view_model/use_inventory_view_models.js';
@@ -24,27 +24,29 @@ export function InventoryPage() {
             : vm.loading ? <Skeleton rows={5}/>
             : !vm.items.length ? <EmptyState icon={materials ? Package : Cog} title={vm.total ? 'Nada encontrado' : materials ? 'Nenhum material cadastrado' : 'Nenhum equipamento cadastrado'}
                 action={!vm.total && <ButtonLink to={materials ? '/estoque/materiais/novo' : '/estoque/equipamentos/novo'} icon={Plus}>{materials ? 'Cadastrar material' : 'Cadastrar equipamento'}</ButtonLink>}/>
-            : materials ? <ul className={styles.items}>
-                {vm.items.map(item => {
-                    const [tone, label] = levelBadge[stockLevel(item)];
-                    return <li key={item.id}><Link to={`/estoque/materiais/${item.id}`} className={styles.item}>
-                        <span className={styles.icon}><Package aria-hidden="true"/></span>
-                        <span className={styles.text}><b>{item.name}</b><small>{brl(item.unitCost)} por {item.unit.toLowerCase()}{!item.active && ' · inativo'}</small></span>
-                        <span className={styles.stock}><b>{numberLabel(item.currentStock)}</b><small>{item.unit.toLowerCase()} · mín. {numberLabel(item.minimumStock)}</small></span>
-                        <Badge tone={tone}>{label}</Badge>
-                        <ChevronRight aria-hidden="true" className={styles.chevron}/>
-                    </Link></li>;
-                })}
-            </ul>
-            : <ul className={styles.items}>
-                {vm.items.map(item => <li key={item.id}><Link to={`/estoque/equipamentos/${item.id}/editar`} className={styles.item}>
-                    <span className={styles.icon}><Cog aria-hidden="true"/></span>
-                    <span className={styles.text}><b>{item.name}</b><small>{item.description || 'Sem descrição'}{!item.active && ' · inativo'}</small></span>
-                    <span className={styles.usage}><span className={styles.usageBar}><i style={{ width: `${usagePercent(item)}%` }}/></span><small>{numberLabel(item.completedUses)} de {numberLabel(item.usefulLifeUses)} usos</small></span>
-                    <span className={styles.stock}><b>{brl(item.costPerUse)}</b><small>por uso</small></span>
-                    <Pencil aria-hidden="true" className={styles.chevron}/>
-                </Link></li>)}
-            </ul>}
+            : <Paginated pager={vm.pager} noun={materials ? 'materiais' : 'equipamentos'}><div className={styles.items}>
+                <ListHeader className={styles.itemHead} columns={materials
+                    ? ['', 'Material', { label: 'Em estoque', end: true }, 'Situação', '']
+                    : ['', 'Equipamento', 'Uso', { label: 'Custo por uso', end: true }, '']}/>
+                <ul className={styles.itemList}>
+                    {materials ? vm.items.map(item => {
+                        const [tone, label] = levelBadge[stockLevel(item)];
+                        return <li key={item.id}><Link to={`/estoque/materiais/${item.id}`} className={styles.item}>
+                            <span className={styles.icon}><Package aria-hidden="true"/></span>
+                            <span className={styles.text}><b>{item.name}</b><small>{brl(item.unitCost)} por {item.unit.toLowerCase()}{!item.active && ' · inativo'}</small></span>
+                            <span className={styles.stock}><span className="sr-only">Em estoque: </span><b>{numberLabel(item.currentStock)}</b><small>{item.unit.toLowerCase()} · mín. {numberLabel(item.minimumStock)}</small></span>
+                            <span><Badge tone={tone}>{label}</Badge></span>
+                            <ChevronRight aria-hidden="true" className={styles.chevron}/>
+                        </Link></li>;
+                    }) : vm.items.map(item => <li key={item.id}><Link to={`/estoque/equipamentos/${item.id}/editar`} className={styles.item}>
+                        <span className={styles.icon}><Cog aria-hidden="true"/></span>
+                        <span className={styles.text}><b>{item.name}</b><small>{item.description || 'Sem descrição'}{!item.active && ' · inativo'}</small></span>
+                        <span className={styles.usage}><span className={styles.usageBar}><i style={{ width: `${usagePercent(item)}%` }}/></span><small>{numberLabel(item.completedUses)} de {numberLabel(item.usefulLifeUses)} usos</small></span>
+                        <span className={styles.stock}><b>{brl(item.costPerUse)}</b><small>por uso</small></span>
+                        <Pencil aria-hidden="true" className={styles.chevron}/>
+                    </Link></li>)}
+                </ul>
+            </div></Paginated>}
     </>;
 }
 
@@ -74,7 +76,7 @@ export function ProductDetailPage() {
         </div>}
         <Card title="Movimentações">
             {!vm.movements.length ? <p className={styles.muted}>Nenhuma movimentação ainda.</p>
-                : <ul className={styles.history}>
+                : <Paginated pager={vm.pager} noun="movimentações"><ul className={styles.history}>
                     {vm.movements.map(item => {
                         const Icon = movementIcons[item.type] ?? Scale;
                         return <li key={item.id}>
@@ -83,7 +85,7 @@ export function ProductDetailPage() {
                             <span className={styles.when}>{new Date(item.occurredAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}<small>{brl(item.unitCostAtTime)} / {unit}</small></span>
                         </li>;
                     })}
-                </ul>}
+                </ul></Paginated>}
         </Card>
         <Panel open={Boolean(vm.movement)} onOpenChange={open => { if (!open) vm.close(); }} title={vm.movement ? vm.movementTypes[vm.movement.type].label : ''}
             footer={vm.movement && <Button size="lg" block busy={vm.busy} onClick={vm.submit}>Registrar {vm.movementTypes[vm.movement.type].label.toLowerCase()}</Button>}>
@@ -100,22 +102,8 @@ export function ProductDetailPage() {
     </>;
 }
 
-function InventoryFormShell({ title, back, vm, submitLabel, children }) {
-    if (vm.error && !vm.form)
-        return <><PageHeader title={title} back={back}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
-    if (vm.loading || !vm.form)
-        return <><PageHeader title={title} back={back}/><Skeleton rows={2} height={150}/></>;
-    return <>
-        <PageHeader title={title} back={back}/>
-        <form className={styles.form} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
-            {vm.failure && <Alert tone="danger" title="Não foi possível salvar">{vm.failure}</Alert>}
-            <Card>{children}</Card>
-            <div className={styles.footer}>
-                <ButtonLink to={back.to} variant="secondary">Cancelar</ButtonLink>
-                <Button type="submit" size="lg" busy={vm.busy}>{submitLabel}</Button>
-            </div>
-        </form>
-    </>;
+function InventoryFormShell({ children, ...props }) {
+    return <FormPage {...props}><Card>{children}</Card></FormPage>;
 }
 
 export function ProductFormPage() {
@@ -134,7 +122,7 @@ export function ProductFormPage() {
             <Field label="Estoque mínimo" optional error={vm.errors.minimumStock} hint="Abaixo disso, o material aparece como reposição.">{input('minimumStock', { inputMode: 'decimal', placeholder: '0' })}</Field>
             <div className="full"><Checkbox label="Material ativo" checked={vm.form.active} onChange={event => vm.change('active', event.target.checked)}/></div>
         </FormGrid>}
-        {vm.editing && <p className={styles.muted}>A quantidade em estoque muda só por entrada, saída ou ajuste, na tela do material.</p>}
+        {vm.editing && <p className={`${styles.muted} ${styles.cardNote}`}>A quantidade em estoque muda só por entrada, saída ou ajuste, na tela do material.</p>}
     </InventoryFormShell>;
 }
 

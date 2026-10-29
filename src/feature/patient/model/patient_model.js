@@ -1,12 +1,14 @@
 import { ageOf, digits, isoDate, maskCep, maskCpf, maskPhone, normalizeText } from '../../../component/format.js';
+import { composeAddress, splitAddress } from '../../../component/address.js';
 
 // Regras do guia (seção 10): nome, CPF, endereço, bairro e CEP obrigatórios; nascimento não pode ser futuro.
-export const emptyPatientForm = () => ({ name: '', cpf: '', birthDate: '', phone: '', email: '', zipCode: '', address: '', neighborhood: '' });
+// O endereço é digitado em rua, número e complemento e enviado num texto só (`address`).
+export const emptyPatientForm = () => ({ name: '', cpf: '', birthDate: '', phone: '', email: '', zipCode: '', street: '', number: '', complement: '', neighborhood: '' });
 
 export function formFromPatient(patient) {
     return {
         name: patient.name ?? '', cpf: maskCpf(patient.cpf), birthDate: patient.birthDate ?? '', phone: maskPhone(patient.phone),
-        email: patient.email ?? '', zipCode: maskCep(patient.zipCode), address: patient.address ?? '', neighborhood: patient.neighborhood ?? '',
+        email: patient.email ?? '', zipCode: maskCep(patient.zipCode), ...splitAddress(patient.address), neighborhood: patient.neighborhood ?? '',
     };
 }
 
@@ -28,10 +30,13 @@ export function validatePatient(form, today = isoDate(new Date())) {
         errors.email = 'Use no máximo 100 caracteres.';
     if (digits(form.zipCode).length !== 8)
         errors.zipCode = 'O CEP tem 8 números.';
-    if (!form.address.trim())
-        errors.address = 'Informe a rua e o número.';
-    else if (form.address.length > 150)
-        errors.address = 'Use no máximo 150 caracteres.';
+    // Cadastros antigos podem trazer o número dentro da rua; nesse caso o campo Número pode ficar vazio.
+    if (!form.street.trim())
+        errors.street = 'Informe a rua.';
+    else if (composeAddress(form).length > 150)
+        errors.street = 'Rua, número e complemento passam de 150 caracteres. Abrevie algum deles.';
+    if (form.street.trim() && !form.number.trim() && !/\d/.test(form.street))
+        errors.number = 'Informe o número (ou s/n).';
     if (!form.neighborhood.trim())
         errors.neighborhood = 'Informe o bairro.';
     else if (form.neighborhood.length > 80)
@@ -53,7 +58,7 @@ export function fieldFromApiMessage(message) {
 
 export function toPatientPayload(form, clinicId) {
     return {
-        clinicId, name: form.name.trim(), cpf: maskCpf(form.cpf), address: form.address.trim(), neighborhood: form.neighborhood.trim(),
+        clinicId, name: form.name.trim(), cpf: maskCpf(form.cpf), address: composeAddress(form), neighborhood: form.neighborhood.trim(),
         zipCode: maskCep(form.zipCode), phone: digits(form.phone) || null, email: form.email.trim() || null, birthDate: form.birthDate || null,
     };
 }

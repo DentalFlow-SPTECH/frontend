@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
+import { usePagination } from '../../../component/use_pagination.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
 import { normalizeText } from '../../../component/format.js';
@@ -9,6 +10,9 @@ import {
     emptyEquipmentForm, emptyMovementForm, emptyProductForm, formFromEquipment, formFromProduct, movementTypes,
     stockLevel, validateEquipment, validateMovement, validateProduct,
 } from '../model/inventory_model.js';
+
+const inventoryPageSize = 20;
+const movementPageSize = 10;
 
 export function useInventoryViewModel() {
     const repository = useRepository('inventory');
@@ -19,6 +23,7 @@ export function useInventoryViewModel() {
     const query = useQuery(`inventory:${tab}:${onlyActive}`, () => (tab === 'materiais' ? repository.products(onlyActive) : repository.equipment(onlyActive)));
     const text = normalizeText(term);
     const items = [...(query.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).filter(item => !text || normalizeText(item.name).includes(text));
+    const pager = usePagination(items, inventoryPageSize);
     const update = next => setParams(current => {
         const updated = new URLSearchParams(current);
         for (const [key, value] of Object.entries(next)) {
@@ -30,11 +35,13 @@ export function useInventoryViewModel() {
         return updated;
     });
     return {
-        tab, onlyActive, term, setTerm, items, total: query.data?.length ?? 0,
+        tab, onlyActive, term, items: pager.items, pager, total: query.data?.length ?? 0,
         lowCount: tab === 'materiais' ? (query.data ?? []).filter(item => item.active && stockLevel(item) !== 'ok').length : 0,
         loading: query.firstLoad, error: query.error, reload: query.reload,
-        setTab: value => { setTerm(''); update({ aba: value === 'equipamentos' ? 'equipamentos' : '' }); },
-        setOnlyActive: value => update({ todos: value ? '' : '1' }),
+        // Mudar aba, filtro ou busca volta para a primeira página.
+        setTerm: value => { setTerm(value); pager.setPage(1); },
+        setTab: value => { setTerm(''); update({ aba: value === 'equipamentos' ? 'equipamentos' : '', pagina: '' }); },
+        setOnlyActive: value => update({ todos: value ? '' : '1', pagina: '' }),
     };
 }
 
@@ -47,8 +54,9 @@ export function useProductDetailViewModel() {
     const [errors, setErrors] = useState({});
     const [failure, setFailure] = useState('');
     const [busy, setBusy] = useState(false);
+    const pager = usePagination(query.data?.movements ?? [], movementPageSize);
     return {
-        product: query.data?.product, movements: query.data?.movements ?? [], loading: query.firstLoad, error: query.error, reload: query.reload,
+        product: query.data?.product, movements: pager.items, pager, loading: query.firstLoad, error: query.error, reload: query.reload,
         movement, errors, failure, busy, movementTypes,
         open: type => { setMovement(emptyMovementForm(type)); setErrors({}); setFailure(''); },
         close: () => setMovement(null),

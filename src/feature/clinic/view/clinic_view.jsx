@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Building2, ChevronRight, Clock, Eye, EyeOff, IdCard, MapPin, Pencil, Phone, Plus, Search, Sparkles, Stethoscope, UserCog, UserPlus } from 'lucide-react';
-import { Alert, Avatar, Badge, Button, ButtonLink, Card, DefinitionList, EmptyState, ErrorState, Field, FormGrid, Input, PageHeader, Select, Skeleton } from '../../../component/ui/index.js';
+import { AddressFields, Alert, Avatar, Badge, ButtonLink, Card, Combobox, DefinitionList, EmptyState, ErrorState, Field, FormGrid, FormPage, Input, ListHeader, PageHeader, Paginated, Skeleton } from '../../../component/ui/index.js';
 import { brl, maskCnpj, maskPhone } from '../../../component/format.js';
 import { useCatalogViewModel, useClinicFormViewModel, useClinicHubViewModel, useDentistFormViewModel, useProcedureFormViewModel, useUserFormViewModel } from '../view_model/use_clinic_view_models.js';
 import styles from './clinic.module.css';
@@ -39,10 +39,11 @@ function HubLink({ to, icon: Icon, title, detail }) {
 export function DentistListPage() {
     const vm = useCatalogViewModel('dentists');
     return <CatalogPage vm={vm} title="Dentistas" back="/clinica" newTo="/clinica/dentistas/novo" newLabel="Novo dentista" searchLabel="Buscar por nome, CRO ou especialidade" emptyIcon={Stethoscope}
+        columns={['Dentista', 'Celular']} noun="dentistas"
         renderItem={item => <>
             <Avatar name={item.name}/>
             <span className={styles.itemText}><b>{item.name}</b><small>{[item.specialty, item.cro].filter(Boolean).join(' · ')}</small></span>
-            <span className={styles.itemMeta}>{item.phone ? maskPhone(item.phone) : ''}</span>
+            <span className={styles.itemMeta}>{item.phone && <><span className="sr-only">Celular: </span>{maskPhone(item.phone)}</>}</span>
         </>}
         editTo={item => `/clinica/dentistas/${item.id}/editar`}/>;
 }
@@ -50,6 +51,7 @@ export function DentistListPage() {
 export function ProcedureListPage() {
     const vm = useCatalogViewModel('procedures');
     return <CatalogPage vm={vm} title="Procedimentos" back="/clinica" newTo="/clinica/procedimentos/novo" newLabel="Novo procedimento" searchLabel="Buscar procedimento" emptyIcon={Sparkles}
+        columns={['Procedimento', { label: 'Preço', end: true }]} noun="procedimentos"
         renderItem={item => <>
             <span className={styles.itemIcon}><Sparkles aria-hidden="true"/></span>
             <span className={styles.itemText}><b>{item.name}</b><small>{item.durationMinutes ? `${item.durationMinutes} min` : 'Duração não informada'}</small></span>
@@ -58,7 +60,7 @@ export function ProcedureListPage() {
         editTo={item => `/clinica/procedimentos/${item.id}/editar`}/>;
 }
 
-function CatalogPage({ vm, title, back, newTo, newLabel, searchLabel, emptyIcon, renderItem, editTo }) {
+function CatalogPage({ vm, title, back, newTo, newLabel, searchLabel, emptyIcon, columns, noun, renderItem, editTo }) {
     return <>
         <PageHeader title={title} subtitle={vm.loading ? 'Carregando…' : `${vm.total} ${vm.total === 1 ? 'cadastrado' : 'cadastrados'}`} back={{ to: back, label: 'Clínica' }}
             actions={vm.canEdit && <ButtonLink to={newTo} icon={Plus}>{newLabel}</ButtonLink>}/>
@@ -67,46 +69,42 @@ function CatalogPage({ vm, title, back, newTo, newLabel, searchLabel, emptyIcon,
         {vm.error && !vm.total ? <ErrorState error={vm.error} onRetry={vm.reload}/>
             : vm.loading ? <Skeleton rows={5}/>
             : !vm.items.length ? <EmptyState icon={emptyIcon} title={vm.total ? 'Nada encontrado' : `Nenhum cadastro em ${title.toLowerCase()}`} action={vm.canEdit && !vm.total && <ButtonLink to={newTo} icon={Plus}>{newLabel}</ButtonLink>}/>
-            : <ul className={styles.items}>
-                {vm.items.map(item => <li key={item.id}>
-                    {vm.canEdit
-                        ? <Link to={editTo(item)} className={styles.item} aria-label={`Editar ${item.name}`}>{renderItem(item)}<Pencil aria-hidden="true" className={styles.itemAction}/></Link>
-                        : <div className={styles.item}>{renderItem(item)}</div>}
-                </li>)}
-            </ul>}
+            : <Paginated pager={vm.pager} noun={noun}><div className={styles.items}>
+                <ListHeader className={vm.canEdit ? styles.itemHead : styles.itemHeadRead} columns={['', ...columns, ...(vm.canEdit ? [''] : [])]}/>
+                <ul className={styles.itemList}>
+                    {vm.items.map(item => <li key={item.id}>
+                        {vm.canEdit
+                            ? <Link to={editTo(item)} className={styles.item} aria-label={`Editar ${item.name}`}>{renderItem(item)}<Pencil aria-hidden="true" className={styles.itemAction}/></Link>
+                            : <div className={styles.item}>{renderItem(item)}</div>}
+                    </li>)}
+                </ul>
+            </div></Paginated>}
     </>;
 }
 
-function FormShell({ title, back, vm, children, submitLabel }) {
-    if (vm.error && !vm.form)
-        return <><PageHeader title={title} back={back}/><ErrorState error={vm.error} onRetry={vm.reload}/></>;
-    if (vm.loading || !vm.form)
-        return <><PageHeader title={title} back={back}/><Skeleton rows={2} height={150}/></>;
-    return <>
-        <PageHeader title={title} back={back}/>
-        <form className={styles.form} noValidate onSubmit={event => { event.preventDefault(); vm.submit(); }}>
-            {vm.failure && <Alert tone="danger" title="Não foi possível salvar">{vm.failure}</Alert>}
-            <Card>{children}</Card>
-            <div className={styles.footer}>
-                <ButtonLink to={back.to} variant="secondary">Cancelar</ButtonLink>
-                <Button type="submit" size="lg" busy={vm.busy}>{submitLabel}</Button>
-            </div>
-        </form>
-    </>;
+// Formulário de um cartão só: os campos ficam no Card, centralizados pela coluna do FormPage.
+function FormShell({ children, ...props }) {
+    return <FormPage {...props}><Card>{children}</Card></FormPage>;
 }
 
 const bind = (vm, field, props = {}) => <Input value={vm.form[field]} onChange={event => vm.change(field, event.target.value)} {...props}/>;
 
 export function ClinicFormPage() {
     const vm = useClinicFormViewModel();
-    return <FormShell title="Dados da clínica" back={{ to: '/clinica', label: 'Clínica' }} vm={vm} submitLabel="Salvar dados">
-        {vm.form && <FormGrid>
-            <Field label="Nome da clínica" error={vm.errors.name} className="full">{bind(vm, 'name', { maxLength: 100 })}</Field>
-            <Field label="CNPJ" optional error={vm.errors.cnpj}>{bind(vm, 'cnpj', { inputMode: 'numeric', placeholder: '00.000.000/0000-00' })}</Field>
-            <Field label="Telefone" optional error={vm.errors.phone}>{bind(vm, 'phone', { inputMode: 'tel', placeholder: '(00) 0000-0000' })}</Field>
-            <Field label="Endereço" optional error={vm.errors.address} className="full">{bind(vm, 'address', { maxLength: 150 })}</Field>
-        </FormGrid>}
-    </FormShell>;
+    return <FormPage title="Dados da clínica" back={{ to: '/clinica', label: 'Clínica' }} vm={vm} submitLabel="Salvar dados">
+        {vm.form && <>
+            <Card title={<span className={styles.sectionTitle}><Building2 aria-hidden="true"/>Clínica</span>}>
+                <FormGrid>
+                    <Field label="Nome da clínica" error={vm.errors.name} className="full">{bind(vm, 'name', { maxLength: 100 })}</Field>
+                    <Field label="CNPJ" optional error={vm.errors.cnpj}>{bind(vm, 'cnpj', { inputMode: 'numeric', placeholder: '00.000.000/0000-00' })}</Field>
+                    <Field label="Telefone" optional error={vm.errors.phone}>{bind(vm, 'phone', { inputMode: 'tel', placeholder: '(00) 0000-0000' })}</Field>
+                </FormGrid>
+            </Card>
+            <Card title={<span className={styles.sectionTitle}><MapPin aria-hidden="true"/>Endereço</span>}>
+                <AddressFields form={vm.form} errors={vm.errors} cep={vm.cep} onChange={vm.change} withCity required={false}/>
+            </Card>
+        </>}
+    </FormPage>;
 }
 
 export function DentistFormPage() {
@@ -145,10 +143,7 @@ export function UserFormPage() {
                     </button>)}
             </div>
             {vm.form.accessLevel === 'DENTISTA' && <Field label="Dentista" error={vm.errors.dentistId} className="full" hint="Cada dentista pode ter um único acesso.">
-                <Select value={vm.form.dentistId} onChange={event => vm.change('dentistId', event.target.value)}>
-                    <option value="">Escolha o dentista</option>
-                    {vm.dentists.map(dentist => <option key={dentist.id} value={dentist.id}>{dentist.name}</option>)}
-                </Select>
+                <Combobox options={vm.dentistOptions} value={vm.form.dentistId} onChange={value => vm.change('dentistId', value)} placeholder="Digite o nome do dentista"/>
             </Field>}
             <Field label="Usuário para entrar" error={vm.errors.login} hint="Sem espaços. A pessoa usa este nome para entrar.">{bind(vm, 'login', { maxLength: 50, autoComplete: 'off', autoCapitalize: 'none', spellCheck: false })}</Field>
             <Field label="Senha inicial" error={vm.errors.password} hint="Pelo menos 6 caracteres.">

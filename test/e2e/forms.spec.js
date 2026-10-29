@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signIn, useFakeApi } from './fake_api.js';
+import { chooseOption, signIn, useFakeApi } from './fake_api.js';
 
 test.describe('formulários integrados', () => {
     test('agendar consulta: busca o paciente, escolhe horário livre e abre na agenda', async ({ page }) => {
@@ -8,7 +8,7 @@ test.describe('formulários integrados', () => {
         await page.getByLabel('Buscar paciente').fill('cam');
         await page.getByRole('button', { name: /Camila Duarte/ }).click();
         await page.getByRole('group', { name: 'Dentista' }).getByRole('button', { name: /Dra. Ana/ }).click();
-        await page.getByLabel('Procedimento').selectOption({ label: 'Limpeza · 60 min · R$ 180,00' });
+        await chooseOption(page, 'Procedimento', 'limp', /^Limpeza/);
         await expect(page.getByRole('button', { name: '09:00', exact: true })).toHaveCount(0);
         await page.getByRole('button', { name: '10:00', exact: true }).click();
         await page.getByRole('button', { name: /^Agendar( consulta)?$/ }).click();
@@ -22,7 +22,7 @@ test.describe('formulários integrados', () => {
     test('horário ocupado gera aviso, sem bloquear', async ({ page }) => {
         await useFakeApi(page);
         await signIn(page, 'ana', '/agenda/nova?data=2026-10-28&dentista=3&paciente=2');
-        await page.getByLabel('Procedimento').selectOption({ label: 'Avaliação · 30 min · R$ 120,00' });
+        await chooseOption(page, 'Procedimento', 'avalia', /^Avaliação/);
         await page.getByLabel('Horário', { exact: true }).fill('10:10');
         await expect(page.getByText('Este horário já está ocupado').filter({ visible: true })).toBeVisible();
         await expect(page.getByText(/10:00 · Ana Clara Mendes/).filter({ visible: true })).toBeVisible();
@@ -39,15 +39,17 @@ test.describe('formulários integrados', () => {
         await expect(page.getByLabel('CPF')).toHaveValue('100.111.222-00');
         await page.getByLabel('Celular / WhatsApp (opcional)').fill('11987654321');
         await page.getByLabel('CEP').fill('01234567');
+        await expect(page.getByText('CEP não encontrado.', { exact: false })).toBeVisible();
         await page.getByLabel('Bairro').fill('Centro');
-        await page.getByLabel('Rua e número').fill('Rua A, 10');
+        await page.getByLabel('Rua', { exact: true }).fill('Rua A');
+        await page.getByLabel('Número').fill('10');
         await page.getByRole('button', { name: 'Salvar paciente' }).click();
         await expect(page.getByLabel('CPF')).toHaveAttribute('aria-invalid', 'true');
         await expect(page.getByText('Já existe um paciente cadastrado com este CPF na mesma clínica.')).toBeVisible();
         await page.getByLabel('CPF').fill('99988877766');
         await page.getByRole('button', { name: 'Salvar paciente' }).click();
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Maria Eduarda Lopes');
-        expect(db.patients.at(-1)).toMatchObject({ cpf: '999.888.777-66', phone: '11987654321', zipCode: '01234-567', clinicId: 1 });
+        expect(db.patients.at(-1)).toMatchObject({ cpf: '999.888.777-66', phone: '11987654321', zipCode: '01234-567', address: 'Rua A, 10', clinicId: 1 });
     });
 
     test('pacientes: busca por nome sem acento e por telefone', async ({ page }) => {

@@ -2,30 +2,28 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
+import { usePagination } from '../../../component/use_pagination.js';
+import { useCepLookup } from '../../../component/use_cep_lookup.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
 import { firstName, maskCep, maskCpf, maskPhone } from '../../../component/format.js';
 import { emptyPatientForm, fieldFromApiMessage, formFromPatient, groupByLetter, searchPatients, validatePatient } from '../model/patient_model.js';
 
-const pageSize = 40;
+const pageSize = 20;
 
 export function usePatientListViewModel() {
     const repository = useRepository('patient');
     const [params, setParams] = useSearchParams();
     const term = params.get('busca') ?? '';
-    const [limit, setLimit] = useState(pageSize);
     const query = useQuery('patients', () => repository.list());
     const results = searchPatients(query.data ?? [], term);
+    const pager = usePagination(results, pageSize);
     return {
         loading: query.firstLoad, error: query.error, reload: query.reload,
         total: query.data?.length ?? 0, term, count: results.length,
-        groups: groupByLetter(results.slice(0, limit)),
-        hasMore: results.length > limit,
-        showMore: () => setLimit(value => value + pageSize),
-        setTerm(value) {
-            setLimit(pageSize);
-            setParams(value ? { busca: value } : {}, { replace: true });
-        },
+        groups: groupByLetter(pager.items), pager,
+        // Trocar a busca volta para a primeira página (o parâmetro `pagina` sai junto).
+        setTerm: value => setParams(value ? { busca: value } : {}, { replace: true }),
     };
 }
 
@@ -51,14 +49,24 @@ export function usePatientFormViewModel() {
     const [failure, setFailure] = useState('');
     const [busy, setBusy] = useState(false);
     const [dirty, setDirty] = useState(false);
+    const cep = useCepLookup(repository.findAddress);
     useUnsaved(dirty && !busy);
     const current = form ?? (editing ? (query.data ? formFromPatient(query.data) : null) : emptyPatientForm());
 
+    // O ViaCEP preenche rua e bairro (sem apagar o que ele não souber); número e complemento ficam com a pessoa.
+    function fillAddress(address) {
+        setForm(found => ({ ...found, street: address.street || found.street, neighborhood: address.neighborhood || found.neighborhood }));
+        setErrors(found => ({ ...found, street: undefined, neighborhood: undefined }));
+    }
+
     function change(field, value) {
-        setForm({ ...current, [field]: masks[field] ? masks[field](value) : value });
+        const next = masks[field] ? masks[field](value) : value;
+        setForm({ ...current, [field]: next });
         setErrors(found => ({ ...found, [field]: undefined }));
         setDirty(true);
         setFailure('');
+        if (field === 'zipCode')
+            cep.lookup(next, fillAddress);
     }
 
     async function submit() {
@@ -88,7 +96,7 @@ export function usePatientFormViewModel() {
 
     return {
         editing, loading: editing && query.firstLoad, error: query.error, reload: query.reload,
-        form: current, errors, failure, busy, change, submit,
+        form: current, errors, failure, busy, change, submit, cep,
         backLink: editing ? `/pacientes/${id}` : params.get('agendar') ? '/agenda/nova' : '/pacientes',
     };
 }

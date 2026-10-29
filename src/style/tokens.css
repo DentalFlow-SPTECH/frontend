@@ -11,6 +11,8 @@
   --destructive: #B23B3B; --destructive-soft: #FBE7E7;
   --warning: #7A5000; --warning-soft: #FFF1D2; --success: #1D7A45; --success-soft: #E2F3E8; --info: #2F5E9E; --info-soft: #E5EDF8;
   --whatsapp: #187A43; --whatsapp-soft: #E3F4EA;
+  /* Gráficos de dinheiro: verde = entrou, coral = saiu (contraste ≥ 3:1 sobre o branco do card). */
+  --chart-in: #2E9D67; --chart-out: #E0603C;
 
   /* Situações da consulta (revisão de 28/10/2026): cor e forma diferentes para não depender só da cor.
      Agendado = vazado/tracejado (ainda não confirmado); Em atendimento = roxo cheio (destaque do momento);

@@ -26,6 +26,20 @@ export const shiftMonth = ({ year, month }, delta) => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
+// Eixo do gráfico com valores redondos (passos de 1, 2, 2,5 ou 5 × 10ⁿ), ex.: 0, 200, 400, 600, 800.
+export function niceScale(max, count = 4) {
+    const top = Math.max(Number(max) || 0, 1);
+    const raw = top / count;
+    const power = 10 ** Math.floor(Math.log10(raw));
+    const step = Math.max(1, [1, 2, 2.5, 5, 10].map(factor => factor * power).find(value => value >= raw));
+    const ticks = Array.from({ length: Math.ceil(top / step) + 1 }, (_, index) => index * step);
+    return { max: ticks.at(-1), ticks };
+}
+
+export const chartTotals = points => points.reduce((totals, point) => ({
+    gross: totals.gross + Number(point.generalGross ?? 0), outflows: totals.outflows + Number(point.totalOutflows ?? 0),
+}), { gross: 0, outflows: 0 });
+
 export const production = summary => [
     ['Moldagens', summary?.moldingCount], ['Mordidas', summary?.biteCount], ['Provas', summary?.fittingCount], ['Entregas', summary?.deliveryCount], ['Repetições', summary?.repetitionCount],
 ].map(([label, value]) => ({ label, value: value ?? 0 }));

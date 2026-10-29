@@ -33,7 +33,10 @@ export function DashboardPage() {
                 <Stat icon={Users} tone="info" label="Pacientes atendidos" value={summary.patientCount} hint={`Em ${kpis.operatingDays} ${kpis.operatingDays === 1 ? 'dia' : 'dias'} de atendimento`}/>
             </div>
             <div className={styles.grid}>
-                <Card title="Entradas e saídas por dia" action={<span className={styles.legend}><span><i className={styles.legendBar}/>Entradas</span><span><i className={styles.legendLine}/>Saídas</span></span>}>
+                <Card title="Entradas e saídas por dia" action={dailyEvolution.length > 0 && <span className={styles.legend}>
+                    <span><i className={styles.keyIn}/>Entradas <b>{brl(vm.chartTotals.gross)}</b></span>
+                    <span><i className={styles.keyOut}/>Saídas <b>{brl(vm.chartTotals.outflows)}</b></span>
+                </span>}>
                     {dailyEvolution.length ? <DailyChart points={dailyEvolution}/> : <p className={styles.muted}>Sem lançamentos neste período.</p>}
                 </Card>
                 <Card title="Consultas do mês">

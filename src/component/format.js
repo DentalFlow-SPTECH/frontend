@@ -3,6 +3,16 @@ const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
 export const brl = value => money.format(Number(value ?? 0));
 export const numberLabel = value => decimal.format(Number(value ?? 0));
+// Valor curto para eixos de gráfico: "R$ 800", "R$ 1,2 mil", "R$ 2 mi".
+export function moneyShort(value) {
+    const number = Number(value ?? 0);
+    const short = (amount, suffix) => `R$ ${amount.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${suffix}`;
+    if (Math.abs(number) >= 1e6)
+        return short(number / 1e6, ' mi');
+    if (Math.abs(number) >= 1000)
+        return short(number / 1000, ' mil');
+    return `R$ ${number.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`;
+}
 export const percent = value => `${Number(value ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 export const digits = value => String(value ?? '').replace(/\D/g, '');
 

@@ -4,7 +4,7 @@ import { useRepository } from '../../../app/app_provider.jsx';
 import { useQuery } from '../../../component/use_query.js';
 import { useUnsaved } from '../../../component/use_unsaved.js';
 import { useToast } from '../../../component/ui/index.js';
-import { dateLong, isoDate, monthName } from '../../../component/format.js';
+import { brl, dateLong, isoDate, monthName } from '../../../component/format.js';
 import { monthParam, shiftMonth } from '../../dashboard/model/dashboard_model.js';
 import {
     emptyDailyMapForm, emptyExpense, emptyVisit, emptyVoucher, formFromDailyMap, previewTotals, readyToClose, validateDailyMap, visitsFromAppointments,
@@ -98,7 +98,8 @@ export function useDailyMapFormViewModel() {
     return {
         editing, date: current?.date ?? date, loading: query.firstLoad, error: query.error, reload: query.reload,
         existing: query.data?.existing ?? null, suggested: query.data?.suggested ?? 0,
-        procedures: query.data?.procedures ?? [], form: current, errors, failure, busy,
+        procedureOptions: (query.data?.procedures ?? []).map(item => ({ value: String(item.id), label: item.name, detail: item.price ? brl(item.price) : '' })),
+        form: current, errors, failure, busy,
         totals: current ? previewTotals(current) : null,
         change: (field, value) => { edit({ ...current, [field]: value }); setErrors(found => ({ ...found, [field]: undefined })); },
         changeRow: (list, index, field, value) => { updateList(list, index, field, value); setErrors(found => ({ ...found, [`${list}.${index}.${field}`]: undefined })); },

@@ -22,12 +22,14 @@ test('recepção cadastra paciente, agenda, confirma e a API recusa o painel', a
     await page.getByLabel('CPF').fill(`900${stamp}`);
     await page.getByLabel('CEP').fill('01234567');
     await page.getByLabel('Bairro').fill('Centro');
-    await page.getByLabel('Rua e número').fill('Rua do Teste, 1');
+    await page.getByLabel('Rua', { exact: true }).fill('Rua do Teste');
+    await page.getByLabel('Número').fill('1');
     await page.getByRole('button', { name: 'Salvar paciente' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Teste Integração ${stamp}`);
     await page.getByRole('link', { name: 'Agendar consulta' }).click();
     await page.getByRole('group', { name: 'Dentista' }).getByRole('button').first().click();
-    await page.getByLabel('Procedimento').selectOption({ index: 1 });
+    await page.getByRole('combobox', { name: 'Procedimento' }).click();
+    await page.getByRole('option').first().click();
     await page.getByLabel('Data').fill('2026-12-01');
     await page.getByLabel('Horário').fill('07:05');
     await page.getByRole('button', { name: 'Agendar consulta' }).click();

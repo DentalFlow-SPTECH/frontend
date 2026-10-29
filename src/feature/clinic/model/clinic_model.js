@@ -1,19 +1,27 @@
-import { digits, maskCnpj, maskPhone } from '../../../component/format.js';
+import { digits, maskCep, maskCnpj, maskPhone } from '../../../component/format.js';
+import { composeClinicAddress, splitClinicAddress } from '../../../component/address.js';
 
 const max = (value, size, message) => (value.trim().length > size ? message ?? `Use no máximo ${size} caracteres.` : undefined);
 const clean = errors => Object.fromEntries(Object.entries(errors).filter(([, value]) => value));
 
-export const emptyClinicForm = () => ({ name: '', cnpj: '', address: '', phone: '' });
-export const formFromClinic = clinic => ({ name: clinic.name ?? '', cnpj: maskCnpj(clinic.cnpj), address: clinic.address ?? '', phone: maskPhone(clinic.phone) });
+// A API da clínica tem um campo de endereço só: o formulário separa as partes (para o CEP preencher) e junta ao salvar.
+const emptyAddress = { zipCode: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
+export const emptyClinicForm = () => ({ name: '', cnpj: '', phone: '', ...emptyAddress });
+export function formFromClinic(clinic) {
+    const address = splitClinicAddress(clinic.address);
+    return { name: clinic.name ?? '', cnpj: maskCnpj(clinic.cnpj), phone: maskPhone(clinic.phone), ...address, zipCode: maskCep(address.zipCode) };
+}
 export function validateClinic(form) {
     return clean({
         name: !form.name.trim() ? 'Informe o nome da clínica.' : max(form.name, 100),
         cnpj: form.cnpj && digits(form.cnpj).length !== 14 ? 'O CNPJ tem 14 números.' : undefined,
-        address: max(form.address, 150),
+        zipCode: form.zipCode && digits(form.zipCode).length !== 8 ? 'O CEP tem 8 números.' : undefined,
+        street: composeClinicAddress(form).length > 150 ? 'O endereço completo passa de 150 caracteres. Abrevie alguma parte.' : undefined,
+        state: form.state && !/^[A-Za-z]{2}$/.test(form.state.trim()) ? 'Use a sigla do estado (ex.: SP).' : undefined,
         phone: form.phone && digits(form.phone).length < 10 ? 'Informe o DDD e o número.' : undefined,
     });
 }
-export const toClinicPayload = form => ({ name: form.name.trim(), cnpj: form.cnpj ? maskCnpj(form.cnpj) : null, address: form.address.trim() || null, phone: digits(form.phone) || null });
+export const toClinicPayload = form => ({ name: form.name.trim(), cnpj: form.cnpj ? maskCnpj(form.cnpj) : null, address: composeClinicAddress(form) || null, phone: digits(form.phone) || null });
 
 export const emptyDentistForm = () => ({ name: '', cro: '', specialty: '', phone: '' });
 export const formFromDentist = dentist => ({ name: dentist.name ?? '', cro: dentist.cro ?? '', specialty: dentist.specialty ?? '', phone: maskPhone(dentist.phone) });
