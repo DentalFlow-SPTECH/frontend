@@ -76,3 +76,17 @@ O sistema usa o símbolo verde do dente, sem quadrado, na barra de cima e na tel
 - A agenda consulta um dia por chamada: a semana faz 7 chamadas e o mês até 31.
 - O botão WhatsApp abre `wa.me` com o telefone do paciente e um texto pronto; não envia nada automaticamente.
 - O workflow do GitHub Pages publica somente o frontend; sem `VITE_API_URL` apontando para uma API acessível, a versão publicada não funciona.
+
+## Imagem Docker e integração contínua
+
+O workflow `.github/workflows/docker.yml` valida pull requests para `main`, pushes na `main` e execuções manuais: instala dependências, executa `npm run check`, instala o Microsoft Edge do Playwright, roda os E2E com API simulada e verifica o build Docker sem publicar. O workflow manual de GitHub Pages continua independente.
+
+Após essas verificações, somente execuções da `main` publicam `jorglcs/dentalflow-frontend:latest` e `jorglcs/dentalflow-frontend:sha-<commit completo>` para Linux AMD64 e ARM64. A publicação é serializada; execuções cujo commit já não é a ponta da `main` são ignoradas antes do envio. Configure os secrets `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN` no GitHub, com acesso de escrita ao repositório público de imagens. Nunca inclua o token no código.
+
+O Dockerfile compila com Node 24 e serve o resultado com nginx na porta 80. A imagem inclui `/healthz` para verificar o servidor e encaminha `/dentalflow-api/` para `backend:8080`, mantendo frontend e API na mesma origem. O DNS do backend é atualizado pelo nginx após recriações do container. A imagem não incorpora arquivos `.env` nem depende de configurações locais de desenvolvimento.
+
+Depois da primeira publicação das duas aplicações, basta clonar `infra` e executar `docker compose up`; a interface fica em `http://localhost:5180`. Não é necessário clonar este repositório para executar o sistema. Para compilar a imagem localmente durante desenvolvimento: `docker build -t dentalflow-frontend:local .`. O proxy espera a rede Docker da infra com o serviço `backend`.
+
+Para retornar a uma versão anterior, configure `FRONTEND_TAG=sha-<commit completo>` no `.env` opcional da infra e rode `docker compose up -d`. A tag precisa ter sido publicada; isso não modifica o banco. A primeira execução dos workflows e a validação da stack publicada devem ser registradas como evidências separadas da preparação dos arquivos.
+
+Validação local desta entrega (12/11/2026): `npm ci`, `npm run check`, `npm run build:pages`, leitura do YAML e `git diff --check` aprovados. O test runner reportou seis arquivos unitários aprovados; os builds mantêm o aviso existente de pacote maior que 500 kB. A tentativa de E2E ficou impedida pela ausência do Microsoft Edge nesta máquina; o workflow instala esse navegador explicitamente. Docker não está instalado neste ambiente, portanto build da imagem, execução do nginx e publicação não foram verificados localmente.

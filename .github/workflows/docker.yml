@@ -1,0 +1,87 @@
+name: Validar e publicar imagem Docker
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps msedge
+      - run: npm run test:e2e
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Validar build da imagem sem publicar
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: dockerhub-frontend-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Ignorar execução de commit que já saiu da ponta da main
+        id: current
+        shell: bash
+        run: |
+          current_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current_sha" = "$GITHUB_SHA" ]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'publish=false' >> "$GITHUB_OUTPUT"
+            echo 'A main avançou; esta execução não publica imagens.'
+          fi
+      - if: steps.current.outputs.publish == 'true'
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - if: steps.current.outputs.publish == 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - if: steps.current.outputs.publish == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publicar imagens AMD64 e ARM64
+        if: steps.current.outputs.publish == 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: jorglcs/dentalflow-frontend:sha-${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - name: Promover para latest somente se main ainda aponta para este commit
+        if: steps.current.outputs.publish == 'true'
+        shell: bash
+        run: |
+          current_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current_sha" = "$GITHUB_SHA" ]; then
+            docker buildx imagetools create \
+              --tag jorglcs/dentalflow-frontend:latest \
+              "jorglcs/dentalflow-frontend:sha-$GITHUB_SHA"
+          else
+            echo 'Imagem por commit publicada; latest preservada porque a main avançou.'
+          fi
